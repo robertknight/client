@@ -32,8 +32,6 @@ describe('searchStatusBar', function () {
         selectionCount: 1,
         totalAnnotations: 2,
         selectedTab: 'annotation',
-        tabAnnotations: 'annotation',
-        tabNotes: 'note',
       });
       var clearBtn = elem[0].querySelector('button');
       assert.include(clearBtn.textContent, msg);
@@ -47,8 +45,6 @@ describe('searchStatusBar', function () {
         selectionCount: 1,
         totalNotes: 3,
         selectedTab: 'note',
-        tabAnnotations: 'annotation',
-        tabNotes: 'note',
       });
       var clearBtn = elem[0].querySelector('button');
       assert.include(clearBtn.textContent, msg);

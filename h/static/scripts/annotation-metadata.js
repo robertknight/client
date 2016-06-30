@@ -108,7 +108,7 @@ function isPageNote(annotation) {
 
 /** Return `true` if the given annotation is a top level annotation, `false` otherwise. */
 function isAnnotation(annotation) {
-  return (annotation.target && annotation.target.length > 0 && annotation.target[0].selector);
+  return !!(annotation.target && annotation.target.length > 0 && annotation.target[0].selector);
 }
 
 /** Return a numeric key that can be used to sort annotations by location.
