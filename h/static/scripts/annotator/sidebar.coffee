@@ -133,6 +133,10 @@ module.exports = class Sidebar extends Host
         this.hide()
 
   show: ->
+    console.log('show sidebar. CrossFrame plugin is', this.plugins.CrossFrame);
+    if this.plugins.CrossFrame
+      this.plugins.CrossFrame.call('sidebarOpened')
+
     @frame.css 'margin-left': "#{-1 * @frame.width()}px"
     @frame.removeClass 'annotator-collapsed'
 

@@ -2,14 +2,8 @@
 
 var uuid = require('node-uuid');
 
+var events = require('./events');
 var Socket = require('./websocket');
-
-// the randomly generated session UUID
-var clientId = uuid.v4();
-
-// the singleton socket instance, only one may
-// be open at a time
-var socket;
 
 /**
  * Open a new WebSocket connection to the Hypothesis push notification service.
@@ -27,32 +21,28 @@ var socket;
  * @return The push notification service client.
  */
 // @ngInject
-function connect($rootScope, annotationMapper, groups, session, settings) {
-  // The public interface of the streamer. Returned from connect.
-  var controls = {
-    setConfig: setConfig
-  };
+function Streamer($rootScope, annotationMapper, groups, session, settings) {
+
+  // The randomly generated session UUID
+  var clientId = uuid.v4();
+  var socket;
+
   // Client configuration messages, to be sent each time a new connection is
   // established.
   var configMessages = {};
 
-  // Close any existing socket
-  if (socket) {
-    socket.close();
-  }
+  /**
+   * Send a configuration message to the push notification service.
+   * Each message is associated with a key, which is used to re-send
+   * configuration data to the server in the event of a reconnection.
+   */
 
-  // If we have no URL configured, don't do anything.
-  var url = settings.websocketUrl;
-  if (!url) {
-    return controls;
+  this.setConfig = function (key, configMessage) {
+    configMessages[key] = configMessage;
+    if (socket && socket.isConnected()) {
+      socket.send(configMessage);
+    }
   }
-
-  // Open the socket
-  socket = new Socket(url);
-  setConfig('client-id', {
-    messageType: 'client_id',
-    value: clientId
-  });
 
   function handleAnnotationNotification(message) {
     var action = message.options.action;
@@ -96,64 +86,78 @@ function connect($rootScope, annotationMapper, groups, session, settings) {
     });
   }
 
-  /**
-   * Send a configuration message to the push notification service.
-   * Each message is associated with a key, which is used to re-send
-   * configuration data to the server in the event of a reconnection.
-   */
-  function setConfig(key, configMessage) {
-    configMessages[key] = configMessage;
-    if (socket && socket.isConnected()) {
-      socket.send(configMessage);
+  this.connect = function () {
+    // Close any existing socket
+    if (socket) {
+      socket.close();
     }
-  }
 
-  socket.on('open', function () {
-    sendClientConfig();
-  });
-
-  socket.on('error', function (event) {
-    console.warn('Error connecting to H push notification service:', event);
-
-    // In development, warn if the connection failure might be due to
-    // the app's origin not having been whitelisted in the H service's config.
-    //
-    // Unfortunately the error event does not provide a way to get at the
-    // HTTP status code for HTTP -> WS upgrade requests.
-    var websocketHost = new URL(url).hostname;
-    if (['localhost', '127.0.0.1'].indexOf(websocketHost) !== -1) {
-      console.warn('Check that your H service is configured to allow ' +
-                   'WebSocket connections from ' + window.location.origin);
+    // If we have no URL configured, don't do anything.
+    var url = settings.websocketUrl;
+    if (!url) {
+      return;
     }
-  });
 
-  socket.on('message', function (event) {
-    // Wrap message dispatches in $rootScope.$apply() so that
-    // scope watches on app state affected by the received message
-    // are updated
-    //
-    // Note: The use of $apply() here will no longer be needed once session
-    // state is moved to the Redux store in `annotationUI`.
-    $rootScope.$apply(function () {
-      var message = JSON.parse(event.data);
-      if (!message) {
-        return;
-      }
+    socket = new Socket(url);
+    socket.on('open', function () {
+      sendClientConfig();
+    });
 
-      if (message.type === 'annotation-notification') {
-        handleAnnotationNotification(message);
-      } else if (message.type === 'session-change') {
-        handleSessionChangeNotification(message);
-      } else {
-        console.warn('received unsupported notification', message.type);
+    socket.on('error', function (event) {
+      console.warn('Error connecting to H push notification service:', event);
+
+      // In development, warn if the connection failure might be due to
+      // the app's origin not having been whitelisted in the H service's config.
+      //
+      // Unfortunately the error event does not provide a way to get at the
+      // HTTP status code for HTTP -> WS upgrade requests.
+      var websocketHost = new URL(url).hostname;
+      if (['localhost', '127.0.0.1'].indexOf(websocketHost) !== -1) {
+        console.warn('Check that your H service is configured to allow ' +
+                     'WebSocket connections from ' + window.location.origin);
       }
     });
-  });
 
-  return controls;
+    socket.on('message', function (event) {
+      // wrap message dispatches in $rootScope.$apply() so that
+      // scope watches on app state affected by the received message
+      // are updated
+      $rootScope.$apply(function () {
+        var message = JSON.parse(event.data);
+        if (!message) {
+          return;
+        }
+
+        if (message.type === 'annotation-notification') {
+          handleAnnotationNotification(message);
+        } else if (message.type === 'session-change') {
+          handleSessionChangeNotification(message);
+        } else {
+          console.warn('received unsupported notification', message.type);
+        }
+      });
+    });
+
+    var self = this;
+    var sidebarOpen = false;
+    $rootScope.$on('sidebarOpened', function () {
+      sidebarOpen = true;
+      if (!socket) {
+        self.connect();
+      }
+    });
+    $rootScope.$on(events.USER_CHANGED, function () {
+      if (sidebarOpen) {
+       self.connect();
+      }
+    });
+
+    // Configure the client ID
+    this.setConfig('client-id', {
+      messageType: 'client_id',
+      value: self.clientId
+    });
+  }
 }
 
-module.exports = {
-  connect: connect,
-  clientId: clientId
-};
+module.exports = Streamer;

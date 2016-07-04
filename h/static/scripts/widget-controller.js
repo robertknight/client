@@ -249,8 +249,10 @@ module.exports = function WidgetController(
    * @param {Array<{uri:string}>} frames - Hypothesis client frames
    *        to load annotations for.
    */
-  function loadAnnotations(frames) {
-    _resetAnnotations();
+  function loadAnnotations(frames, reset) {
+    if (reset || typeof reset === 'undefined') {
+      _resetAnnotations();
+    }
 
     searchClients.forEach(function (client) {
       client.cancel();
@@ -287,6 +289,10 @@ module.exports = function WidgetController(
       streamer.setConfig('filter', {filter: streamFilter.getFilter()});
     }
   }
+
+  $rootScope.$on('sidebarOpened', function () {
+    loadAnnotations(crossframe.frames, false /* do not reset */);
+  });
 
   // When a direct-linked annotation is successfully anchored in the page,
   // focus and scroll to it
