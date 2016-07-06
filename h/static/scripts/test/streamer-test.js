@@ -82,25 +82,40 @@ describe('Streamer', function () {
   });
 
   it('should not create a websocket connection if websocketUrl is not provided', function () {
-    fakeSettings = {}
+    fakeSettings = {};
     createDefaultStreamer();
     activeStreamer.connect();
     assert.isNull(fakeWebSocket);
   });
 
-  it('should not create a websocket connection if not explicitely connected', function () {
+  it('should not create a websocket connection if the user is not logged in', function () {
     createDefaultStreamer();
     assert.isNull(fakeWebSocket);
+  });
+
+  it('should create a websocket connection if the user is logged in', function () {
+    fakeSession.state = { userid: "foo" };
+    createDefaultStreamer();
+    assert.ok(fakeWebSocket);
+  });
+
+  it('should create a websocket connection if explicitly connected', function () {
+    createDefaultStreamer();
     activeStreamer.connect();
     assert.ok(fakeWebSocket);
-  })
+  });
 
-  it('should send a client ID', function () {
+  it('should have a non-null client ID', function () {
+    createDefaultStreamer();
+    assert.ok(activeStreamer.clientId);
+  });
+
+  it('should send the client ID on connection', function () {
     createDefaultStreamer();
     activeStreamer.connect();
     assert.equal(fakeWebSocket.messages.length, 1);
     assert.equal(fakeWebSocket.messages[0].messageType, 'client_id');
-    assert.equal(fakeWebSocket.messages[0].value, Streamer.clientId);
+    assert.equal(fakeWebSocket.messages[0].value, activeStreamer.clientId);
   });
 
   it('should close any existing socket', function () {
