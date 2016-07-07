@@ -135,6 +135,9 @@
   "scripts": {
     "build": "gulp build-app",
     "deps": "check-dependencies",
-    "test": "gulp test-app"
+    "test": "gulp test-app",
+    "preversion": "npm run test",
+    "version": "make clean all && ./scripts/update-changelog.js",
+    "postversion": "echo Publishing all the things"
   }
 }
