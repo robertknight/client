@@ -5,7 +5,7 @@
   "license": "BSD-2-Clause",
   "homepage": "https://hypothes.is",
   "bugs": "https://github.com/hypothesis/client/issues",
-  "repository": "hypothesis/client",
+  "repository": "robertknight/client",
   "devDependencies": {
     "angular": "~1.5.6",
     "angular-jwt": "0.0.9",
