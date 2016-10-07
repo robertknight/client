@@ -285,7 +285,7 @@ describe 'Guest', ->
       guest.plugins.PDF = null
       guest.plugins.Document =
         uri: -> 'http://foobar.com/things?id=42'
-        metadata: {}
+        getDocumentMetadata: sinon.stub()
       return guest.getDocumentInfo().then ({uri}) ->
         assert.equal uri, 'http://foobar.com/things?id=42'
 

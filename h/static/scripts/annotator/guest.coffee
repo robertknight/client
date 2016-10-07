@@ -106,7 +106,7 @@ module.exports = class Guest extends Annotator
       uriPromise = Promise.resolve(@plugins.PDF.uri())
     else if @plugins.Document?
       uriPromise = Promise.resolve(@plugins.Document.uri())
-      metadataPromise = Promise.resolve(@plugins.Document.metadata)
+      metadataPromise = Promise.resolve(@plugins.Document.getDocumentMetadata())
     else
       uriPromise = Promise.reject()
       metadataPromise = Promise.reject()
