@@ -10,6 +10,7 @@ adder = require('./adder')
 highlighter = require('./highlighter')
 rangeUtil = require('./range-util')
 selections = require('./selections')
+urlChanges = require('./url-changes')
 
 animationPromise = (fn) ->
   return new Promise (resolve, reject) ->
@@ -88,6 +89,11 @@ module.exports = class Guest extends Annotator
     this._connectAnnotationSync(@crossframe)
     this._connectAnnotationUISync(@crossframe)
 
+    # Notify sidebar when document URL changes
+    this.urlChanges = urlChanges().subscribe
+      next: (url) =>
+        @crossframe.call 'urlChanged', url
+
     # Load plugins
     for own name, opts of @options
       if not @plugins[name] and Annotator.Plugin[name]
@@ -155,6 +161,7 @@ module.exports = class Guest extends Annotator
     $('#annotator-dynamic-style').remove()
 
     this.selections.unsubscribe()
+    this.urlChanges.unsubscribe()
     @adder.remove()
 
     @element.find('.annotator-hl').each ->
@@ -438,4 +445,3 @@ module.exports = class Guest extends Annotator
       @element.removeClass(SHOW_HIGHLIGHTS_CLASS)
 
     @visibleHighlights = shouldShowHighlights
-

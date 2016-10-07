@@ -40,8 +40,7 @@ function formatAnnot(ann) {
 function FrameSync($rootScope, $window, AnnotationUISync, Discovery,
                    annotationUI, bridge) {
 
-  // List of frames currently connected to the sidebar
-  var frames = [];
+  var self = this;
 
   // Set of tags of annotations that are currently loaded into the frame
   var inFrame = new Set();
@@ -107,6 +106,19 @@ function FrameSync($rootScope, $window, AnnotationUISync, Discovery,
       $rootScope.$broadcast(events.BEFORE_ANNOTATION_CREATED, annot);
     });
 
+    // The URL of a connected frame was changed via the HTML 5 History API.
+    // Trigger unloading of annotations for the old URL and loading of annotations
+    // for the new URL
+    bridge.on('urlChanged', function () {
+      $rootScope.$apply(function () {
+        var channels = self.frames.map(function (frame) {
+          return frame.channel;
+        });
+        self.frames = [];
+        channels.forEach(addFrame);
+      });
+    });
+
     // Anchoring an annotation in the frame completed
     bridge.on('sync', function (events_) {
       events_.forEach(function (event) {
@@ -152,7 +164,8 @@ function FrameSync($rootScope, $window, AnnotationUISync, Discovery,
       // The `frames` list is currently stored by this service but should in
       // future be moved to the app state.
       $rootScope.$apply(function () {
-        frames.push({
+        self.frames.push({
+          channel: channel,
           uri: info.uri,
           searchUris: searchUris,
           documentFingerprint: documentFingerprint,
@@ -198,7 +211,7 @@ function FrameSync($rootScope, $window, AnnotationUISync, Discovery,
    * List of frames that are connected to the app.
    * @type {FrameInfo}
    */
-  this.frames = frames;
+  this.frames = [];
 }
 
 module.exports = {

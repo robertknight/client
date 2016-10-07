@@ -12,6 +12,7 @@ anchoring = {}
 highlighter = {}
 rangeUtil = null
 selections = null
+urlChanges = null
 
 raf = sinon.stub().yields()
 raf['@noCallThru'] = true
@@ -60,12 +61,18 @@ describe 'Guest', ->
           selections = obs
           return () ->
         )
+      './url-changes': () ->
+        new Observable((obs) ->
+          urlChanges = obs
+          return () ->
+        )
       'annotator': Annotator,
       'raf': raf,
       'scroll-into-view': scrollIntoView,
     })
 
     fakeCrossFrame = {
+      call: sinon.stub()
       onConnect: sinon.stub()
       on: sinon.stub()
       sync: sinon.stub()
@@ -258,6 +265,12 @@ describe 'Guest', ->
       guest = createGuest()
       selections.next(null)
       assert.called FakeAdder::instance.hide
+
+  describe 'when the document URL changes', ->
+    it 'sends the sidebar a "urlChanged" event', ->
+      guest = createGuest()
+      urlChanges.next('/new-url')
+      assert.calledWith fakeCrossFrame.call, 'urlChanged', '/new-url'
 
   describe '#getDocumentInfo()', ->
     guest = null
