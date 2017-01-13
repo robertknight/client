@@ -60,15 +60,14 @@ function Controller($scope, $timeout, flash, session, formRespond, serviceUrl) {
       return;
     }
 
-    $scope.$broadcast('formState', form.$name, 'loading');
+    $scope.$broadcast('formState', 'login', 'loading');
 
-    var handler = session[form.$name];
-    var _failure = angular.bind(this, failure, form);
-    var res = handler($scope.model, success, _failure);
-
-    res.$promise.finally(function() {
-      return $scope.$broadcast('formState', form.$name, '');
-    });
+    session.login($scope.model)
+      .then(success, failure.bind(null, form))
+      .then(function () {
+        $scope.$broadcast('formState', form.$name, '');
+        $scope.$digest();
+      });
   };
 
   if (!$scope.model) {

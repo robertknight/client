@@ -47,8 +47,8 @@ function updateModel(annotation, changes, permissions) {
 // @ngInject
 function AnnotationController(
   $document, $q, $rootScope, $scope, $timeout, $window, annotationUI,
-  annotationMapper, drafts, flash, features, groups, permissions, serviceUrl,
-  session, store, streamer) {
+  annotationMapper, annotationService, drafts, flash, features, groups,
+  permissions, serviceUrl, session, streamer) {
 
   var vm = this;
   var newlyCreatedByHighlightButton;
@@ -57,9 +57,9 @@ function AnnotationController(
   function save(annot) {
     var saved;
     if (annot.id) {
-      saved = store.annotation.update({id: annot.id}, annot);
+      saved = annotationService.api.annotation.update({id: annot.id}, annot);
     } else {
-      saved = store.annotation.create({}, annot);
+      saved = annotationService.api.annotation.create({}, annot);
     }
     return saved.then(function (savedAnnot) {
       // Copy across internal properties which are not part of the annotation

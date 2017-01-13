@@ -81,14 +81,23 @@ function serializeParams(params) {
  * @param links - Object or promise for an object mapping named API routes to
  *                URL templates and methods
  * @param route - The dotted path of the named API route (eg. `annotation.create`)
+ * @param {Function} authToken - Function which returns the access token to use
+ *                 to authenticate API requests.
  */
-function createAPICall($http, links, route) {
+function createAPICall($http, links, route, authToken) {
   return function (params, data) {
-    return links.then(function (links) {
+    return Promise.all([links, authToken()]).then(function (linksAndToken) {
+      var links = linksAndToken[0];
+      var token = linksAndToken[1];
       var descriptor = get(links, route);
       var url = urlUtil.replaceURLParams(descriptor.url, params);
+      var headers = {};
+      if (token) {
+        headers.Authorization = 'Bearer ' + token;
+      }
       var req = {
         data: data ? stripInternalProperties(data) : null,
+        headers: headers,
         method: descriptor.method,
         params: url.params,
         paramSerializer: serializeParams,
@@ -108,21 +117,22 @@ function createAPICall($http, links, route) {
  * the Hypothesis API (see http://h.readthedocs.io/en/latest/api/).
  */
 // @ngInject
-function store($http, settings) {
+function store($http, apiUrl, authToken) {
   var links = retryUtil.retryPromiseOperation(function () {
-    return $http.get(settings.apiUrl);
+    return $http.get(apiUrl);
   }).then(function (response) {
     return response.data.links;
   });
 
   return {
-    search: createAPICall($http, links, 'search'),
+    search: createAPICall($http, links, 'search', authToken),
     annotation: {
-      create: createAPICall($http, links, 'annotation.create'),
-      delete: createAPICall($http, links, 'annotation.delete'),
-      get: createAPICall($http, links, 'annotation.read'),
-      update: createAPICall($http, links, 'annotation.update'),
+      create: createAPICall($http, links, 'annotation.create', authToken),
+      delete: createAPICall($http, links, 'annotation.delete', authToken),
+      get: createAPICall($http, links, 'annotation.read', authToken),
+      update: createAPICall($http, links, 'annotation.update', authToken),
     },
+    profile: createAPICall($http, links, 'profile', authToken),
   };
 }
 

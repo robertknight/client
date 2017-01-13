@@ -12,7 +12,7 @@ function getExistingAnnotation(annotationUI, id) {
 
 // Wraps the annotation store to trigger events for the CRUD actions
 // @ngInject
-function annotationMapper($rootScope, annotationUI, store) {
+function annotationMapper($rootScope, annotationService, annotationUI) {
   function loadAnnotations(annotations, replies) {
     annotations = annotations.concat(replies || []);
 
@@ -46,7 +46,7 @@ function annotationMapper($rootScope, annotationUI, store) {
   }
 
   function deleteAnnotation(annotation) {
-    return store.annotation.delete({
+    return annotationService.api.annotation.delete({
       id: annotation.id,
     }).then(function () {
       $rootScope.$broadcast(events.ANNOTATION_DELETED, annotation);

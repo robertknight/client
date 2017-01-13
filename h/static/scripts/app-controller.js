@@ -24,7 +24,7 @@ function authStateFromUserID(userid) {
 // @ngInject
 module.exports = function AppController(
   $document, $location, $rootScope, $route, $scope,
-  $window, annotationUI, auth, drafts, features, frameSync, groups,
+  $window, annotationUI, annotationService, drafts, features, frameSync, groups,
   serviceUrl, session, settings, streamer
 ) {
 
@@ -132,7 +132,7 @@ module.exports = function AppController(
     });
     drafts.discard();
     $scope.accountDialog.visible = false;
-    auth.logout();
+    annotationService.logout();
   };
 
   $scope.clearSelection = function () {

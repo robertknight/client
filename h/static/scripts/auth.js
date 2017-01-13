@@ -112,7 +112,7 @@ function authService(flash, session) {
    * @return {Promise<void>} - A promise for when logout has completed.
    */
   function logout() {
-    return session.logout({}).$promise
+    return session.logout()
       .then(function() {
         clearCache();
       })

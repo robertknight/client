@@ -79,15 +79,6 @@ function configureRoutes($routeProvider) {
 }
 
 // @ngInject
-function configureHttp($httpProvider, jwtInterceptorProvider) {
-  // Use the Pyramid XSRF header name
-  $httpProvider.defaults.xsrfHeaderName = 'X-CSRF-Token';
-  // Setup JWT tokens for API requests
-  $httpProvider.interceptors.push('jwtInterceptor');
-  jwtInterceptorProvider.tokenGetter = require('./auth').tokenGetter;
-}
-
-// @ngInject
 function setupHttp($http, streamer) {
   $http.defaults.headers.common['X-Client-Id'] = streamer.clientId;
 }
@@ -160,8 +151,8 @@ module.exports = angular.module('h', [
   .directive('windowScroll', require('./directive/window-scroll'))
 
   .service('annotationMapper', require('./annotation-mapper'))
+  .service('annotationService', require('./annotation-service'))
   .service('annotationUI', require('./annotation-ui'))
-  .service('auth', require('./auth').service)
   .service('bridge', require('./bridge'))
   .service('drafts', require('./drafts'))
   .service('features', require('./features'))
@@ -183,8 +174,6 @@ module.exports = angular.module('h', [
   .service('unicode', require('./unicode'))
   .service('viewFilter', require('./view-filter'))
 
-  .factory('store', require('./store'))
-
   .value('Discovery', require('./discovery'))
   .value('ExcerptOverflowMonitor', require('./directive/excerpt-overflow-monitor'))
   .value('VirtualThreadList', require('./virtual-thread-list'))
@@ -193,7 +182,6 @@ module.exports = angular.module('h', [
   .value('time', require('./time'))
   .value('urlEncodeFilter', require('./filter/url').encode)
 
-  .config(configureHttp)
   .config(configureLocation)
   .config(configureRoutes)
 
