@@ -213,7 +213,6 @@ module.exports = angular.module('h', [
   .service('apiRoutes', require('./api-routes'))
   .service('auth', authService)
   .service('bridge', require('../shared/bridge'))
-  .service('drafts', require('./drafts'))
   .service('features', require('./features'))
   .service('flash', require('./flash'))
   .service('formRespond', require('./form-respond'))
