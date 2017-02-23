@@ -18,6 +18,7 @@
  */
 
 var annotations = require('./annotations');
+var drafts = require('./drafts');
 var frames = require('./frames');
 var links = require('./links');
 var selection = require('./selection');
@@ -29,6 +30,7 @@ function init(settings) {
   return Object.assign(
     {},
     annotations.init(),
+    drafts.init(),
     frames.init(),
     links.init(),
     selection.init(settings),
@@ -39,6 +41,7 @@ function init(settings) {
 
 var update = util.createReducer(Object.assign(
   annotations.update,
+  drafts.update,
   frames.update,
   links.update,
   selection.update,

@@ -38,6 +38,7 @@ var thunk = require('redux-thunk').default;
 
 var reducers = require('./reducers');
 var annotationsReducer = require('./reducers/annotations');
+var draftsReducer = require('./reducers/drafts');
 var framesReducer = require('./reducers/frames');
 var linksReducer = require('./reducers/links');
 var selectionReducer = require('./reducers/selection');
@@ -95,6 +96,7 @@ module.exports = function ($rootScope, settings) {
   //
   var actions = redux.bindActionCreators(Object.assign({},
     annotationsReducer.actions,
+    draftsReducer.actions,
     framesReducer.actions,
     linksReducer.actions,
     selectionReducer.actions,
@@ -111,6 +113,7 @@ module.exports = function ($rootScope, settings) {
   //   annotationUI.isAnnotationSelected(id)
   var selectors = util.bindSelectors(Object.assign({},
     annotationsReducer.selectors,
+    draftsReducer.selectors,
     framesReducer.selectors,
     linksReducer.selectors,
     selectionReducer.selectors,
