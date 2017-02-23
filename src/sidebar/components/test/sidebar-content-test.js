@@ -43,7 +43,6 @@ describe('sidebar.components.sidebar-content', function () {
   var ctrl;
   var fakeAnalytics;
   var fakeAnnotationMapper;
-  var fakeDrafts;
   var fakeFeatures;
   var fakeFrameSync;
   var fakeGroups;
@@ -86,10 +85,6 @@ describe('sidebar.components.sidebar-content', function () {
       scrollToAnnotation: sinon.stub(),
     };
 
-    fakeDrafts = {
-      unsaved: sandbox.stub().returns([]),
-    };
-
     fakeFeatures = {
       flagEnabled: sandbox.stub().returns(true),
     };
@@ -121,7 +116,6 @@ describe('sidebar.components.sidebar-content', function () {
 
     $provide.value('analytics', fakeAnalytics);
     $provide.value('annotationMapper', fakeAnnotationMapper);
-    $provide.value('drafts', fakeDrafts);
     $provide.value('features', fakeFeatures);
     $provide.value('frameSync', fakeFrameSync);
     $provide.value('rootThread', fakeRootThread);
@@ -369,7 +363,9 @@ describe('sidebar.components.sidebar-content', function () {
       // annotations loaded.
       annotationUI.addAnnotations([{id: '123'}]);
       annotationUI.addAnnotations = sinon.stub();
-      fakeDrafts.unsaved.returns([{id: uri + '123'}, {id: uri + '456'}]);
+      annotationUI.unsavedDrafts = sinon.stub().returns([
+        {id: uri + '123'}, {id: uri + '456'},
+      ]);
       setFrames([{uri: uri}]);
       $scope.$digest();
     });

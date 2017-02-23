@@ -1,6 +1,7 @@
 'use strict';
 
 var buildThread = require('./build-thread');
+var isDraftEmpty = require('./reducers/drafts').isDraftEmpty;
 var events = require('./events');
 var memoize = require('./util/memoize');
 var metadata = require('./annotation-metadata');
@@ -40,7 +41,7 @@ var sortFns = {
  * The root thread is then displayed by viewer.html
  */
 // @ngInject
-function RootThread($rootScope, annotationUI, drafts, searchFilter, viewFilter) {
+function RootThread($rootScope, annotationUI, searchFilter, viewFilter) {
 
   /**
    * Build the root conversation thread from the given UI state.
@@ -87,9 +88,10 @@ function RootThread($rootScope, annotationUI, drafts, searchFilter, viewFilter) 
 
   function deleteNewAndEmptyAnnotations() {
     annotationUI.getState().annotations.filter(function (ann) {
-      return metadata.isNew(ann) && !drafts.getIfNotEmpty(ann);
+      var draft = annotationUI.getDraft(ann);
+      return metadata.isNew(ann) && isDraftEmpty(draft);
     }).forEach(function (ann) {
-      drafts.remove(ann);
+      annotationUI.removeDraft(ann);
       $rootScope.$broadcast(events.ANNOTATION_DELETED, ann);
     });
   }

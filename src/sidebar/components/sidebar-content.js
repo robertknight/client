@@ -33,7 +33,7 @@ function groupIDFromSelection(selection, results) {
 
 // @ngInject
 function SidebarContentController(
-  $scope, analytics, annotationUI, annotationMapper, drafts, features, frameSync,
+  $scope, analytics, annotationUI, annotationMapper, features, frameSync,
   groups, rootThread, settings, streamer, streamFilter, store
 ) {
   var self = this;
