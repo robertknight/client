@@ -2,8 +2,8 @@
 
 var angular = require('angular');
 
-var util = require('./util');
-var excerpt = require('../excerpt');
+var util = require('../directive/test/util');
+var excerpt = require('./excerpt');
 
 describe('excerpt', function () {
   // ExcerptOverflowMonitor fake instance created by the current test
