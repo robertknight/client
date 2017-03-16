@@ -34,7 +34,7 @@ module.exports = function AppController(
   // When the controller instantiates we do not yet know if the user is
   // logged-in or not, so it has an initial status of 'unknown'. This can be
   // used by templates to show an intermediate or loading state.
-  $scope.auth = {status: 'unknown'};
+  this.auth = {status: 'unknown'};
 
   // Allow all child scopes to look up feature flags as:
   //
@@ -45,33 +45,35 @@ module.exports = function AppController(
   $scope.session = session;
 
   // App dialogs
-  $scope.accountDialog = {visible: false};
-  $scope.shareDialog = {visible: false};
-  $scope.helpPanel = {visible: false};
+  this.accountDialog = {visible: false};
+  this.shareDialog = {visible: false};
+  this.helpPanel = {visible: false};
 
   // Check to see if we're in the sidebar, or on a standalone page such as
   // the stream page or an individual annotation page.
-  $scope.isSidebar = $window.top !== $window;
-  if ($scope.isSidebar) {
+  this.isSidebar = $window.top !== $window;
+  if (this.isSidebar) {
     frameSync.connect();
   }
 
-  $scope.serviceUrl = serviceUrl;
+  this.serviceUrl = serviceUrl;
 
-  $scope.sortKey = function () {
+  this.sortKey = function () {
     return annotationUI.getState().sortKey;
   };
 
-  $scope.sortKeysAvailable = function () {
+  this.sortKeysAvailable = function () {
     return annotationUI.getState().sortKeysAvailable;
   };
 
-  $scope.setSortKey = annotationUI.setSortKey;
+  this.setSortKey = annotationUI.setSortKey;
+
+  var self = this;
 
   // Reload the view when the user switches accounts
   $scope.$on(events.USER_CHANGED, function (event, data) {
-    $scope.auth = authStateFromUserID(data.userid);
-    $scope.accountDialog.visible = false;
+    self.auth = authStateFromUserID(data.userid);
+    self.accountDialog.visible = false;
 
     if (!data || !data.initialLoad) {
       $route.reload();
@@ -82,10 +84,10 @@ module.exports = function AppController(
     // When the authentication status of the user is known,
     // update the auth info in the top bar and show the login form
     // after first install of the extension.
-    $scope.auth = authStateFromUserID(state.userid);
+    self.auth = authStateFromUserID(state.userid);
 
     if (!state.userid && settings.openLoginForm) {
-      $scope.login();
+      self.login();
     }
   });
 
@@ -99,19 +101,19 @@ module.exports = function AppController(
   }
 
   // Start the login flow. This will present the user with the login dialog.
-  $scope.login = function () {
+  this.login = function () {
     if (serviceConfig(settings)) {
       bridge.call(bridgeEvents.DO_LOGIN);
       return;
     }
 
-    $scope.accountDialog.visible = true;
+    self.accountDialog.visible = true;
     scrollToView('login-form');
   };
 
   // Display the dialog for sharing the current page
-  $scope.share = function () {
-    $scope.shareDialog.visible = true;
+  this.share = function () {
+    self.shareDialog.visible = true;
     scrollToView('share-dialog');
   };
 
@@ -130,7 +132,7 @@ module.exports = function AppController(
   };
 
   // Log the user out.
-  $scope.logout = function () {
+  this.logout = function () {
     if (!promptToLogout()) {
       return;
     }
@@ -138,11 +140,11 @@ module.exports = function AppController(
       $rootScope.$emit(events.ANNOTATION_DELETED, draft);
     });
     drafts.discard();
-    $scope.accountDialog.visible = false;
+    self.accountDialog.visible = false;
     session.logout();
   };
 
-  $scope.clearSelection = function () {
+  this.clearSelection = function () {
     var selectedTab = annotationUI.getState().selectedTab;
     if (!annotationUI.getState().selectedTab || annotationUI.getState().selectedTab === uiConstants.TAB_ORPHANS) {
       selectedTab = uiConstants.TAB_ANNOTATIONS;
@@ -152,7 +154,7 @@ module.exports = function AppController(
     annotationUI.selectTab(selectedTab);
   };
 
-  $scope.search = {
+  this.search = {
     query: function () {
       return annotationUI.getState().filterQuery;
     },
@@ -161,6 +163,6 @@ module.exports = function AppController(
     },
   };
 
-  $scope.countPendingUpdates = streamer.countPendingUpdates;
-  $scope.applyPendingUpdates = streamer.applyPendingUpdates;
+  this.countPendingUpdates = streamer.countPendingUpdates;
+  this.applyPendingUpdates = streamer.applyPendingUpdates;
 };
