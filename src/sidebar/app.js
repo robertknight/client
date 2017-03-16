@@ -140,6 +140,7 @@ module.exports = angular.module('h', [
   .component('annotationShareDialog', require('./components/annotation-share-dialog'))
   .component('annotationThread', require('./components/annotation-thread'))
   .component('dropdownMenuBtn', require('./components/dropdown-menu-btn'))
+  .component('groupList', require('./directive/group-list').component)
   .component('helpLink', require('./components/help-link'))
   .component('helpPanel', require('./components/help-panel'))
   .component('loggedoutMessage', require('./components/loggedout-message'))
@@ -159,7 +160,6 @@ module.exports = angular.module('h', [
   .component('topBar', require('./components/top-bar'))
 
   // These should use `component()` but will require some changes.
-  .directive('groupList', require('./directive/group-list').directive)
   .directive('markdown', require('./directive/markdown'))
 
   .directive('excerpt', require('./directive/excerpt').directive)
