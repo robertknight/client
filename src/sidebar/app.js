@@ -156,11 +156,11 @@ module.exports = angular.module('h', [
   .component('tagEditor', require('./components/tag-editor'))
   .component('threadList', require('./components/thread-list'))
   .component('timestamp', require('./components/timestamp'))
+  .component('topBar', require('./directive/top-bar'))
 
   // These should use `component()` but will require some changes.
   .directive('groupList', require('./directive/group-list').directive)
   .directive('markdown', require('./directive/markdown'))
-  .directive('topBar', require('./directive/top-bar'))
 
   .directive('excerpt', require('./directive/excerpt').directive)
   .directive('formInput', require('./directive/form-input'))
