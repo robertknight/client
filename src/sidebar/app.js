@@ -146,6 +146,7 @@ module.exports = angular.module('h', [
   .component('loggedoutMessage', require('./components/loggedout-message'))
   .component('loginControl', require('./components/login-control'))
   .component('loginForm', require('./components/login-form').component)
+  .component('markdown', require('./directive/markdown'))
   .component('publishAnnotationBtn', require('./components/publish-annotation-btn'))
   .component('searchInput', require('./components/search-input'))
   .component('searchStatusBar', require('./components/search-status-bar'))
@@ -158,9 +159,6 @@ module.exports = angular.module('h', [
   .component('threadList', require('./components/thread-list'))
   .component('timestamp', require('./components/timestamp'))
   .component('topBar', require('./components/top-bar'))
-
-  // These should use `component()` but will require some changes.
-  .directive('markdown', require('./directive/markdown'))
 
   .directive('excerpt', require('./directive/excerpt').directive)
   .directive('formInput', require('./directive/form-input'))

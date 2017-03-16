@@ -41,7 +41,7 @@ describe('markdown', function () {
 
   before(function () {
     angular.module('app', ['ngSanitize'])
-      .directive('markdown', proxyquire('../markdown', noCallThru({
+      .component('markdown', proxyquire('../markdown', noCallThru({
         angular: angular,
         katex: {
           renderToString: function (input) {
