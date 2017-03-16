@@ -133,7 +133,7 @@ module.exports = angular.module('h', [
   .controller('WidgetController', require('./widget-controller'))
 
   // The root component for the application
-  .component('hypothesisApp', require('./directive/app'))
+  .component('hypothesisApp', require('./components/hypothesis-app'))
 
   // UI components
   .component('annotation', require('./components/annotation').component)
