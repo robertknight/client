@@ -1,5 +1,5 @@
 <top-bar
-  auth="vm.auth"
+  auth="vm.auth()"
   on-login="vm.login()"
   on-logout="vm.logout()"
   on-share-page="vm.share()"
@@ -13,7 +13,7 @@
   on-change-sort-key="vm.setSortKey(sortKey)">
 </top-bar>
 
-<div class="create-account-banner" ng-if="vm.isSidebar && vm.auth.status === 'logged-out'" ng-cloak>
+<div class="create-account-banner" ng-if="vm.isSidebar && vm.auth().status === 'logged-out'" ng-cloak>
   To annotate this document
   <a href="{{ vm.serviceUrl('signup') }}" target="_blank">
     create a free account
@@ -33,7 +33,7 @@
   </share-dialog>
   <help-panel ng-if="vm.helpPanel.visible"
     on-close="vm.helpPanel.visible = false"
-    auth="vm.auth">
+    auth="vm.auth()">
   </help-panel>
   <main ng-view=""></main>
 </div>

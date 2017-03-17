@@ -202,6 +202,8 @@ module.exports = function WidgetController(
     }
   }
 
+  $scope.auth = annotationUI.authStatus;
+
   $scope.$on('sidebarOpened', function () {
 
     analytics.track(analytics.events.SIDEBAR_OPENED);

@@ -177,56 +177,6 @@ describe('AppController', function () {
     assert.notCalled(fakeFrameSync.connect);
   });
 
-  it('auth.status is "unknown" on startup', function () {
-    createController();
-    assert.equal($scope.auth.status, 'unknown');
-  });
-
-  it('sets auth.status to "logged-out" if userid is null', function () {
-    createController();
-    return fakeSession.load().then(function () {
-      assert.equal($scope.auth.status, 'logged-out');
-    });
-  });
-
-  it('sets auth.status to "logged-in" if userid is non-null', function () {
-    fakeSession.load = function () {
-      return Promise.resolve({userid: 'acct:jim@hypothes.is'});
-    };
-    createController();
-    return fakeSession.load().then(function () {
-      assert.equal($scope.auth.status, 'logged-in');
-    });
-  });
-
-  it('sets userid, username, and provider properties at login', function () {
-    fakeSession.load = function () {
-      return Promise.resolve({userid: 'acct:jim@hypothes.is'});
-    };
-    createController();
-    return fakeSession.load().then(function () {
-      assert.equal($scope.auth.userid, 'acct:jim@hypothes.is');
-      assert.equal($scope.auth.username, 'jim');
-      assert.equal($scope.auth.provider, 'hypothes.is');
-    });
-  });
-
-  it('updates auth when the logged-in user changes', function () {
-    createController();
-    return fakeSession.load().then(function () {
-      $scope.$broadcast(events.USER_CHANGED, {
-        initialLoad: false,
-        userid: 'acct:john@hypothes.is',
-      });
-      assert.deepEqual($scope.auth, {
-        status: 'logged-in',
-        userid: 'acct:john@hypothes.is',
-        username: 'john',
-        provider: 'hypothes.is',
-      });
-    });
-  });
-
   it('exposes the serviceUrl on the scope', function () {
     createController();
     assert.equal($scope.serviceUrl, fakeServiceUrl);

@@ -1,5 +1,7 @@
 'use strict';
 
+var parseAccountID = require('../filter/persona').parseAccountID;
+var memoize = require('../util/memoize');
 var util = require('./util');
 
 function init() {
@@ -60,6 +62,40 @@ function isFeatureEnabled(state, feature) {
   return !!state.session.features[feature];
 }
 
+/**
+ * @typedef AuthStatus
+ * @property {'unknown'|'logged-in'|'logged-out'} status
+ * @property {string?} userid - The full userid of the logged-in user
+ * @property {string?} username - The username part of the userid
+ * @property {string?} provider - The domain which 'owns' the username
+ */
+
+/**
+ * Return the authentication status of the user.
+ *
+ * @return {AuthStatus}
+ */
+function authStatus(state) {
+  // Check for the groups list being empty as a way to test whether the profile
+  // information has even been fetched or not.
+  if (state.session.groups.length === 0) {
+    return {status: 'unknown'};
+  }
+
+  var userid = state.session.userid;
+  if (userid) {
+    var parsed = parseAccountID(userid);
+    return {
+      status: 'logged-in',
+      userid: userid,
+      username: parsed.username,
+      provider: parsed.provider,
+    };
+  } else {
+    return {status: 'logged-out'};
+  }
+}
+
 module.exports = {
   init: init,
   update: update,
@@ -69,5 +105,9 @@ module.exports = {
   },
 
   // Selectors
+
+  // Memoized so that `authStatus` returns the same object for each call if the
+  // session is unchanged.
+  authStatus: memoize(authStatus),
   isFeatureEnabled: isFeatureEnabled,
 };

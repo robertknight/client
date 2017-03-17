@@ -3,25 +3,10 @@
 var scrollIntoView = require('scroll-into-view');
 
 var events = require('./events');
-var parseAccountID = require('./filter/persona').parseAccountID;
 var scopeTimeout = require('./util/scope-timeout');
 var uiConstants = require('./ui-constants');
 var serviceConfig = require('./service-config');
 var bridgeEvents = require('../shared/bridge-events');
-
-function authStateFromUserID(userid) {
-  if (userid) {
-    var parsed = parseAccountID(userid);
-    return {
-      status: 'logged-in',
-      userid: userid,
-      username: parsed.username,
-      provider: parsed.provider,
-    };
-  } else {
-    return {status: 'logged-out'};
-  }
-}
 
 // @ngInject
 module.exports = function AppController(
@@ -30,11 +15,7 @@ module.exports = function AppController(
   serviceUrl, session, settings, streamer
 ) {
 
-  // This stores information about the current user's authentication status.
-  // When the controller instantiates we do not yet know if the user is
-  // logged-in or not, so it has an initial status of 'unknown'. This can be
-  // used by templates to show an intermediate or loading state.
-  this.auth = {status: 'unknown'};
+  this.auth = annotationUI.authStatus;
 
   // App dialogs
   this.accountDialog = {visible: false};
@@ -64,7 +45,6 @@ module.exports = function AppController(
 
   // Reload the view when the user switches accounts
   $scope.$on(events.USER_CHANGED, function (event, data) {
-    self.auth = authStateFromUserID(data.userid);
     self.accountDialog.visible = false;
 
     if (!data || !data.initialLoad) {
@@ -73,11 +53,6 @@ module.exports = function AppController(
   });
 
   session.load().then(function (state) {
-    // When the authentication status of the user is known,
-    // update the auth info in the top bar and show the login form
-    // after first install of the extension.
-    self.auth = authStateFromUserID(state.userid);
-
     if (!state.userid && settings.openLoginForm) {
       self.login();
     }
