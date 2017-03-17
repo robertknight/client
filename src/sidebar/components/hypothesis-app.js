@@ -6,5 +6,5 @@ module.exports = {
   controller: AppController,
   controllerAs: 'vm',
   bindings: {},
-  template: require('../templates/app.html'),
+  template: require('../templates/hypothesis_app.html'),
 };
