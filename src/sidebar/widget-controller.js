@@ -339,4 +339,6 @@ module.exports = function WidgetController(
     annotationUI.clearSelectedAnnotations();
     annotationUI.selectTab(selectedTab);
   };
+
+  $scope.isSidebar = true;
 };

@@ -33,6 +33,8 @@ function AnnotationViewerController (
 
   var id = $routeParams.id;
 
+  $scope.isSidebar = false;
+
   // Provide no-ops until these methods are moved elsewere. They only apply
   // to annotations loaded into the stream.
   $scope.focus = angular.noop;

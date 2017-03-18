@@ -14,6 +14,7 @@ module.exports = class StreamController
      streamer,   streamFilter,   annotationMapper
   ) ->
     annotationUI.setAppIsSidebar(false)
+    $scope.isSidebar = false
 
     offset = 0
 
