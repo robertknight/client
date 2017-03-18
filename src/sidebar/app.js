@@ -43,15 +43,6 @@ if(settings.googleAnalytics){
   addAnalytics(settings.googleAnalytics);
 }
 
-// Fetch external state that the app needs before it can run. This includes the
-// authenticated user state, the API endpoint URLs and WebSocket connection.
-var resolve = {
-  // @ngInject
-  sessionState: function (session) {
-    return session.load();
-  },
-};
-
 // @ngInject
 function configureLocation($locationProvider) {
   // Use HTML5 history
@@ -60,13 +51,6 @@ function configureLocation($locationProvider) {
 
 // @ngInject
 function configureRoutes($routeProvider) {
-  $routeProvider.when('/stream',
-    {
-      controller: 'StreamController',
-      template: require('./templates/stream_content.html'),
-      reloadOnSearch: false,
-      resolve: resolve,
-    });
   $routeProvider.otherwise({
     controller: function () {},
     template: '',
@@ -118,8 +102,6 @@ module.exports = angular.module('h', [
   'ngRaven',
 ])
 
-  .controller('StreamController', require('./stream-controller'))
-
   // The root component for the application
   .component('hypothesisApp', require('./components/hypothesis-app'))
 
@@ -142,6 +124,7 @@ module.exports = angular.module('h', [
   .component('sidebarTutorial', require('./components/sidebar-tutorial').component)
   .component('shareDialog', require('./components/share-dialog'))
   .component('sortDropdown', require('./components/sort-dropdown'))
+  .component('streamContent', require('./components/stream-content'))
   .component('svgIcon', require('./components/svg-icon'))
   .component('tagEditor', require('./components/tag-editor'))
   .component('threadList', require('./components/thread-list'))

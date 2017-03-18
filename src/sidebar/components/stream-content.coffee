@@ -1,6 +1,6 @@
 angular = require('angular')
 
-module.exports = class StreamController
+class StreamContentController
   this.$inject = [
     '$scope', '$location', '$route', '$rootScope', '$routeParams',
     'annotationUI',
@@ -67,3 +67,9 @@ module.exports = class StreamController
 
     $scope.isStream = true
     $scope.loadMore = fetch
+
+module.exports = {
+  controller: StreamContentController,
+  controllerAs: 'vm',
+  template: require('../templates/stream_content.html'),
+  }

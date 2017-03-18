@@ -36,12 +36,9 @@
     auth="vm.auth()">
   </help-panel>
 
-  <main ng-if="vm.appType !== 'sidebar' && vm.appType !== 'annotation'"
-        ng-view="">
-  </main>
-
   <span ng-if="vm.hasFetchedProfile()">
     <annotation-viewer-content ng-if="vm.appType === 'annotation'"></annotation-viewer-content>
     <sidebar-content ng-if="vm.appType === 'sidebar'"></sidebar-content>
+    <stream-content ng-if="vm.appType === 'stream'"></stream-content>
   </span>
 </div>

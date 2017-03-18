@@ -27,7 +27,7 @@ describe 'StreamController', ->
 
   before ->
     angular.module('h', [])
-    .controller('StreamController', require('../stream-controller'))
+    .controller('StreamController', require('../stream-content'))
 
   beforeEach module('h')
 
