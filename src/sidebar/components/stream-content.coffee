@@ -31,26 +31,34 @@ class StreamContentController
       offset += rows.length
       annotationMapper.loadAnnotations(rows, replies)
 
+    connectStreamer = ->
+      # Initialize the base filter
+      streamFilter
+        .resetFilter()
+        .setMatchPolicyIncludeAll()
+
+      # Apply query clauses
+      terms = searchFilter.generateFacetedFilter $location.search().q
+      queryParser.populateFilter streamFilter, terms
+      streamer.setConfig('filter', {filter: streamFilter.getFilter()})
+      streamer.connect()
+
+    startFetch = ->
+      annotationUI.clearAnnotations()
+      offset = 0
+      fetch(20)
+      connectStreamer()
+
     # Reload on query change (ignore hash change)
     lastQuery = $location.search().q
     $scope.$on '$locationChangeSuccess', ->
-      if $location.search().q isnt lastQuery
-        annotationUI.clearAnnotations()
-        fetch(20)
-
-    # Initialize the base filter
-    streamFilter
-      .resetFilter()
-      .setMatchPolicyIncludeAll()
-
-    # Apply query clauses
-    terms = searchFilter.generateFacetedFilter $location.search().q
-    queryParser.populateFilter streamFilter, terms
-    streamer.setConfig('filter', {filter: streamFilter.getFilter()})
-    streamer.connect()
+      newQuery = $location.search().q
+      if newQuery isnt lastQuery
+        lastQuery = newQuery
+        startFetch()
 
     # Perform the initial search
-    fetch(20)
+    startFetch()
 
     $scope.setCollapsed = (id, collapsed) ->
       annotationUI.setCollapsed(id, collapsed)
