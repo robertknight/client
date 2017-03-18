@@ -7,6 +7,7 @@ var EventEmitter = require('tiny-emitter');
 
 var events = require('../events');
 var noCallThru = require('../../shared/test/util').noCallThru;
+var uiConstants = require('../ui-constants');
 
 var searchClients;
 function FakeSearchClient(searchFn, opts) {
@@ -470,6 +471,20 @@ describe('WidgetController', function () {
       });
       $scope.$digest();
       assert.equal($scope.visibleCount(), 2);
+    });
+  });
+
+  describe('#clearSelection', function () {
+    it('clears the selected annotations', function () {
+      annotationUI.clearSelectedAnnotations = sinon.stub();
+      $scope.clearSelection();
+      assert.called(annotationUI.clearSelectedAnnotations);
+    });
+
+    it('selects the Annotations tab if the Orphans tab was previously selected', function () {
+      annotationUI.selectTab(uiConstants.TAB_ORPHANS);
+      $scope.clearSelection();
+      assert.equal(annotationUI.getState().selectedTab, uiConstants.TAB_ANNOTATIONS);
     });
   });
 });
