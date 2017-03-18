@@ -26,7 +26,7 @@ function fetchThread(store, id) {
 
 // @ngInject
 function AnnotationViewerContentController (
-  $location, $scope,
+  $location,
   annotationUI, rootThread, streamer, store, streamFilter, annotationMapper
 ) {
   annotationUI.setAppIsSidebar(false);
@@ -34,17 +34,13 @@ function AnnotationViewerContentController (
   // Extract id from `/a/:id`
   var id = $location.path().split('/')[2];
 
-  $scope.isSidebar = false;
-
-  // Provide no-ops until these methods are moved elsewere. They only apply
-  // to annotations loaded into the stream.
-  $scope.focus = angular.noop;
+  var self = this;
 
   annotationUI.subscribe(function () {
-    $scope.rootThread = rootThread.thread(annotationUI.getState());
+    self.rootThread = rootThread.thread(annotationUI.getState());
   });
 
-  $scope.setCollapsed = function (id, collapsed) {
+  this.setCollapsed = function (id, collapsed) {
     annotationUI.setCollapsed(id, collapsed);
   };
 
