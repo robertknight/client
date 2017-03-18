@@ -7,8 +7,8 @@ class FakeRootThread extends EventEmitter
   constructor: () ->
     this.thread = sinon.stub()
 
-describe 'StreamController', ->
-  $controller = null
+describe 'StreamContentController', ->
+  $componentController = null
   $scope = null
   fakeAnnotationMapper = null
   fakeAnnotationUI = null
@@ -23,11 +23,11 @@ describe 'StreamController', ->
   sandbox = null
 
   createController = ->
-    $controller('StreamController', {$scope: $scope})
+    $componentController('streamContent', {$scope: $scope})
 
   before ->
     angular.module('h', [])
-    .controller('StreamController', require('../stream-content'))
+    .component('streamContent', require('../stream-content'))
 
   beforeEach module('h')
 
@@ -91,8 +91,8 @@ describe 'StreamController', ->
     $provide.value 'streamFilter', fakeStreamFilter
     return
 
-  beforeEach inject (_$controller_, $rootScope) ->
-    $controller = _$controller_
+  beforeEach inject (_$componentController_, $rootScope) ->
+    $componentController = _$componentController_
     $scope = $rootScope.$new()
 
   afterEach ->
