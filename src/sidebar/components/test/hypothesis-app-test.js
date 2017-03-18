@@ -3,7 +3,6 @@
 var angular = require('angular');
 var proxyquire = require('proxyquire');
 
-var events = require('../../events');
 var bridgeEvents = require('../../../shared/bridge-events');
 var util = require('../../../shared/test/util');
 
@@ -24,7 +23,6 @@ describe('HypothesisAppController', function () {
   var fakeServiceConfig = null;
   var fakeSession = null;
   var fakeGroups = null;
-  var fakeRoute = null;
   var fakeServiceUrl = null;
   var fakeSettings = null;
   var fakeStreamer = null;
@@ -107,8 +105,6 @@ describe('HypothesisAppController', function () {
 
     fakeGroups = {focus: sandbox.spy()};
 
-    fakeRoute = {reload: sandbox.spy()};
-
     fakeWindow = {
       top: {},
       confirm: sandbox.stub(),
@@ -190,20 +186,6 @@ describe('HypothesisAppController', function () {
   it('does not show the share dialog at start', function () {
     var ctrl = createController();
     assert.isFalse(ctrl.shareDialog.visible);
-  });
-
-  it('does not reload the view when the logged-in user changes on first load', function () {
-    createController();
-    fakeRoute.reload = sinon.spy();
-    $scope.$broadcast(events.USER_CHANGED, {initialLoad: true});
-    assert.notCalled(fakeRoute.reload);
-  });
-
-  it('reloads the view when the logged-in user changes after first load', function () {
-    createController();
-    fakeRoute.reload = sinon.spy();
-    $scope.$broadcast(events.USER_CHANGED, {initialLoad: false});
-    assert.calledOnce(fakeRoute.reload);
   });
 
   describe('#login()', function () {
