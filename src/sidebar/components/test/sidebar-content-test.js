@@ -57,10 +57,10 @@ describe('SidebarContentController', function () {
   before(function () {
     angular.module('h', [])
       .service('annotationUI', require('../../annotation-ui'))
-      .controller('WidgetController', proxyquire('../widget-controller',
+      .component('sidebarContent', proxyquire('../sidebar-content',
         noCallThru({
           angular: angular,
-          './search-client': FakeSearchClient,
+          '../search-client': FakeSearchClient,
         })
       ));
   });
@@ -136,14 +136,14 @@ describe('SidebarContentController', function () {
     annotationUI.frames.returns(frames);
   }
 
-  beforeEach(angular.mock.inject(function ($controller, _annotationUI_, _$rootScope_) {
+  beforeEach(angular.mock.inject(function ($componentController, _annotationUI_, _$rootScope_) {
     $rootScope = _$rootScope_;
     $scope = $rootScope.$new();
     $scope.auth = {'status': 'unknown'};
     annotationUI = _annotationUI_;
     annotationUI.frames = sinon.stub().returns([]);
     annotationUI.updateFrameAnnotationFetchStatus = sinon.stub();
-    $controller('WidgetController', {$scope: $scope});
+    $componentController('sidebarContent', {$scope: $scope});
   }));
 
   afterEach(function () {
