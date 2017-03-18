@@ -136,9 +136,7 @@ describe('HypothesisAppController', function () {
     $provide.value('bridge', fakeBridge);
     $provide.value('streamer', fakeStreamer);
     $provide.value('groups', fakeGroups);
-    $provide.value('$route', fakeRoute);
     $provide.value('$location', fakeLocation);
-    $provide.value('$routeParams', fakeParams);
     $provide.value('$window', fakeWindow);
   }));
 

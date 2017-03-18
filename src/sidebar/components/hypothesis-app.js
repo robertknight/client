@@ -9,7 +9,7 @@ var bridgeEvents = require('../../shared/bridge-events');
 
 // @ngInject
 function HypothesisAppController(
-  $document, $location, $rootScope, $route, $routeParams, $scope,
+  $document, $location, $rootScope, $scope,
   $window, annotationUI, auth, bridge, drafts, features, frameSync, groups,
   serviceUrl, session, settings, streamer
 ) {
@@ -46,13 +46,8 @@ function HypothesisAppController(
     return annotationUI.authStatus().status !== 'unknown';
   };
 
-  // Reload the view when the user switches accounts
-  $scope.$on(events.USER_CHANGED, function (event, data) {
+  $scope.$on(events.USER_CHANGED, function () {
     self.accountDialog.visible = false;
-
-    if (!data || !data.initialLoad) {
-      $route.reload();
-    }
   });
 
   session.load().then(function (state) {
@@ -130,7 +125,7 @@ function HypothesisAppController(
       if (self.appType === 'sidebar') {
         return annotationUI.getState().filterQuery;
       } else {
-        return $routeParams.q || '';
+        return $location.search().q || '';
       }
     },
     update: function (query) {

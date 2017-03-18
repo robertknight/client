@@ -2,13 +2,13 @@ angular = require('angular')
 
 class StreamContentController
   this.$inject = [
-    '$scope', '$location', '$route', '$rootScope', '$routeParams',
+    '$scope', '$location', '$rootScope',
     'annotationUI',
     'queryParser', 'rootThread', 'searchFilter', 'store',
     'streamer', 'streamFilter', 'annotationMapper'
   ]
   constructor: (
-     $scope,  $location,   $route,   $rootScope,   $routeParams
+     $scope, $location, $rootScope,
      annotationUI,
      queryParser,   rootThread,   searchFilter,   store,
      streamer,   streamFilter,   annotationMapper
@@ -20,7 +20,7 @@ class StreamContentController
 
     fetch = (limit) ->
       options = {offset, limit}
-      searchParams = searchFilter.toObject($routeParams.q)
+      searchParams = searchFilter.toObject($location.search().q)
       query = angular.extend(options, searchParams)
       query._separate_replies = true
       store.search(query)
@@ -32,11 +32,11 @@ class StreamContentController
       annotationMapper.loadAnnotations(rows, replies)
 
     # Reload on query change (ignore hash change)
-    lastQuery = $routeParams.q
-    $scope.$on '$routeUpdate', ->
-      if $routeParams.q isnt lastQuery
+    lastQuery = $location.search().q
+    $scope.$on '$locationChangeSuccess', ->
+      if $location.search().q isnt lastQuery
         annotationUI.clearAnnotations()
-        $route.reload()
+        fetch(20)
 
     # Initialize the base filter
     streamFilter
@@ -44,7 +44,7 @@ class StreamContentController
       .setMatchPolicyIncludeAll()
 
     # Apply query clauses
-    terms = searchFilter.generateFacetedFilter $routeParams.q
+    terms = searchFilter.generateFacetedFilter $location.search().q
     queryParser.populateFilter streamFilter, terms
     streamer.setConfig('filter', {filter: streamFilter.getFilter()})
     streamer.connect()

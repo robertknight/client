@@ -83,8 +83,6 @@ describe 'StreamController', ->
 
     $provide.value 'annotationMapper', fakeAnnotationMapper
     $provide.value 'annotationUI', fakeAnnotationUI
-    $provide.value '$route', fakeRoute
-    $provide.value '$routeParams', fakeParams
     $provide.value 'queryParser', fakeQueryParser
     $provide.value 'rootThread', fakeRootThread
     $provide.value 'searchFilter', fakeSearchFilter
@@ -119,18 +117,18 @@ describe 'StreamController', ->
         ['annotation_1', 'annotation_2'], ['reply_1', 'reply_2', 'reply_3']
 
 
-  describe 'on $routeUpdate', ->
+  describe 'on $locationChangeSuccess', ->
 
     it 'reloads the route when the query changes', ->
       fakeParams.q = 'test query'
       createController()
       fakeParams.q = 'new query'
-      $scope.$broadcast('$routeUpdate')
+      $scope.$broadcast('$locationChangeSuccess')
       assert.called(fakeAnnotationUI.clearAnnotations)
       assert.calledOnce(fakeRoute.reload)
 
     it 'does not reload the route when the query is the same', ->
       fakeParams.q = 'test query'
       createController()
-      $scope.$broadcast('$routeUpdate')
+      $scope.$broadcast('$locationChangeSuccess')
       assert.notCalled(fakeRoute.reload)
