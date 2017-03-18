@@ -1,10 +1,10 @@
 'use strict';
 
-var SearchClient = require('./search-client');
-var events = require('./events');
-var memoize = require('./util/memoize');
-var tabs = require('./tabs');
-var uiConstants = require('./ui-constants');
+var SearchClient = require('../search-client');
+var events = require('../events');
+var memoize = require('../util/memoize');
+var tabs = require('../tabs');
+var uiConstants = require('../ui-constants');
 
 function firstKey(object) {
   for (var k in object) {
@@ -32,7 +32,7 @@ function groupIDFromSelection(selection, results) {
 }
 
 // @ngInject
-module.exports = function WidgetController(
+function SidebarContentController(
   $scope, analytics, annotationUI, annotationMapper, drafts, features, frameSync,
   groups, rootThread, settings, streamer, streamFilter, store
 ) {
@@ -341,4 +341,10 @@ module.exports = function WidgetController(
   };
 
   $scope.isSidebar = true;
+}
+
+module.exports = {
+  controller: SidebarContentController,
+  controllerAs: 'vm',
+  template: require('../templates/sidebar_content.html'),
 };

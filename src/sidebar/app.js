@@ -75,10 +75,9 @@ function configureRoutes($routeProvider) {
       resolve: resolve,
     });
   $routeProvider.otherwise({
-    controller: 'WidgetController',
-    template: require('./templates/sidebar_content.html'),
+    controller: function () {},
+    template: '',
     reloadOnSearch: false,
-    resolve: resolve,
   });
 }
 
@@ -128,7 +127,6 @@ module.exports = angular.module('h', [
 
   .controller('AnnotationViewerController', require('./annotation-viewer-controller'))
   .controller('StreamController', require('./stream-controller'))
-  .controller('WidgetController', require('./widget-controller'))
 
   // The root component for the application
   .component('hypothesisApp', require('./components/hypothesis-app'))
@@ -147,6 +145,7 @@ module.exports = angular.module('h', [
   .component('searchInput', require('./components/search-input'))
   .component('searchStatusBar', require('./components/search-status-bar'))
   .component('selectionTabs', require('./components/selection-tabs'))
+  .component('sidebarContent', require('./components/sidebar-content'))
   .component('sidebarTutorial', require('./components/sidebar-tutorial').component)
   .component('shareDialog', require('./components/share-dialog'))
   .component('sortDropdown', require('./components/sort-dropdown'))

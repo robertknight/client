@@ -5,9 +5,9 @@ var inherits = require('inherits');
 var proxyquire = require('proxyquire');
 var EventEmitter = require('tiny-emitter');
 
-var events = require('../events');
-var noCallThru = require('../../shared/test/util').noCallThru;
-var uiConstants = require('../ui-constants');
+var events = require('../../events');
+var noCallThru = require('../../../shared/test/util').noCallThru;
+var uiConstants = require('../../ui-constants');
 
 var searchClients;
 function FakeSearchClient(searchFn, opts) {
@@ -37,7 +37,7 @@ function FakeRootThread() {
 }
 inherits(FakeRootThread, EventEmitter);
 
-describe('WidgetController', function () {
+describe('SidebarContentController', function () {
   var $rootScope;
   var $scope;
   var annotationUI;
@@ -56,7 +56,7 @@ describe('WidgetController', function () {
 
   before(function () {
     angular.module('h', [])
-      .service('annotationUI', require('../annotation-ui'))
+      .service('annotationUI', require('../../annotation-ui'))
       .controller('WidgetController', proxyquire('../widget-controller',
         noCallThru({
           angular: angular,
