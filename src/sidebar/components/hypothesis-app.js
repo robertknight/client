@@ -10,7 +10,7 @@ var bridgeEvents = require('../../shared/bridge-events');
 
 // @ngInject
 function HypothesisAppController(
-  $document, $location, $rootScope, $route, $scope,
+  $document, $location, $rootScope, $route, $routeParams, $scope,
   $window, annotationUI, auth, bridge, drafts, features, frameSync, groups,
   serviceUrl, session, settings, streamer
 ) {
@@ -121,12 +121,31 @@ function HypothesisAppController(
     annotationUI.selectTab(selectedTab);
   };
 
+  // This duplicates the router's pattern-matching, but the router will soon be
+  // removed in favor of just instantiating the appropriate content component
+  // depending on the app mode.
+  if ($location.path() === '/stream') {
+    this.appType = 'stream';
+  } else if ($location.path().match(/\/a\/.*/)) {
+    this.appType = 'annotation';
+  } else {
+    this.appType = 'sidebar';
+  }
+
   this.search = {
     query: function () {
-      return annotationUI.getState().filterQuery;
+      if (self.appType === 'sidebar') {
+        return annotationUI.getState().filterQuery;
+      } else {
+        return $routeParams.q || '';
+      }
     },
     update: function (query) {
-      annotationUI.setFilterQuery(query);
+      if (self.appType === 'sidebar') {
+        annotationUI.setFilterQuery(query);
+      } else {
+        $location.path('/stream').search('q', query);
+      }
     },
   };
 

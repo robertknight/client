@@ -57,11 +57,6 @@ module.exports = class StreamController
     $scope.forceVisible = (id) ->
       annotationUI.setForceVisible(id, true)
 
-    Object.assign $scope.search, {
-      query: -> $routeParams.q || ''
-      update: (q) -> $location.search({q: q})
-    }
-
     annotationUI.subscribe( ->
       $scope.rootThread = rootThread.thread(annotationUI.getState())
     );

@@ -1,5 +1,5 @@
 <selection-tabs
-  ng-if="!search.query() && selectedAnnotationCount() === 0"
+  ng-if="!filterQuery() && selectedAnnotationCount() === 0"
   is-waiting-to-anchor-annotations="waitingToAnchorAnnotations"
   is-loading="isLoading"
   selected-tab="selectedTab"
@@ -11,10 +11,10 @@
 <search-status-bar
   ng-show="!isLoading()"
   ng-if="!isStream"
-  filter-active="!!search.query()"
+  filter-active="!!filterQuery()"
   filter-match-count="visibleCount()"
   on-clear-selection="clearSelection()"
-  search-query="search ? search.query : ''"
+  filterQuery="filterQuery()"
   selection-count="selectedAnnotationCount()"
   total-count="topLevelThreadCount()"
   selected-tab="selectedTab"

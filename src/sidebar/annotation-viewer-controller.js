@@ -37,10 +37,6 @@ function AnnotationViewerController (
   // to annotations loaded into the stream.
   $scope.focus = angular.noop;
 
-  $scope.search.update = function (query) {
-    $location.path('/stream').search('q', query);
-  };
-
   annotationUI.subscribe(function () {
     $scope.rootThread = rootThread.thread(annotationUI.getState());
   });

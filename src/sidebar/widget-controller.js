@@ -324,4 +324,8 @@ module.exports = function WidgetController(
   $scope.topLevelThreadCount = function () {
     return thread().totalChildren;
   };
+
+  $scope.filterQuery = function () {
+    return annotationUI.getState().filterQuery || '';
+  };
 };

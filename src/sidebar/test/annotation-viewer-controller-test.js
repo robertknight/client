@@ -53,9 +53,7 @@ describe('AnnotationViewerController', function () {
     var locals = {
       $location: {},
       $routeParams: { id: 'test_annotation_id' },
-      $scope: {
-        search: {},
-      },
+      $scope: {},
       annotationUI: {
         setAppIsSidebar: sinon.stub(),
         setCollapsed: sinon.stub(),

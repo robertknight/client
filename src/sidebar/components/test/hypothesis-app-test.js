@@ -65,6 +65,7 @@ describe('HypothesisAppController', function () {
     fakeAnnotationUI = {
       tool: 'comment',
       clearSelectedAnnotations: sandbox.spy(),
+      getState: sandbox.stub().returns({}),
     };
 
     fakeAnalytics = {
@@ -93,6 +94,7 @@ describe('HypothesisAppController', function () {
     };
 
     fakeLocation = {
+      path: sandbox.stub().returns('/app.html'),
       search: sandbox.stub().returns({}),
     };
 
@@ -308,6 +310,70 @@ describe('HypothesisAppController', function () {
       ctrl.logout();
 
       assert.equal(fakeWindow.confirm.callCount, 0);
+    });
+  });
+
+  describe('#appType', function () {
+    it('is "sidebar" when the path is "/app.html"', function () {
+      fakeLocation.path.returns('/app.html');
+      var ctrl = createController();
+      assert.equal(ctrl.appType, 'sidebar');
+    });
+
+    it('is "annotation" when the path is "/a/:id"', function () {
+      fakeLocation.path.returns('/a/1234');
+      var ctrl = createController();
+      assert.equal(ctrl.appType, 'annotation');
+    });
+
+    it('is "stream" when the path is "/stream"', function () {
+      fakeLocation.path.returns('/stream');
+      var ctrl = createController();
+      assert.equal(ctrl.appType, 'stream');
+    });
+  });
+
+  describe('#search.query', function () {
+    it('returns the filter query in the sidebar', function () {
+      fakeLocation.path.returns('/app.html');
+      fakeAnnotationUI.getState.returns({ filterQuery: 'foo' });
+      var ctrl = createController();
+      assert.equal(ctrl.search.query(), 'foo');
+    });
+
+    it('returns the "q" route param otherwise', function () {
+      fakeLocation.path.returns('/stream');
+      fakeParams.q = 'bar';
+      var ctrl = createController();
+      assert.equal(ctrl.search.query(), 'bar');
+    });
+  });
+
+  describe('#search.update', function () {
+    it('sets the filter query in the sidebar', function () {
+      fakeLocation.path.returns('/app.html');
+      fakeAnnotationUI.setFilterQuery = sandbox.stub();
+
+      var ctrl = createController();
+      ctrl.search.update('wibble');
+
+      assert.calledWith(fakeAnnotationUI.setFilterQuery, 'wibble');
+    });
+
+    it('redirects to the stream and sets the "q" param otherwise', function () {
+      fakeLocation.path = sandbox.spy(function (path) {
+        if (path) {
+          return fakeLocation;
+        } else {
+          return '/stream';
+        }
+      });
+
+      var ctrl = createController();
+      ctrl.search.update('wibble');
+
+      assert.calledWith(fakeLocation.path, '/stream');
+      assert.calledWith(fakeLocation.search, 'q', 'wibble');
     });
   });
 });
