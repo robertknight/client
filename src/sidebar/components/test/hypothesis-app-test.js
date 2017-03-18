@@ -19,7 +19,6 @@ describe('HypothesisAppController', function () {
   var fakeFeatures = null;
   var fakeFrameSync = null;
   var fakeLocation = null;
-  var fakeParams = null;
   var fakeServiceConfig = null;
   var fakeSession = null;
   var fakeGroups = null;
@@ -95,8 +94,6 @@ describe('HypothesisAppController', function () {
       path: sandbox.stub().returns('/app.html'),
       search: sandbox.stub().returns({}),
     };
-
-    fakeParams = {id: 'test'};
 
     fakeSession = {
       load: sandbox.stub().returns(Promise.resolve({userid: null})),
@@ -321,9 +318,9 @@ describe('HypothesisAppController', function () {
       assert.equal(ctrl.search.query(), 'foo');
     });
 
-    it('returns the "q" route param otherwise', function () {
+    it('returns the "q" query param otherwise', function () {
       fakeLocation.path.returns('/stream');
-      fakeParams.q = 'bar';
+      fakeLocation.search.returns({q: 'bar'});
       var ctrl = createController();
       assert.equal(ctrl.search.query(), 'bar');
     });
