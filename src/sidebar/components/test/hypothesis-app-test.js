@@ -376,4 +376,18 @@ describe('HypothesisAppController', function () {
       assert.calledWith(fakeLocation.search, 'q', 'wibble');
     });
   });
+
+  describe('#hasFetchedProfile', function () {
+    it('is true if the auth state is known', function () {
+      fakeAnnotationUI.authStatus = sandbox.stub().returns({status: 'logged-in'});
+      var ctrl = createController();
+      assert.isTrue(ctrl.hasFetchedProfile());
+    });
+
+    it('is false if the auth state is not known', function () {
+      fakeAnnotationUI.authStatus = sandbox.stub().returns({status: 'unknown'});
+      var ctrl = createController();
+      assert.isFalse(ctrl.hasFetchedProfile());
+    });
+  });
 });

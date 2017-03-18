@@ -42,6 +42,10 @@ function HypothesisAppController(
 
   var self = this;
 
+  this.hasFetchedProfile = function () {
+    return annotationUI.authStatus().status !== 'unknown';
+  };
+
   // Reload the view when the user switches accounts
   $scope.$on(events.USER_CHANGED, function (event, data) {
     self.accountDialog.visible = false;

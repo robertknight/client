@@ -36,5 +36,8 @@
     auth="vm.auth()">
   </help-panel>
   <main ng-if="vm.appType !== 'sidebar'" ng-view=""></main>
-  <sidebar-content ng-if="vm.appType === 'sidebar'"></sidebar-content>
+
+  <span ng-if="vm.hasFetchedProfile()">
+    <sidebar-content ng-if="vm.appType === 'sidebar'"></sidebar-content>
+  </span>
 </div>
