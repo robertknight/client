@@ -1,7 +1,5 @@
 'use strict';
 
-var angular = require('angular');
-
 /**
  * Fetch all annotations in the same thread as `id`.
  *

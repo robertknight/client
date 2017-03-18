@@ -14,7 +14,6 @@ class StreamContentController
      streamer,   streamFilter,   annotationMapper
   ) ->
     annotationUI.setAppIsSidebar(false)
-    $scope.isSidebar = false
 
     offset = 0
 
@@ -73,7 +72,6 @@ class StreamContentController
     # Sort the stream so that the newest annotations are at the top
     annotationUI.setSortKey('Newest')
 
-    $scope.isStream = true
     $scope.loadMore = fetch
 
 module.exports = {
