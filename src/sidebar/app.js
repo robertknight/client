@@ -60,13 +60,6 @@ function configureLocation($locationProvider) {
 
 // @ngInject
 function configureRoutes($routeProvider) {
-  $routeProvider.when('/a/:id',
-    {
-      controller: 'AnnotationViewerController',
-      template: require('./templates/annotation_viewer_content.html'),
-      reloadOnSearch: false,
-      resolve: resolve,
-    });
   $routeProvider.when('/stream',
     {
       controller: 'StreamController',
@@ -125,7 +118,6 @@ module.exports = angular.module('h', [
   'ngRaven',
 ])
 
-  .controller('AnnotationViewerController', require('./annotation-viewer-controller'))
   .controller('StreamController', require('./stream-controller'))
 
   // The root component for the application
@@ -134,6 +126,7 @@ module.exports = angular.module('h', [
   // UI components
   .component('annotation', require('./components/annotation').component)
   .component('annotationShareDialog', require('./components/annotation-share-dialog'))
+  .component('annotationViewerContent', require('./components/annotation-viewer-content'))
   .component('annotationThread', require('./components/annotation-thread'))
   .component('dropdownMenuBtn', require('./components/dropdown-menu-btn'))
   .component('helpLink', require('./components/help-link'))

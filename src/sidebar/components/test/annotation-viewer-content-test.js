@@ -30,29 +30,32 @@ function FakeStore(annots) {
   };
 }
 
-describe('AnnotationViewerController', function () {
+describe('AnnotationViewerContentController', function () {
 
   before(function () {
     angular.module('h', [])
-      .controller('AnnotationViewerController',
-        require('../annotation-viewer-controller'));
+      .component('annotationViewerContent',
+        require('../annotation-viewer-content'));
   });
 
   beforeEach(angular.mock.module('h'));
 
-  // Return the $controller service from Angular.
+  // Return the $componentController service from Angular.
   function getControllerService() {
-    var $controller;
-    angular.mock.inject(function (_$controller_) {
-      $controller = _$controller_;
+    var $componentController;
+    angular.mock.inject(function (_$componentController_) {
+      $componentController = _$componentController_;
     });
-    return $controller;
+    return $componentController;
   }
 
   function createController(opts) {
     var locals = {
-      $location: {},
-      $routeParams: { id: 'test_annotation_id' },
+      $location: {
+        path: function () {
+          return '/a/test_annotation_id';
+        },
+      },
       $scope: {},
       annotationUI: {
         setAppIsSidebar: sinon.stub(),
@@ -82,7 +85,7 @@ describe('AnnotationViewerController', function () {
         loadAnnotations: sinon.spy(),
       },
     };
-    locals.ctrl = getControllerService()('AnnotationViewerController', locals);
+    locals.ctrl = getControllerService()('annotationViewerContent', locals);
     return locals;
   }
 

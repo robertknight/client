@@ -25,13 +25,14 @@ function fetchThread(store, id) {
 }
 
 // @ngInject
-function AnnotationViewerController (
-  $location, $routeParams, $scope,
+function AnnotationViewerContentController (
+  $location, $scope,
   annotationUI, rootThread, streamer, store, streamFilter, annotationMapper
 ) {
   annotationUI.setAppIsSidebar(false);
 
-  var id = $routeParams.id;
+  // Extract id from `/a/:id`
+  var id = $location.path().split('/')[2];
 
   $scope.isSidebar = false;
 
@@ -75,4 +76,8 @@ function AnnotationViewerController (
   });
 }
 
-module.exports = AnnotationViewerController;
+module.exports = {
+  controller: AnnotationViewerContentController,
+  controllerAs: 'vm',
+  template: require('../templates/annotation_viewer_content.html'),
+};

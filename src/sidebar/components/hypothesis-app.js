@@ -137,6 +137,8 @@ function HypothesisAppController(
       if (self.appType === 'sidebar') {
         annotationUI.setFilterQuery(query);
       } else {
+        // FIXME - Make this work when redirecting from annotation viewer to
+        // stream
         $location.path('/stream').search('q', query);
       }
     },
