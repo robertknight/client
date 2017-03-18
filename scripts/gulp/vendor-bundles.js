@@ -14,7 +14,6 @@ module.exports = {
       'angular',
       'angular-jwt',
       'angular-resource',
-      'angular-route',
       'angular-sanitize',
       'ng-tags-input',
       'angular-toastr',

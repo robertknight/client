@@ -43,19 +43,9 @@ if(settings.googleAnalytics){
   addAnalytics(settings.googleAnalytics);
 }
 
-// @ngInject
 function configureLocation($locationProvider) {
   // Use HTML5 history
   return $locationProvider.html5Mode(true);
-}
-
-// @ngInject
-function configureRoutes($routeProvider) {
-  $routeProvider.otherwise({
-    controller: function () {},
-    template: '',
-    reloadOnSearch: false,
-  });
 }
 
 // @ngInject
@@ -87,7 +77,6 @@ module.exports = angular.module('h', [
   // via module.exports
   require('angular-jwt'),
   require('angular-resource'),
-  require('angular-route'),
   require('angular-sanitize'),
   require('angular-toastr'),
 
@@ -182,7 +171,6 @@ module.exports = angular.module('h', [
 
   .config(configureHttp)
   .config(configureLocation)
-  .config(configureRoutes)
 
   .run(setupHttp);
 
