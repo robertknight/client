@@ -211,6 +211,7 @@ module.exports = angular.module('h', [
   .config(configureHttp)
   .config(configureLocation)
   .config(configureRoutes)
+  .config(require('./util/warn-on-undefined-expressions'))
 
   .run(setupHttp);
 
