@@ -1,7 +1,5 @@
 'use strict';
 
-require('../shared/polyfills');
-
 var Annotator = require('annotator');
 
 // Polyfills

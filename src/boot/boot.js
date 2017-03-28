@@ -1,5 +1,21 @@
 'use strict';
 
+/**
+ * Return a URL for a script which provides the polyfills required
+ * by the client in the current browser.
+ *
+ * See https://cdn.polyfill.io/v2/docs/.
+ */
+function polyfillUrl() {
+  // Features for which polyfills are needed.  See
+  // https://cdn.polyfill.io/v2/docs/features/
+  var features = [
+    'es6',
+    'URL',
+  ].join(',');
+  return 'https://cdn.polyfill.io/v2/polyfill.min.js?features=' + features;
+}
+
 function injectStylesheet(doc, href) {
   var link = doc.createElement('link');
   link.rel = 'stylesheet';
@@ -21,7 +37,14 @@ function injectScript(doc, src) {
 
 function injectAssets(doc, config, assets) {
   assets.forEach(function (path) {
-    var url = config.assetRoot + 'build/' + config.manifest[path];
+    var url;
+
+    if (path.indexOf('://') === -1) {
+      url = config.assetRoot + 'build/' + config.manifest[path];
+    } else {
+      url = path;
+    }
+
     if (url.match(/\.css/)) {
       injectStylesheet(doc, url);
     } else {
@@ -53,7 +76,7 @@ function bootHypothesisClient(doc, config) {
 
   injectAssets(doc, config, [
     // Vendor code and polyfills
-    'scripts/polyfills.bundle.js',
+    polyfillUrl(),
     'scripts/jquery.bundle.js',
 
     // Main entry point for the client
@@ -75,7 +98,7 @@ function bootSidebarApp(doc, config) {
     'scripts/angular.bundle.js',
     'scripts/katex.bundle.js',
     'scripts/showdown.bundle.js',
-    'scripts/polyfills.bundle.js',
+    polyfillUrl(),
     'scripts/unorm.bundle.js',
 
     // The sidebar app

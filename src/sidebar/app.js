@@ -1,7 +1,6 @@
 'use strict';
 
 var addAnalytics = require('./ga');
-require('../shared/polyfills');
 
 var raven;
 
