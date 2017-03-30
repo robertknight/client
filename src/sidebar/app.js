@@ -173,6 +173,7 @@ module.exports = angular.module('h', [
   .service('annotationUI', require('./annotation-ui'))
   .service('auth', authService)
   .service('bridge', require('../shared/bridge'))
+  .service('connectStore', require('./connect-store'))
   .service('drafts', require('./drafts'))
   .service('features', require('./features'))
   .service('flash', require('./flash'))
