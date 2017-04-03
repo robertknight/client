@@ -2,12 +2,22 @@
 
 // @ngInject
 function ModerationBannerController(annotationUI, flash, store) {
+  var self = this;
+
   this.flagCount = function () {
-    return annotationUI.flagCount(this.annotationId);
+    var moderation = self.annotation.moderation;
+    if (!moderation) {
+      return 0;
+    }
+    return moderation.flag_count;
   };
 
   this.isHidden = function () {
-    return annotationUI.isHiddenByModerator(this.annotationId);
+    var moderation = self.annotation.moderation;
+    if (!moderation) {
+      return 0;
+    }
+    return moderation.is_hidden;
   };
 
   /**
@@ -15,7 +25,7 @@ function ModerationBannerController(annotationUI, flash, store) {
    */
   this.hideAnnotation = function () {
     store.annotation.hide({id: this.annotationId}).then(function () {
-      annotationUI.annotationHiddenChanged(this.annotationId, true);
+      // TODO - Update the state of the annotation locally
     }).catch(function (err) {
       flash.error(err.message);
     });
@@ -26,6 +36,7 @@ function ModerationBannerController(annotationUI, flash, store) {
    */
   this.unhideAnnotation = function () {
     store.annotation.unhide({id: this.annotationId}).then(function () {
+      // TODO - Update the state of the annotation locally
       annotationUI.annotationHiddenChanged(this.annotationId, false);
     }).catch(function (err) {
       flash.error(err.message);
@@ -42,15 +53,7 @@ module.exports = {
   controller: ModerationBannerController,
   controllerAs: 'vm',
   bindings: {
-    /**
-     * The ID of the annotation whose moderation status the banner should
-     * reflect.
-     */
-    annotationId: '<',
-    /**
-     * `true` if this annotation is a reply.
-     */
-    isReply: '<',
+    annotation: '<',
   },
   template: require('../templates/moderation_banner.html'),
 };

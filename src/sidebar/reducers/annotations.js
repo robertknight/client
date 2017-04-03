@@ -162,6 +162,36 @@ var update = {
     });
     return {annotations: annotations};
   },
+
+  HIDE_ANNOTATION: function (state, action) {
+    var anns = state.annotations.map(function (ann) {
+      if (ann.id !== action.id) {
+        return ann;
+      }
+      var moderation = Object.assign({}, ann.moderation, {
+        is_hidden: true,
+      });
+      return Object.assign({}, ann, {
+        moderation: moderation,
+      });
+    });
+    return {annotations: anns};
+  },
+
+  UNHIDE_ANNOTATION: function (state, action) {
+    var anns = state.annotations.map(function (ann) {
+      if (ann.id !== action.id) {
+        return ann;
+      }
+      var moderation = Object.assign({}, ann.moderation, {
+        is_hidden: false,
+      });
+      return Object.assign({}, ann, {
+        moderation: moderation,
+      });
+    });
+    return {annotations: anns};
+  },
 };
 
 var actions = util.actionTypes(update);
