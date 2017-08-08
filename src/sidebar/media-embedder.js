@@ -101,6 +101,41 @@ function youTubeQueryParams(link) {
   }
   return query;
 }
+
+/**
+ * Return a sandboxed iframe.
+ *
+ * This is used when handling embeds from arbitrary URLs, which need to be
+ * locked down to minimize their ability to track users or otherwise cause a
+ * nuisance.
+ *
+ * @return {HTMLIFrameElement}
+ */
+function sandboxedIframe(src) {
+  // If no protocol is specified in the embed code, assume HTTPS.
+  if (src.startsWith('//')) {
+    src = 'https:' + src;
+  }
+
+  var iframe = document.createElement('iframe');
+  iframe.src = src;
+  iframe.frameBorder = '0';
+
+  // Let the iframe know that it was used from within Hypothesis, but don't
+  // include any query params that were used when initializing the sidebar.
+  iframe.referrerPolicy = 'origin';
+
+  // Allow scripts so that interactive games etc. can function.
+  //
+  // Unfortunately in some browsers "allow-same-origin" is required for web
+  // fonts to work 😞. However it also gives the iframe access to localStorage
+  // and cookies and hence tracking tools.
+  var sandboxTokens = ['allow-scripts', 'allow-same-origin'];
+  iframe.sandbox = sandboxTokens.join(' ');
+
+  return iframe;
+}
+
 /**
  * Return a YouTube embed (<iframe>) DOM element for the given video ID.
  */
@@ -122,6 +157,35 @@ function vimeoEmbed(id) {
  *
  */
 const embedGenerators = [
+  // Replace links tagged by `render-markdown` as originating from `<iframe>`
+  // tags with actual iframes.
+  //
+  // `render-markdown` converts `<iframe>` tags to links and we convert them
+  // back to iframes here. This is done for security reasons to ensure that
+  // all iframes are sandboxed and any attributes other than the `src` of the
+  // original iframe are not preserved.
+  //
+  // This generator appears first in the list so that it is applied before
+  // any other generator.
+  function iframeFromEmbed(link) {
+    if (link.classList.contains('js-embed')) {
+      var iframe = sandboxedIframe(link.href);
+      iframe.className = 'annotation-embed';
+
+      // This might be H5P content (https://h5p.org/).
+      // Load the resizer script which allows the iframe to dynamically resize
+      // to fit the height of its contents.
+      //
+      // Note that the resizer script requires the iframe's sandbox to include
+      // the "allow-same-origin" capability in Chrome in order to allow
+      // `postMessage`-based communication to work.
+      require('./vendor/h5p-resizer');
+
+      return iframe;
+    }
+    return null;
+  },
+
   // Matches URLs like https://www.youtube.com/watch?v=rw6oWkCojpw
   function iframeFromYouTubeWatchURL(link) {
     if (link.hostname !== 'www.youtube.com') {
@@ -263,7 +327,6 @@ const embedGenerators = [
  * return an embed DOM element (for example an <iframe>) for that media.
  *
  * Otherwise return undefined.
- *
  */
 function embedForLink(link) {
   let embed;
@@ -310,6 +373,7 @@ function replaceLinkWithEmbed(link) {
   ) {
     return;
   }
+
   const embed = embedForLink(link);
   if (embed) {
     link.parentElement.replaceChild(embed, link);

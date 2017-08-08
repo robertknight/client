@@ -114,4 +114,38 @@ describe('render-markdown', function() {
       );
     });
   });
+
+  describe('iframe tags ("embed codes")', () => {
+    [
+      {
+        url: 'https://h5p.org/h5p/embed/707',
+        linkHref: 'https://h5p.org/h5p/embed/707',
+        linkText: 'https://h5p.org/h5p/embed/707',
+      },
+      {
+        url: 'https://evil.org/<script',
+        linkHref: 'https://evil.org/%3Cscript',
+        linkText: 'https://evil.org/&lt;script',
+      },
+    ].forEach(({ url, linkHref, linkText }) => {
+      it('should convert `<iframe>` tags to links', () => {
+        const content = `
+          <iframe src="${url}"
+                  width="1090"
+                  height="232"
+                  frameborder="0"
+                  allowfullscreen="allowfullscreen"></iframe>`;
+
+        const rendered = render(content);
+
+        // Check that the `<iframe>` was stripped from the source and replaced
+        // with a link which preserves only the source and the fact that the
+        // link came from an iframe originally.
+        assert.equal(
+          rendered,
+          `<p><a class="js-embed" href="${linkHref}">${linkText}</a></p>`
+        );
+      });
+    });
+  });
 });

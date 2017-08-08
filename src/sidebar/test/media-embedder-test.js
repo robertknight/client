@@ -420,4 +420,31 @@ describe('media-embedder', function() {
       'https://www.youtube.com/embed/abcdefg'
     );
   });
+
+  it('replaces embed links with sandboxed iframes', () => {
+    var element = domElement(
+      '<a class="js-embed" href="https://h5p.org/activity/1234">https://h5p.org/activity/1234</a>'
+    );
+
+    mediaEmbedder.replaceLinksWithEmbeds(element);
+
+    var frame = element.querySelector('iframe');
+    assert.equal(frame.src, 'https://h5p.org/activity/1234');
+    assert.equal(
+      frame.getAttribute('sandbox'),
+      'allow-scripts allow-same-origin'
+    );
+  });
+
+  it('initializes H5P resizing support when a possibly-H5P embed link is found', () => {
+    var element = domElement(
+      '<a class="js-embed" href="https://h5p.org/activity/1234">https://h5p.org/activity/1234</a>'
+    );
+
+    mediaEmbedder.replaceLinksWithEmbeds(element);
+
+    // `h5pResizerInitialized` is a global variable set by the H5P iframe
+    // resizer vendor script in `vendor/h5p-resizer.js`.
+    assert.isTrue(window.h5pResizerInitialized);
+  });
 });

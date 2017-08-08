@@ -152,6 +152,11 @@
   height: 208px;
 }
 
+.annotation-embed {
+  width: 100%;
+  height: 320px;
+}
+
 .annotation-header__user {
   @include font-normal;
   color: $grey-7;
