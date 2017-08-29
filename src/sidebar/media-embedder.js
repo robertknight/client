@@ -1,5 +1,7 @@
 'use strict';
 
+var queryString = require('query-string');
+
 /**
 * Return an HTML5 audio player with the given src URL.
 */
@@ -32,6 +34,23 @@ function youTubeEmbed(id) {
 
 function vimeoEmbed(id) {
   return iframe('https://player.vimeo.com/video/' + id);
+}
+
+/**
+ * Generate a CNN video embed given the path extracted from a viewer page.
+ *
+ * @param {string} path - Article path. The part after 'videos/' in the URL of
+ *                        the viewer page.
+ */
+function cnnVideoEmbed(path) {
+  var url = new URL('https://fave.api.cnn.io/v1/fav/');
+  url.search = queryString.stringify({
+    customer: 'cnn',
+    edition: 'international',
+    video: path,
+    env: 'prod',
+  });
+  return iframe(url.href);
 }
 
 /**
@@ -104,6 +123,19 @@ var embedGenerators = [
   function html5audioFromMp3Link(link) {
     if (link.pathname.endsWith('.mp3') || link.pathname.endsWith('.ogg') || link.pathname.endsWith('.wav')) {
       return audioElement(link.href);
+    }
+    return null;
+  },
+
+  // Matches URLs like http://edition.cnn.com/videos/weather/2017/08/24/hurricane-harvey-latest.cnn
+  function iframeFromCnnVideoLink(link) {
+    if (!link.hostname.match(/\.cnn.com$/)) {
+      return null;
+    }
+
+    var groups = /videos\/(.*)/.exec(link.pathname);
+    if (groups) {
+      return cnnVideoEmbed(groups[1]);
     }
     return null;
   },
