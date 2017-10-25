@@ -396,9 +396,10 @@ module.exports = {
     unhideAnnotation: unhideAnnotation,
   },
 
-  // Selectors
-  annotationExists: annotationExists,
-  findAnnotationByID: findAnnotationByID,
-  findIDsForTags: findIDsForTags,
-  savedAnnotations: savedAnnotations,
+  selectors: {
+    annotationExists,
+    findAnnotationByID,
+    findIDsForTags,
+    savedAnnotations,
+  },
 };

@@ -93,7 +93,7 @@ module.exports = function ($rootScope, settings) {
   // You can use:
   //   annotationUI.addAnnotations(annotations)
   //
-  var actionCreators = redux.bindActionCreators(Object.assign({},
+  var actions = redux.bindActionCreators(Object.assign({},
     annotationsReducer.actions,
     framesReducer.actions,
     linksReducer.actions,
@@ -109,22 +109,14 @@ module.exports = function ($rootScope, settings) {
   //   selection.isAnnotationSelected(annotationUI.getState(), id)
   // You can use:
   //   annotationUI.isAnnotationSelected(id)
-  var selectors = util.bindSelectors({
-    isAnnotationSelected: selectionReducer.isAnnotationSelected,
-    hasSelectedAnnotations: selectionReducer.hasSelectedAnnotations,
+  var selectors = util.bindSelectors(Object.assign({},
+    annotationsReducer.selectors,
+    framesReducer.selectors,
+    linksReducer.selectors,
+    selectionReducer.selectors,
+    sessionReducer.selectors,
+    viewerReducer.selectors
+  ), store.getState);
 
-    annotationExists: annotationsReducer.annotationExists,
-    findIDsForTags: annotationsReducer.findIDsForTags,
-    savedAnnotations: annotationsReducer.savedAnnotations,
-
-    frames: framesReducer.frames,
-    searchUris: framesReducer.searchUris,
-
-    isSidebar: viewerReducer.isSidebar,
-
-    isFeatureEnabled: sessionReducer.isFeatureEnabled,
-    profile: sessionReducer.profile,
-  }, store.getState);
-
-  return Object.assign(store, actionCreators, selectors);
+  return Object.assign(store, actions, selectors);
 };

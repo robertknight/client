@@ -77,7 +77,8 @@ module.exports = {
     updateSession,
   },
 
-  // Selectors
-  isFeatureEnabled,
-  profile,
+  selectors: {
+    isFeatureEnabled,
+    profile,
+  },
 };

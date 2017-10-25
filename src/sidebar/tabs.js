@@ -14,7 +14,7 @@ var uiConstants = require('./ui-constants');
  * @param {object} state - The current application state.
  */
 function shouldSeparateOrphans(state) {
-  return session.isFeatureEnabled(state, 'orphans_tab');
+  return session.selectors.isFeatureEnabled(state, 'orphans_tab');
 }
 
 /**
