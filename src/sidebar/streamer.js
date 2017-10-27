@@ -274,6 +274,9 @@ function Streamer($rootScope, annotationMapper, annotationUI, auth,
     pendingDeletions = {};
   }
 
+  // TODO: Move pending updates to the app state and then implement this logic
+  // as part of the reducers that handle annotation update/delete/unload
+  // actions.
   var updateEvents = [
     events.ANNOTATION_DELETED,
     events.ANNOTATION_UPDATED,
@@ -283,7 +286,7 @@ function Streamer($rootScope, annotationMapper, annotationUI, auth,
   updateEvents.forEach(function (event) {
     $rootScope.$on(event, removePendingUpdates);
   });
-  $rootScope.$on(events.GROUP_FOCUSED, clearPendingUpdates);
+  annotationUI.watch(() => annotationUI.focusedGroup(), clearPendingUpdates);
 
   this.applyPendingUpdates = applyPendingUpdates;
   this.countPendingUpdates = countPendingUpdates;

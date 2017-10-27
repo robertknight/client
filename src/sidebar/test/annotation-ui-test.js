@@ -531,4 +531,14 @@ describe('annotationUI', function () {
       });
     });
   });
+
+  describe('#watch', () => {
+    it('invokes the callback when the watched value changes', () => {
+      // TODO
+    });
+
+    it('does not invoke the callback if the watched value remains the same', () => {
+      // TODO
+    });
+  });
 });

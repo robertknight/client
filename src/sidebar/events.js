@@ -21,11 +21,6 @@ module.exports = {
    */
   OAUTH_TOKENS_CHANGED: 'oauthTokensChanged',
 
-  // UI state changes
-
-  /** The currently selected group changed */
-  GROUP_FOCUSED: 'groupFocused',
-
   // Annotation events
 
   /** A new annotation has been created locally. */

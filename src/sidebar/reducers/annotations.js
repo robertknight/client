@@ -207,6 +207,18 @@ var update = {
     });
     return {annotations: anns};
   },
+
+  FOCUS_GROUP: (state, action) => {
+    // Move new annotations to current group when switching groups.
+    state.annotations.map(ann => {
+      if (!metadata.isNew(ann) || metadata.isReply(ann)) {
+        return ann;
+      }
+      return Object.assign(ann, {
+        group: action.id,
+      });
+    });
+  },
 };
 
 var actions = util.actionTypes(update);

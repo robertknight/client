@@ -13,29 +13,25 @@
 
 var STORAGE_KEY = 'hypothesis.groups.focus';
 
-var events = require('./events');
-
 // @ngInject
-function groups(localStorage, serviceUrl, session, $rootScope, store) {
-  // The currently focused group. This is the group that's shown as selected in
-  // the groups dropdown, the annotations displayed are filtered to only ones
-  // that belong to this group, and any new annotations that the user creates
-  // will be created in this group.
-  var focusedGroup;
+function groups(annotationUI, localStorage, serviceUrl, $rootScope, store) {
 
   function all() {
-    return session.state.groups || [];
+    return annotationUI.getState().groups;
   }
 
-  // Return the full object for the group with the given id.
+  /**
+   * Return the group with the given `id`.
+   */
   function get(id) {
-    var gs = all();
-    for (var i = 0, max = gs.length; i < max; i++) {
-      if (gs[i].id === id) {
-        return gs[i];
-      }
-    }
-    return null;
+    return annotationUI.getGroup(id);
+  }
+
+  /**
+   * Return the group that is currently focused in the drop-down menu.
+   */
+  function focused() {
+    return annotationUI.focusedGroup();
   }
 
   /**
@@ -52,54 +48,32 @@ function groups(localStorage, serviceUrl, session, $rootScope, store) {
     });
   }
 
-
-  /** Return the currently focused group. If no group is explicitly focused we
-   * will check localStorage to see if we have persisted a focused group from
-   * a previous session. Lastly, we fall back to the first group available.
-   */
-  function focused() {
-    if (focusedGroup) {
-      return focusedGroup;
-    }
-    var fromStorage = get(localStorage.getItem(STORAGE_KEY));
-    if (fromStorage) {
-      focusedGroup = fromStorage;
-      return focusedGroup;
-    }
-    return all()[0];
-  }
-
   /** Set the group with the passed id as the currently focused group. */
   function focus(id) {
-    var prevFocused = focused();
-    var g = get(id);
-    if (g) {
-      focusedGroup = g;
-      localStorage.setItem(STORAGE_KEY, g.id);
-      if (prevFocused.id !== g.id) {
-        $rootScope.$broadcast(events.GROUP_FOCUSED, g.id);
-      }
-    }
+    annotationUI.focusGroup(id);
+    localStorage.setItem(STORAGE_KEY, id);
   }
 
-  // reset the focused group if the user leaves it
-  $rootScope.$on(events.GROUPS_CHANGED, function () {
-    if (focusedGroup) {
-      focusedGroup = get(focusedGroup.id);
-      if (!focusedGroup) {
-        $rootScope.$broadcast(events.GROUP_FOCUSED, focused());
-      }
+  // When groups are loaded, focus the group that was last-focused in the
+  // previous session, if it exists.
+  annotationUI.watch(all, groups => {
+    var lastFocusedGroupId = localStorage.getItem(STORAGE_KEY);
+    if (lastFocusedGroupId === focused().id) {
+      return;
+    }
+
+    var group = groups.find(g => g.id === lastFocusedGroupId);
+    if (group) {
+      annotationUI.focusGroup(group.id);
     }
   });
 
   return {
-    all: all,
-    get: get,
-
-    leave: leave,
-
-    focused: focused,
-    focus: focus,
+    all,
+    get,
+    focused,
+    leave,
+    focus,
   };
 }
 

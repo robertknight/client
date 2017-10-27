@@ -31,6 +31,9 @@ function init() {
 
 var update = {
   UPDATE_SESSION: function (state, action) {
+    // TODO - Reset focused group if user leaves.
+    // TODO - Set focused group when groups are fetched.
+
     return {
       session: action.session,
     };

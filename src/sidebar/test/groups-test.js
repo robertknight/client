@@ -160,20 +160,6 @@ describe('groups', function() {
 
       assert.calledWithMatch(fakeLocalStorage.setItem, sinon.match.any, 'id3');
     });
-
-    it('emits the GROUP_FOCUSED event if the focused group changed', function () {
-      var s = service();
-      s.focus('id3');
-      assert.calledWith(fakeRootScope.$broadcast, events.GROUP_FOCUSED, 'id3');
-    });
-
-    it('does not emit GROUP_FOCUSED if the focused group did not change', function () {
-      var s = service();
-      s.focus('id3');
-      fakeRootScope.$broadcast = sinon.stub();
-      s.focus('id3');
-      assert.notCalled(fakeRootScope.$broadcast);
-    });
   });
 
   describe('.leave()', function () {

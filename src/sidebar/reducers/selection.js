@@ -85,6 +85,9 @@ function init(settings) {
     sortKey: TAB_SORTKEY_DEFAULT[TAB_DEFAULT],
     // Keys by which annotations can be sorted.
     sortKeysAvailable: TAB_SORTKEYS_AVAILABLE[TAB_DEFAULT],
+
+    // ID of the currently focused group
+    focusedGroup: null,
   };
 }
 
@@ -142,6 +145,12 @@ var update = {
 
   SET_SORT_KEY: function (state, action) {
     return {sortKey: action.key};
+  },
+
+  FOCUS_GROUP: (state, action) => {
+    return {
+      focusedGroup: action.id,
+    };
   },
 };
 
@@ -293,6 +302,21 @@ function clearSelectedAnnotations() {
   return {type: actions.CLEAR_SELECTION};
 }
 
+function focusGroup(id) {
+  return {
+    type: actions.FOCUS_GROUP,
+    id,
+  };
+}
+
+function getGroup(state, id) {
+  return state.groups.find(g => g.id === id);
+}
+
+function focusedGroup(state) {
+  return getGroup(state.focusedGroup);
+}
+
 module.exports = {
   init: init,
   update: update,
@@ -300,6 +324,7 @@ module.exports = {
   actions: {
     clearSelectedAnnotations: clearSelectedAnnotations,
     focusAnnotations: focusAnnotations,
+    focusGroup: focusGroup,
     highlightAnnotations: highlightAnnotations,
     removeSelectedAnnotation: removeSelectedAnnotation,
     selectAnnotations: selectAnnotations,
@@ -314,5 +339,8 @@ module.exports = {
   selectors: {
     hasSelectedAnnotations,
     isAnnotationSelected,
+
+    focusedGroup,
+    getGroup,
   },
 };

@@ -133,4 +133,18 @@ describe('annotations reducer', function () {
       newModeration: { flagCount: 0 },
     }]);
   });
+
+  describe('when the focused group changes', () => {
+    it('moves new annotations to the focused group', () => {
+      // TODO
+    });
+
+    it('does not move replies to the new group', () => {
+      // TODO
+    });
+
+    it('does not move saved annotations to the new group', () => {
+      // TODO
+    });
+  });
 });

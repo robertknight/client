@@ -391,6 +391,7 @@ describe('Streamer', function () {
   });
 
   describe('when the focused group changes', function () {
+    // TODO - Update this
     it('clears pending updates and deletions', function () {
       createDefaultStreamer();
       return activeStreamer.connect().then(function () {

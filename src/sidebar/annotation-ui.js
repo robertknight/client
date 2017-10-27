@@ -86,6 +86,31 @@ module.exports = function ($rootScope, settings) {
   var store = redux.createStore(reducers.update, reducers.init(settings),
     enhancer);
 
+  /**
+   * Convenience method for triggering reactions in response to changes in
+   * the application state.
+   *
+   * This is conceptually very similar to Angular's `$watch` on scopes.
+   *
+   * @param {Function} valueFn - 'Cheap' function that computes some value from
+   * the app state.
+   * @param {Function} callback - Function that is called with the current and
+   * previous results of `valueFn` when the result changes.
+   * @return {Function} - Function that removes the listener.
+   */
+  store.watch = (valueFn, callback) => {
+    var prevValue;
+    var unsubscribe = store.subscribe(() => {
+      var currentValue = valueFn(store.getState());
+      if (currentValue === prevValue) {
+        return;
+      }
+      callback(currentValue, prevValue);
+      prevValue = currentValue;
+    });
+    return unsubscribe;
+  };
+
   // Expose helper functions that create actions as methods of the
   // `annotationUI` service to make using them easier from app code. eg.
   //
