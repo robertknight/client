@@ -21,6 +21,7 @@ var annotations = require('./annotations');
 var drafts = require('./drafts');
 var frames = require('./frames');
 var links = require('./links');
+var realtimeUpdates = require('./realtimeUpdates');
 var selection = require('./selection');
 var session = require('./session');
 var viewer = require('./viewer');
@@ -33,6 +34,7 @@ function init(settings) {
     drafts.init(),
     frames.init(),
     links.init(),
+    realtimeUpdates.init(),
     selection.init(settings),
     session.init(),
     viewer.init()
@@ -44,6 +46,7 @@ var update = util.createReducer(Object.assign(
   drafts.update,
   frames.update,
   links.update,
+  realtimeUpdates.update,
   selection.update,
   session.update,
   viewer.update

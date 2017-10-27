@@ -3,7 +3,6 @@
 var queryString = require('query-string');
 var uuid = require('node-uuid');
 
-var events = require('./events');
 var Socket = require('./websocket');
 
 /**
@@ -32,23 +31,6 @@ function Streamer($rootScope, annotationMapper, annotationUI, auth,
   // established.
   var configMessages = {};
 
-  // The streamer maintains a set of pending updates and deletions which have
-  // been received via the WebSocket but not yet applied to the contents of the
-  // app.
-  //
-  // This state should be managed as part of the global app state in
-  // annotationUI, but that is currently difficult because applying updates
-  // requires filtering annotations against the focused group (information not
-  // currently stored in the app state) and triggering events in order to update
-  // the annotations displayed in the page.
-
-  // Map of ID -> updated annotation for updates that have been received over
-  // the WS but not yet applied
-  var pendingUpdates = {};
-  // Set of IDs of annotations which have been deleted but for which the
-  // deletion has not yet been applied
-  var pendingDeletions = {};
-
   function handleAnnotationNotification(message) {
     var action = message.options.action;
     var annotations = message.payload;
@@ -63,30 +45,17 @@ function Streamer($rootScope, annotationMapper, annotationUI, auth,
         // group and reload all annotations and discard pending updates
         // when switching groups.
         if (ann.group === groups.focused().id || !annotationUI.isSidebar()) {
-          pendingUpdates[ann.id] = ann;
+          annotationUI.addPendingUpdate(ann);
         }
       });
       break;
     case 'delete':
-      annotations.forEach(function (ann) {
-        // Discard any pending but not-yet-applied updates for this annotation
-        delete pendingUpdates[ann.id];
-
-        // If we already have this annotation loaded, then record a pending
-        // deletion. We do not check the group of the annotation here because a)
-        // that information is not included with deletion notifications and b)
-        // even if the annotation is from the current group, it might be for a
-        // new annotation (saved in pendingUpdates and removed above), that has
-        // not yet been loaded.
-        if (annotationUI.annotationExists(ann.id)) {
-          pendingDeletions[ann.id] = true;
-        }
-      });
+      annotations.forEach(ann => annotationUI.addPendingUpdate(ann.id));
       break;
     }
 
     if (!annotationUI.isSidebar()) {
-      applyPendingUpdates();
+      annotationUI.applyPendingUpdates();
     }
   }
 
@@ -233,64 +202,9 @@ function Streamer($rootScope, annotationMapper, annotationUI, auth,
     return _connect();
   }
 
-  function applyPendingUpdates() {
-    var updates = Object.values(pendingUpdates);
-    var deletions = Object.keys(pendingDeletions).map(function (id) {
-      return {id: id};
-    });
-
-    if (updates.length) {
-      annotationMapper.loadAnnotations(updates);
-    }
-    if (deletions.length) {
-      annotationMapper.unloadAnnotations(deletions);
-    }
-
-    pendingUpdates = {};
-    pendingDeletions = {};
-  }
-
-  function countPendingUpdates() {
-    return Object.keys(pendingUpdates).length +
-           Object.keys(pendingDeletions).length;
-  }
-
-  function hasPendingDeletion(id) {
-    return pendingDeletions.hasOwnProperty(id);
-  }
-
-  function removePendingUpdates(event, anns) {
-    if (!Array.isArray(anns)) {
-      anns = [anns];
-    }
-    anns.forEach(function (ann) {
-      delete pendingUpdates[ann.id];
-      delete pendingDeletions[ann.id];
-    });
-  }
-
-  function clearPendingUpdates() {
-    pendingUpdates = {};
-    pendingDeletions = {};
-  }
-
-  // TODO: Move pending updates to the app state and then implement this logic
-  // as part of the reducers that handle annotation update/delete/unload
-  // actions.
-  var updateEvents = [
-    events.ANNOTATION_DELETED,
-    events.ANNOTATION_UPDATED,
-    events.ANNOTATIONS_UNLOADED,
-  ];
-
-  updateEvents.forEach(function (event) {
-    $rootScope.$on(event, removePendingUpdates);
-  });
-  annotationUI.watch(() => annotationUI.focusedGroup(), clearPendingUpdates);
-
-  this.applyPendingUpdates = applyPendingUpdates;
-  this.countPendingUpdates = countPendingUpdates;
-  this.hasPendingDeletion = hasPendingDeletion;
+  this.applyPendingUpdates = annotationUI.applyPendingUpdates;
+  this.countPendingUpdates = annotationUI.pendingUpdateCount;
+  this.hasPendingDeletion = annotationUI.hasPendingDeletion;
   this.clientId = clientId;
   this.configMessages = configMessages;
   this.connect = connect;

@@ -41,6 +41,7 @@ var annotationsReducer = require('./reducers/annotations');
 var draftsReducer = require('./reducers/drafts');
 var framesReducer = require('./reducers/frames');
 var linksReducer = require('./reducers/links');
+var realtimeUpdatesReducer = require('./reducers/realtime-updates');
 var selectionReducer = require('./reducers/selection');
 var sessionReducer = require('./reducers/session');
 var viewerReducer = require('./reducers/viewer');
@@ -124,6 +125,7 @@ module.exports = function ($rootScope, settings) {
     draftsReducer.actions,
     framesReducer.actions,
     linksReducer.actions,
+    realtimeUpdatesReducer.actions,
     selectionReducer.actions,
     sessionReducer.actions,
     viewerReducer.actions
@@ -141,6 +143,7 @@ module.exports = function ($rootScope, settings) {
     draftsReducer.selectors,
     framesReducer.selectors,
     linksReducer.selectors,
+    realtimeUpdatesReducer.selectors,
     selectionReducer.selectors,
     sessionReducer.selectors,
     viewerReducer.selectors
