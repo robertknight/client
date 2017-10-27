@@ -209,7 +209,7 @@ module.exports = angular.module('h', [
 
   .service('analytics', require('./analytics'))
   .service('annotationMapper', require('./annotation-mapper'))
-  .service('annotationUI', require('./annotation-ui'))
+  .service('annotationUI', require('./store/index'))
   .service('apiRoutes', require('./api-routes'))
   .service('auth', authService)
   .service('bridge', require('../shared/bridge'))
