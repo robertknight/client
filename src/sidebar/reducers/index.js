@@ -27,32 +27,28 @@ var session = require('./session');
 var viewer = require('./viewer');
 var util = require('./util');
 
+var modules = [
+  annotations,
+  drafts,
+  frames,
+  links,
+  realtimeUpdates,
+  selection,
+  session,
+  viewer,
+];
+
 function init(settings) {
-  return Object.assign(
-    {},
-    annotations.init(),
-    drafts.init(),
-    frames.init(),
-    links.init(),
-    realtimeUpdates.init(),
-    selection.init(settings),
-    session.init(),
-    viewer.init()
-  );
+  return Object.assign(...modules.map(m => m.init(settings)));
 }
 
-var update = util.createReducer(Object.assign(
-  annotations.update,
-  drafts.update,
-  frames.update,
-  links.update,
-  realtimeUpdates.update,
-  selection.update,
-  session.update,
-  viewer.update
-));
+var update = util.createReducer(Object.assign({}, ...modules.map(m => m.update)));
+var actions = Object.assign({}, ...modules.map(m => m.actions));
+var selectors = Object.assign({}, ...modules.map(m => m.selectors));
 
 module.exports = {
-  init: init,
-  update: update,
+  init,
+  update,
+  actions,
+  selectors,
 };

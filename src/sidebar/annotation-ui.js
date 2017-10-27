@@ -36,16 +36,8 @@ var redux = require('redux');
 // `.default` is needed because 'redux-thunk' is built as an ES2015 module
 var thunk = require('redux-thunk').default;
 
-var reducers = require('./reducers');
-var annotationsReducer = require('./reducers/annotations');
-var draftsReducer = require('./reducers/drafts');
-var framesReducer = require('./reducers/frames');
-var linksReducer = require('./reducers/links');
-var realtimeUpdatesReducer = require('./reducers/realtime-updates');
-var selectionReducer = require('./reducers/selection');
-var sessionReducer = require('./reducers/session');
-var viewerReducer = require('./reducers/viewer');
-var util = require('./reducers/util');
+var { init, update, actions, selectors } = require('./reducers');
+var { bindSelectors } = require('./reducers/util');
 
 var debugMiddleware = require('./reducers/debug-middleware');
 
@@ -84,8 +76,7 @@ module.exports = function ($rootScope, settings) {
     debugMiddleware,
     angularDigestMiddleware.bind(null, $rootScope)
   );
-  var store = redux.createStore(reducers.update, reducers.init(settings),
-    enhancer);
+  var store = redux.createStore(update, init(settings), enhancer);
 
   /**
    * Convenience method for triggering reactions in response to changes in
@@ -120,16 +111,7 @@ module.exports = function ($rootScope, settings) {
   // You can use:
   //   annotationUI.addAnnotations(annotations)
   //
-  var actions = redux.bindActionCreators(Object.assign({},
-    annotationsReducer.actions,
-    draftsReducer.actions,
-    framesReducer.actions,
-    linksReducer.actions,
-    realtimeUpdatesReducer.actions,
-    selectionReducer.actions,
-    sessionReducer.actions,
-    viewerReducer.actions
-  ), store.dispatch);
+  var boundActions = redux.bindActionCreators(actions, store.dispatch);
 
   // Expose selectors as methods of the `annotationUI` to make using them easier
   // from app code.
@@ -138,16 +120,7 @@ module.exports = function ($rootScope, settings) {
   //   selection.isAnnotationSelected(annotationUI.getState(), id)
   // You can use:
   //   annotationUI.isAnnotationSelected(id)
-  var selectors = util.bindSelectors(Object.assign({},
-    annotationsReducer.selectors,
-    draftsReducer.selectors,
-    framesReducer.selectors,
-    linksReducer.selectors,
-    realtimeUpdatesReducer.selectors,
-    selectionReducer.selectors,
-    sessionReducer.selectors,
-    viewerReducer.selectors
-  ), store.getState);
+  var boundSelectors = bindSelectors(selectors, store.getState);
 
-  return Object.assign(store, actions, selectors);
+  return Object.assign(store, boundActions, boundSelectors);
 };
