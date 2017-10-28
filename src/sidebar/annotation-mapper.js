@@ -10,9 +10,9 @@ function getExistingAnnotation(annotationUI, id) {
   });
 }
 
-// Wraps the annotation store to trigger events for the CRUD actions
+// Wraps the annotation apiClient to trigger events for the CRUD actions
 // @ngInject
-function annotationMapper($rootScope, annotationUI, store) {
+function annotationMapper($rootScope, annotationUI, apiClient) {
   function loadAnnotations(annotations, replies) {
     annotations = annotations.concat(replies || []);
 
@@ -46,7 +46,7 @@ function annotationMapper($rootScope, annotationUI, store) {
   }
 
   function deleteAnnotation(annotation) {
-    return store.annotation.delete({
+    return apiClient.annotation.delete({
       id: annotation.id,
     }).then(function () {
       $rootScope.$broadcast(events.ANNOTATION_DELETED, annotation);
@@ -55,7 +55,7 @@ function annotationMapper($rootScope, annotationUI, store) {
   }
 
   function flagAnnotation(annot) {
-    return store.annotation.flag({
+    return apiClient.annotation.flag({
       id: annot.id,
     }).then(function () {
       $rootScope.$broadcast(events.ANNOTATION_FLAGGED, annot);

@@ -44,7 +44,7 @@ function sessionActions(options) {
  * @ngInject
  */
 function session($http, $q, $resource, $rootScope, analytics, annotationUI, auth,
-                 flash, raven, settings, serviceConfig, store) {
+                 flash, raven, settings, serviceConfig, apiClient) {
   // Headers sent by every request made by the session service.
   var headers = {};
   var actions = sessionActions({
@@ -96,7 +96,7 @@ function session($http, $q, $resource, $rootScope, analytics, annotationUI, auth
           if (authority) {
             opts.authority = authority;
           }
-          return store.profile.read(opts).then(update);
+          return apiClient.profile.read(opts).then(update);
         } else {
           return resource._load().$promise;
         }
@@ -118,7 +118,7 @@ function session($http, $q, $resource, $rootScope, analytics, annotationUI, auth
    *              the sidebar tutorial, and then updates the session state.
    */
   function dismissSidebarTutorial() {
-    return store.profile.update({}, {preferences: {show_sidebar_tutorial: false}}).then(update);
+    return apiClient.profile.update({}, {preferences: {show_sidebar_tutorial: false}}).then(update);
   }
 
   /**

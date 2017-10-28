@@ -27,7 +27,7 @@ function updateModel(annotation, changes, permissions) {
 function AnnotationController(
   $document, $rootScope, $scope, $timeout, $window, analytics, annotationUI,
   annotationMapper, flash, features, groups, permissions, serviceUrl,
-  session, settings, store, streamer) {
+  session, settings, apiClient, streamer) {
 
   var self = this;
   var newlyCreatedByHighlightButton;
@@ -38,9 +38,9 @@ function AnnotationController(
     var updating = !!annot.id;
 
     if (updating) {
-      saved = store.annotation.update({id: annot.id}, annot);
+      saved = apiClient.annotation.update({id: annot.id}, annot);
     } else {
-      saved = store.annotation.create({}, annot);
+      saved = apiClient.annotation.create({}, annot);
     }
 
     return saved.then(function (savedAnnot) {
@@ -108,7 +108,7 @@ function AnnotationController(
     // received from the server) have some fields missing. Add them.
     //
     // FIXME: This logic should go in the `addAnnotations` Redux action once all
-    // required state is in the store.
+    // required state is in the apiClient.
     self.annotation.user = self.annotation.user || session.state.userid;
     self.annotation.user_info = self.annotation.user_info || session.state.user_info;
     self.annotation.group = self.annotation.group || groups.focused().id;

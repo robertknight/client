@@ -12,7 +12,7 @@ describe('moderationBanner', function () {
   var bannerEl;
   var fakeAnnotationUI;
   var fakeFlash;
-  var fakeStore;
+  var fakeApiClient;
 
   before(function () {
     angular.module('app', [])
@@ -29,7 +29,7 @@ describe('moderationBanner', function () {
       error: sinon.stub(),
     };
 
-    fakeStore = {
+    fakeApiClient = {
       annotation: {
         hide: sinon.stub().returns(Promise.resolve()),
         unhide: sinon.stub().returns(Promise.resolve()),
@@ -39,7 +39,7 @@ describe('moderationBanner', function () {
     angular.mock.module('app', {
       annotationUI: fakeAnnotationUI,
       flash: fakeFlash,
-      store: fakeStore,
+      store: fakeApiClient,
     });
   });
 
@@ -114,13 +114,13 @@ describe('moderationBanner', function () {
     var ann = moderatedAnnotation({ flagCount: 10 });
     var banner = createBanner({ annotation: ann });
     banner.querySelector('button').click();
-    assert.calledWith(fakeStore.annotation.hide, {id: 'ann-id'});
+    assert.calledWith(fakeApiClient.annotation.hide, {id: 'ann-id'});
   });
 
   it('reports an error if hiding the annotation fails', function (done) {
     var ann = moderatedAnnotation({ flagCount: 10 });
     var banner = createBanner({ annotation: ann });
-    fakeStore.annotation.hide.returns(Promise.reject(new Error('Network Error')));
+    fakeApiClient.annotation.hide.returns(Promise.reject(new Error('Network Error')));
 
     banner.querySelector('button').click();
 
@@ -139,7 +139,7 @@ describe('moderationBanner', function () {
 
     banner.querySelector('button').click();
 
-    assert.calledWith(fakeStore.annotation.unhide, {id: 'ann-id'});
+    assert.calledWith(fakeApiClient.annotation.unhide, {id: 'ann-id'});
   });
 
   it('reports an error if unhiding the annotation fails', function (done) {
@@ -148,7 +148,7 @@ describe('moderationBanner', function () {
       hidden: true,
     });
     var banner = createBanner({ annotation: ann });
-    fakeStore.annotation.unhide.returns(Promise.reject(new Error('Network Error')));
+    fakeApiClient.annotation.unhide.returns(Promise.reject(new Error('Network Error')));
 
     banner.querySelector('button').click();
 

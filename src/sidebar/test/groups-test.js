@@ -18,7 +18,7 @@ var sessionWithThreeGroups = function() {
 
 describe('groups', function() {
   var fakeSession;
-  var fakeStore;
+  var fakeApiClient;
   var fakeLocalStorage;
   var fakeRootScope;
   var fakeServiceUrl;
@@ -43,7 +43,7 @@ describe('groups', function() {
         }
       },
     };
-    fakeStore = {
+    fakeApiClient = {
       group: {
         member: {
           delete: sandbox.stub().returns(Promise.resolve()),
@@ -59,7 +59,7 @@ describe('groups', function() {
 
   function service() {
     return groups(fakeLocalStorage, fakeServiceUrl, fakeSession,
-      fakeRootScope, fakeStore);
+      fakeRootScope, fakeApiClient);
   }
 
   describe('.all()', function() {
@@ -166,7 +166,7 @@ describe('groups', function() {
     it('should call the group leave API', function () {
       var s = service();
       return s.leave('id2').then(() => {
-        assert.calledWithMatch(fakeStore.group.member.delete, {
+        assert.calledWithMatch(fakeApiClient.group.member.delete, {
           pubid: 'id2',
           user: 'me',
         });

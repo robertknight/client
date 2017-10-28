@@ -16,7 +16,7 @@ describe('sidebar.session', function () {
   var fakeRaven;
   var fakeServiceConfig;
   var fakeSettings;
-  var fakeStore;
+  var fakeApiClient;
   var sandbox;
   var session;
 
@@ -49,7 +49,7 @@ describe('sidebar.session', function () {
     fakeRaven = {
       setUserInfo: sandbox.spy(),
     };
-    fakeStore = {
+    fakeApiClient = {
       profile: {
         read: sandbox.stub(),
         update: sandbox.stub().returns(Promise.resolve({})),
@@ -68,7 +68,7 @@ describe('sidebar.session', function () {
       raven: fakeRaven,
       settings: fakeSettings,
       serviceConfig: fakeServiceConfig,
-      store: fakeStore,
+      store: fakeApiClient,
     });
   });
 
@@ -181,14 +181,14 @@ describe('sidebar.session', function () {
           authority: 'publisher.org',
           grantToken: 'a.jwt.token',
         });
-        fakeStore.profile.read.returns(Promise.resolve({
+        fakeApiClient.profile.read.returns(Promise.resolve({
           userid: 'acct:user@publisher.org',
         }));
       });
 
       it('should fetch profile data from the API', function () {
         return session.load().then(function () {
-          assert.calledWith(fakeStore.profile.read, {authority: 'publisher.org'});
+          assert.calledWith(fakeApiClient.profile.read, {authority: 'publisher.org'});
         });
       });
 
@@ -202,14 +202,14 @@ describe('sidebar.session', function () {
     context('when using OAuth for first-party accounts', () => {
       beforeEach(() => {
         fakeAuth.login = sinon.stub().returns(Promise.resolve());
-        fakeStore.profile.read.returns(Promise.resolve({
+        fakeApiClient.profile.read.returns(Promise.resolve({
           userid: 'acct:user@hypothes.is',
         }));
       });
 
       it('should fetch profile data from the API', () => {
         return session.load().then(() => {
-          assert.calledWith(fakeStore.profile.read);
+          assert.calledWith(fakeApiClient.profile.read);
         });
       });
 
@@ -306,14 +306,14 @@ describe('sidebar.session', function () {
 
   describe('#dismissSidebarTutorial()', function () {
     beforeEach(function () {
-      fakeStore.profile.update.returns(Promise.resolve({
+      fakeApiClient.profile.update.returns(Promise.resolve({
         preferences: {},
       }));
     });
 
     it('disables the tutorial for the user', function () {
       session.dismissSidebarTutorial();
-      assert.calledWith(fakeStore.profile.update, {}, {preferences: {show_sidebar_tutorial: false}});
+      assert.calledWith(fakeApiClient.profile.update, {}, {preferences: {show_sidebar_tutorial: false}});
     });
 
     it('should update the session with the response from the API', function () {
@@ -329,14 +329,14 @@ describe('sidebar.session', function () {
       fakeAuth.login = sinon.stub().returns(Promise.resolve());
 
       // Load the initial profile data, as the client will do on startup.
-      fakeStore.profile.read.returns(Promise.resolve({
+      fakeApiClient.profile.read.returns(Promise.resolve({
         userid: 'acct:user_a@hypothes.is',
       }));
       return session.load();
     });
 
     it('should clear cached data and reload', () => {
-      fakeStore.profile.read.returns(Promise.resolve({
+      fakeApiClient.profile.read.returns(Promise.resolve({
         userid: 'acct:user_b@hypothes.is',
       }));
 
@@ -401,7 +401,7 @@ describe('sidebar.session', function () {
         });
 
         // Fake profile response after logout.
-        fakeStore.profile.read = () => Promise.resolve({
+        fakeApiClient.profile.read = () => Promise.resolve({
           userid: null,
           loggedIn,
         });
@@ -430,14 +430,14 @@ describe('sidebar.session', function () {
   context('when another client changes the current login', () => {
     it('reloads the profile', () => {
       fakeAuth.login = sinon.stub().returns(Promise.resolve());
-      fakeStore.profile.read.returns(Promise.resolve({
+      fakeApiClient.profile.read.returns(Promise.resolve({
         userid: 'acct:initial_user@hypothes.is',
       }));
 
       return session.load().then(() => {
 
         // Simulate login change happening in a different tab.
-        fakeStore.profile.read.returns(Promise.resolve({
+        fakeApiClient.profile.read.returns(Promise.resolve({
           userid: 'acct:different_user@hypothes.is',
         }));
         $rootScope.$broadcast(events.OAUTH_TOKENS_CHANGED);

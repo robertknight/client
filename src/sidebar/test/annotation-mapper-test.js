@@ -9,11 +9,11 @@ describe('annotationMapper', function() {
   var sandbox = sinon.sandbox.create();
   var $rootScope;
   var annotationUI;
-  var fakeStore;
+  var fakeApiClient;
   var annotationMapper;
 
   beforeEach(function () {
-    fakeStore = {
+    fakeApiClient = {
       annotation: {
         delete: sinon.stub().returns(Promise.resolve({})),
         flag: sinon.stub().returns(Promise.resolve({})),
@@ -23,7 +23,7 @@ describe('annotationMapper', function() {
       .service('annotationMapper', require('../annotation-mapper'))
       .service('annotationUI', require('../annotation-ui'))
       .value('settings', {})
-      .value('store', fakeStore);
+      .value('store', fakeApiClient);
     angular.mock.module('app');
 
     angular.mock.inject(function (_$rootScope_, _annotationUI_, _annotationMapper_) {
@@ -129,8 +129,8 @@ describe('annotationMapper', function() {
     it('flags an annotation', function () {
       var ann = {id: 'test-id'};
       annotationMapper.flagAnnotation(ann);
-      assert.calledOnce(fakeStore.annotation.flag);
-      assert.calledWith(fakeStore.annotation.flag, {id: ann.id});
+      assert.calledOnce(fakeApiClient.annotation.flag);
+      assert.calledWith(fakeApiClient.annotation.flag, {id: ann.id});
     });
 
     it('emits the "annotationFlagged" event', function (done) {
@@ -163,7 +163,7 @@ describe('annotationMapper', function() {
     it('deletes the annotation on the server', function () {
       var ann = {id: 'test-id'};
       annotationMapper.deleteAnnotation(ann);
-      assert.calledWith(fakeStore.annotation.delete, {id: 'test-id'});
+      assert.calledWith(fakeApiClient.annotation.delete, {id: 'test-id'});
     });
 
     it('triggers the "annotationDeleted" event on success', function (done) {
@@ -178,7 +178,7 @@ describe('annotationMapper', function() {
 
     it('does not emit an event on error', function (done) {
       sandbox.stub($rootScope, '$broadcast');
-      fakeStore.annotation.delete.returns(Promise.reject());
+      fakeApiClient.annotation.delete.returns(Promise.reject());
       var ann = {id: 'test-id'};
       annotationMapper.deleteAnnotation(ann).catch(function () {
         assert.notCalled($rootScope.$broadcast);

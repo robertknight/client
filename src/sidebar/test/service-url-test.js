@@ -54,7 +54,7 @@ describe('sidebar.service-url', function () {
 
     beforeEach(function() {
       // Create a serviceUrl function with an unresolved Promise that will
-      // never be resolved - it never receives the links from store.links().
+      // never be resolved - it never receives the links from apiClient.links().
       var parts = createServiceUrl(new Promise(function() {}));
 
       serviceUrl = parts.serviceUrl;
@@ -82,7 +82,7 @@ describe('sidebar.service-url', function () {
     var serviceUrl;
 
     beforeEach(function() {
-      // The links Promise that store.links() will return.
+      // The links Promise that apiClient.links() will return.
       linksPromise = Promise.resolve({
         first_link: 'http://example.com/first_page/:foo',
         second_link: 'http://example.com/second_page',

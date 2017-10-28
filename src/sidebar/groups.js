@@ -14,7 +14,7 @@
 var STORAGE_KEY = 'hypothesis.groups.focus';
 
 // @ngInject
-function groups(annotationUI, localStorage, serviceUrl, $rootScope, store) {
+function groups(annotationUI, localStorage, serviceUrl, $rootScope, apiClient) {
 
   function all() {
     return annotationUI.getState().groups;
@@ -42,7 +42,7 @@ function groups(annotationUI, localStorage, serviceUrl, $rootScope, store) {
     // The groups list will be updated in response to a session state
     // change notification from the server. We could improve the UX here
     // by optimistically updating the session state
-    return store.group.member.delete({
+    return apiClient.group.member.delete({
       pubid: id,
       user: 'me',
     });
