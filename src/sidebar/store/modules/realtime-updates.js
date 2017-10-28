@@ -5,8 +5,8 @@
  * yet been applied.
  */
 
+var { actions: { addAnnotations, removeAnnotations } } = require('./annotations');
 var util = require('./util');
-var { filterMap } = require('../../util/array-util');
 
 /**
  * Return a copy of `obj` retaining only keys that pass the `filterFn`
@@ -61,24 +61,8 @@ var update = {
     };
   },
 
-  APPLY_PENDING_UPDATES: (state) => {
-    var { pendingUpdates, pendingDeletions } = state.realtimeUpdates;
-    var { realtimeUpdates } = init();
-
-    var annotations = filterMap(state.annotations, ann => {
-      if (pendingDeletions[ann.id]) {
-        return null;
-      }
-      if (pendingUpdates[ann.id]) {
-        return pendingUpdates[ann.id];
-      }
-      return ann;
-    });
-
-    return {
-      annotations,
-      realtimeUpdates,
-    };
+  CLEAR_PENDING_UPDATES: () => {
+    return init();
   },
 
   ADD_ANNOTATIONS: (state, action) => {
@@ -132,10 +116,25 @@ function addPendingDeletion(id) {
 }
 
 /**
+ * Discard all pending updates.
+ */
+function clearPendingUpdates() {
+  return { type: actions.CLEAR_PENDING_UPDATES };
+}
+
+/**
  * Apply pending updates & deletions to the current set of annotations.
  */
 function applyPendingUpdates() {
-  return { type: actions.APPLY_PENDING_UPDATES };
+  return (dispatch, getState) => {
+    var { pendingUpdates, pendingDeletions } = getState().realtimeUpdates;
+    var updatedAnns = Object.keys(pendingUpdates).map(id => pendingUpdates[id]);
+    var deletedAnns = Object.keys(pendingDeletions).map(id => ({ id }));
+
+    dispatch(addAnnotations(updatedAnns));
+    dispatch(removeAnnotations(deletedAnns));
+    dispatch(clearPendingUpdates());
+  };
 }
 
 /**
@@ -163,6 +162,7 @@ module.exports = {
   actions: {
     addPendingUpdate,
     addPendingDeletion,
+    clearPendingUpdates,
     applyPendingUpdates,
   },
   selectors: {

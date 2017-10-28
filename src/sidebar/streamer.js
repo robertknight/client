@@ -50,7 +50,7 @@ function Streamer($rootScope, annotationMapper, annotationUI, auth,
       });
       break;
     case 'delete':
-      annotations.forEach(ann => annotationUI.addPendingUpdate(ann.id));
+      annotations.forEach(ann => annotationUI.addPendingDeletion(ann.id));
       break;
     }
 
