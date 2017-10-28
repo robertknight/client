@@ -325,22 +325,22 @@ function focusedGroup(state) {
 }
 
 module.exports = {
-  init: init,
-  update: update,
+  init,
+  update,
 
   actions: {
-    clearSelectedAnnotations: clearSelectedAnnotations,
-    focusAnnotations: focusAnnotations,
-    focusGroup: focusGroup,
-    highlightAnnotations: highlightAnnotations,
-    removeSelectedAnnotation: removeSelectedAnnotation,
-    selectAnnotations: selectAnnotations,
-    selectTab: selectTab,
-    setCollapsed: setCollapsed,
-    setFilterQuery: setFilterQuery,
-    setForceVisible: setForceVisible,
-    setSortKey: setSortKey,
-    toggleSelectedAnnotations: toggleSelectedAnnotations,
+    clearSelectedAnnotations,
+    focusAnnotations,
+    focusGroup,
+    highlightAnnotations,
+    removeSelectedAnnotation,
+    selectAnnotations,
+    selectTab,
+    setCollapsed,
+    setFilterQuery,
+    setForceVisible,
+    setSortKey,
+    toggleSelectedAnnotations,
   },
 
   selectors: {

@@ -396,16 +396,16 @@ function findAnnotationByID(state, id) {
 }
 
 module.exports = {
-  init: init,
-  update: update,
+  init,
+  update,
   actions: {
-    addAnnotations: addAnnotations,
-    clearAnnotations: clearAnnotations,
-    removeAnnotations: removeAnnotations,
-    updateAnchorStatus: updateAnchorStatus,
-    updateFlagStatus: updateFlagStatus,
-    hideAnnotation: hideAnnotation,
-    unhideAnnotation: unhideAnnotation,
+    addAnnotations,
+    clearAnnotations,
+    removeAnnotations,
+    updateAnchorStatus,
+    updateFlagStatus,
+    hideAnnotation,
+    unhideAnnotation,
   },
 
   selectors: {

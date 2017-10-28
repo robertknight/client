@@ -50,11 +50,11 @@ function isSidebar(state) {
 }
 
 module.exports = {
-  init: init,
-  update: update,
+  init,
+  update,
   actions: {
-    setAppIsSidebar: setAppIsSidebar,
-    setShowHighlights: setShowHighlights,
+    setAppIsSidebar,
+    setShowHighlights,
   },
 
   selectors: {

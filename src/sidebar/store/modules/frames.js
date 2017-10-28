@@ -108,13 +108,13 @@ function searchUris(state) {
 }
 
 module.exports = {
-  init: init,
-  update: update,
+  init,
+  update,
 
   actions: {
-    connectFrame: connectFrame,
-    destroyFrame: destroyFrame,
-    updateFrameAnnotationFetchStatus: updateFrameAnnotationFetchStatus,
+    connectFrame,
+    destroyFrame,
+    updateFrameAnnotationFetchStatus,
   },
 
   selectors: {
