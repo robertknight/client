@@ -76,6 +76,10 @@ function getGroup(state, id) {
   return state.session.groups.find(g => g.id === id);
 }
 
+function allGroups(state) {
+  return state.session.groups;
+}
+
 module.exports = {
   init,
   update,
@@ -85,6 +89,7 @@ module.exports = {
   },
 
   selectors: {
+    allGroups,
     getGroup,
     isFeatureEnabled,
     profile,

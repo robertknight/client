@@ -17,7 +17,7 @@ var STORAGE_KEY = 'hypothesis.groups.focus';
 function groups(annotationUI, localStorage, serviceUrl, $rootScope, apiClient) {
 
   function all() {
-    return annotationUI.getState().groups;
+    return annotationUI.allGroups();
   }
 
   /**
