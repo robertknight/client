@@ -57,8 +57,13 @@ function groups(annotationUI, localStorage, serviceUrl, $rootScope, apiClient) {
   // When groups are loaded, focus the group that was last-focused in the
   // previous session, if it exists.
   annotationUI.watch(all, groups => {
+    var focusedGroup = focused();
+    if (!focusedGroup) {
+      return;
+    }
+
     var lastFocusedGroupId = localStorage.getItem(STORAGE_KEY);
-    if (lastFocusedGroupId === focused().id) {
+    if (lastFocusedGroupId === focusedGroup.id) {
       return;
     }
 
