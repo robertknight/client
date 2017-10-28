@@ -72,6 +72,10 @@ function profile(state) {
   return state.session;
 }
 
+function getGroup(state, id) {
+  return state.session.groups.find(g => g.id === id);
+}
+
 module.exports = {
   init,
   update,
@@ -81,6 +85,7 @@ module.exports = {
   },
 
   selectors: {
+    getGroup,
     isFeatureEnabled,
     profile,
   },

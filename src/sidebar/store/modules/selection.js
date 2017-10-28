@@ -15,6 +15,7 @@ var immutable = require('seamless-immutable');
 var { toSet } = require('../../util/array-util');
 var uiConstants = require('../../ui-constants');
 
+var { selectors: { getGroup } } = require('./session');
 var util = require('./util');
 
 
@@ -309,12 +310,8 @@ function focusGroup(id) {
   };
 }
 
-function getGroup(state, id) {
-  return state.groups.find(g => g.id === id);
-}
-
 function focusedGroup(state) {
-  return getGroup(state.focusedGroup);
+  return getGroup(state, state.focusedGroup);
 }
 
 module.exports = {
@@ -341,6 +338,5 @@ module.exports = {
     isAnnotationSelected,
 
     focusedGroup,
-    getGroup,
   },
 };
