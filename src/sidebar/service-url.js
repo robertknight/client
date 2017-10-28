@@ -37,9 +37,7 @@ function serviceUrl(annotationUI, apiRoutes) {
 
   apiRoutes.links()
     .then(annotationUI.updateLinks)
-    .catch(function(error) {
-      console.warn('The links API request was rejected: ' + error.message);
-    });
+    .catch(err => console.warn('Links API request failed', err));
 
   return function(linkName, params) {
     var links = annotationUI.getState().links;
