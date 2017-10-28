@@ -6,7 +6,7 @@
  */
 
 var util = require('./util');
-var { filterMap } = require('../util/array-util');
+var { filterMap } = require('../../util/array-util');
 
 /**
  * Return a copy of `obj` retaining only keys that pass the `filterFn`

@@ -12,8 +12,8 @@
 
 var immutable = require('seamless-immutable');
 
-var toSet = require('../util/array-util').toSet;
-var uiConstants = require('../ui-constants');
+var { toSet } = require('../../util/array-util');
+var uiConstants = require('../../ui-constants');
 
 var util = require('./util');
 
