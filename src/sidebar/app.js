@@ -231,7 +231,7 @@ module.exports = angular.module('h', [
   .service('unicode', require('./unicode'))
   .service('viewFilter', require('./view-filter'))
 
-  .factory('store', require('./store'))
+  .factory('store', require('./api-client'))
 
   .value('Discovery', require('../shared/discovery'))
   .value('ExcerptOverflowMonitor', require('./util/excerpt-overflow-monitor'))
