@@ -35,7 +35,7 @@ function authStateFromProfile(profile) {
 // @ngInject
 function HypothesisAppController(
   $document, $location, $rootScope, $route, $scope,
-  $window, analytics, annotationUI, auth, bridge, drafts, features,
+  $window, analytics, annotationUI, auth, bridge, features,
   flash, frameSync, groups, serviceUrl, session, settings, streamer
 ) {
   var self = this;
@@ -156,14 +156,16 @@ function HypothesisAppController(
   var promptToLogout = function () {
     // TODO - Replace this with a UI which doesn't look terrible.
     var text = '';
-    if (drafts.count() === 1) {
+    var draftCount = annotationUI.countDrafts();
+
+    if (draftCount === 1) {
       text = 'You have an unsaved annotation.\n' +
         'Do you really want to discard this draft?';
-    } else if (drafts.count() > 1) {
-      text = 'You have ' + drafts.count() + ' unsaved annotations.\n' +
+    } else if (draftCount > 1) {
+      text = 'You have ' + draftCount + ' unsaved annotations.\n' +
         'Do you really want to discard these drafts?';
     }
-    return (drafts.count() === 0 || $window.confirm(text));
+    return (draftCount() === 0 || $window.confirm(text));
   };
 
   // Log the user out.
@@ -171,10 +173,10 @@ function HypothesisAppController(
     if (!promptToLogout()) {
       return;
     }
-    drafts.unsaved().forEach(function (draft) {
+    annotationUI.unsavedDrafts().forEach(function (draft) {
       $rootScope.$emit(events.ANNOTATION_DELETED, draft);
     });
-    drafts.discard();
+    annotationUI.clearDrafts();
 
     if (serviceConfig(settings)) {
       // Let the host page handle the signup request
