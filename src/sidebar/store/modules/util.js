@@ -14,13 +14,32 @@ function actionTypes(updateFns) {
  * Given an object which maps action names to update functions, this returns
  * a reducer function that can be passed to the redux `createStore` function.
  */
-function createReducer(updateFns) {
-  return function (state, action) {
-    var fn = updateFns[action.type];
-    if (!fn) {
+function createReducer(...updateFns) {
+  // Combine the { action: update function } maps into a single { action: list
+  // of update functions } map.
+  var union = updateFns.reduce((union, module) => {
+    for (var action in module) {
+      if (!union[action]) {
+        union[action] = [module[action]];
+      } else {
+        union[action].push(module[action]);
+      }
+    }
+    return union;
+  }, {});
+
+  return (state, action) => {
+    // Merge the output of each action function for the current action
+    // into the state.
+    //
+    // Note that each action function receives the _previous_ state as its
+    // input. This avoids creating hidden ordering dependencies between the
+    // update functions.
+    var fns = union[action.type];
+    if (!fns) {
       return state;
     }
-    return Object.assign({}, state, fn(state, action));
+    return Object.assign({}, state, ...fns.map(fn => fn(state, action)));
   };
 }
 

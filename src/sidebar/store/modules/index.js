@@ -39,10 +39,10 @@ var modules = [
 ];
 
 function init(settings) {
-  return Object.assign(...modules.map(m => m.init(settings)));
+  return Object.assign({}, ...modules.map(m => m.init(settings)));
 }
 
-var update = util.createReducer(Object.assign({}, ...modules.map(m => m.update)));
+var update = util.createReducer(...modules.map(m => m.update));
 var actions = Object.assign({}, ...modules.map(m => m.actions));
 var selectors = Object.assign({}, ...modules.map(m => m.selectors));
 
