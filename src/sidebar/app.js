@@ -22,6 +22,8 @@ if (settings.raven) {
 var hostPageConfig = require('./host-config');
 Object.assign(settings, hostPageConfig(window));
 
+var { createStore } = require('./store');
+
 settings.apiUrl = getApiUrl(settings);
 
 // Disable Angular features that are not compatible with CSP.
@@ -207,9 +209,10 @@ module.exports = angular.module('h', [
   .directive('statusButton', require('./directive/status-button'))
   .directive('windowScroll', require('./directive/window-scroll'))
 
+  .service('annotationUI', createStore)
+
   .service('analytics', require('./analytics'))
   .service('annotationMapper', require('./annotation-mapper'))
-  .service('annotationUI', require('./store/index'))
   .service('apiRoutes', require('./api-routes'))
   .service('auth', authService)
   .service('bridge', require('../shared/bridge'))

@@ -68,8 +68,11 @@ function angularDigestMiddleware($rootScope) {
   };
 }
 
+/**
+ * Factory function that creates a store for app state.
+ */
 // @ngInject
-module.exports = function ($rootScope, settings) {
+function createStore($rootScope, settings) {
   var enhancer = redux.applyMiddleware(
     // The `thunk` middleware handles actions which are functions.
     // This is used to implement actions which have side effects or are
@@ -114,4 +117,8 @@ module.exports = function ($rootScope, settings) {
   var boundSelectors = bindSelectors(selectors, store.getState);
 
   return Object.assign(store, boundActions, boundSelectors);
+}
+
+module.exports = {
+  createStore,
 };
