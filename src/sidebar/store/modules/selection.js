@@ -153,6 +153,16 @@ var update = {
       focusedGroup: action.id,
     };
   },
+
+  UPDATE_SESSION: (state, action) => {
+    // Set focused group to first group in current profile if none is selected.
+    if (state.focusedGroup) {
+      return {};
+    }
+
+    var firstGroup = action.session.groups[0];
+    return { focusedGroup: firstGroup.id };
+  },
 };
 
 var actions = util.actionTypes(update);
