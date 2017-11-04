@@ -35,7 +35,7 @@ function authStateFromProfile(profile) {
 // @ngInject
 function HypothesisAppController(
   $document, $location, $rootScope, $route, $scope,
-  $window, analytics, annotationUI, auth, bridge, features,
+  $window, analytics, store, auth, bridge, features,
   flash, frameSync, groups, serviceUrl, session, settings, streamer
 ) {
   var self = this;
@@ -61,14 +61,14 @@ function HypothesisAppController(
   this.serviceUrl = serviceUrl;
 
   this.sortKey = function () {
-    return annotationUI.getState().sortKey;
+    return store.getState().sortKey;
   };
 
   this.sortKeysAvailable = function () {
-    return annotationUI.getState().sortKeysAvailable;
+    return store.getState().sortKeysAvailable;
   };
 
-  this.setSortKey = annotationUI.setSortKey;
+  this.setSortKey = store.setSortKey;
 
   // Reload the view when the user switches accounts
   $scope.$on(events.USER_CHANGED, function (event, data) {
@@ -156,7 +156,7 @@ function HypothesisAppController(
   var promptToLogout = function () {
     // TODO - Replace this with a UI which doesn't look terrible.
     var text = '';
-    var draftCount = annotationUI.countDrafts();
+    var draftCount = store.countDrafts();
 
     if (draftCount === 1) {
       text = 'You have an unsaved annotation.\n' +
@@ -173,10 +173,10 @@ function HypothesisAppController(
     if (!promptToLogout()) {
       return;
     }
-    annotationUI.unsavedDrafts().forEach(function (draft) {
+    store.unsavedDrafts().forEach(function (draft) {
       $rootScope.$emit(events.ANNOTATION_DELETED, draft);
     });
-    annotationUI.clearDrafts();
+    store.clearDrafts();
 
     if (serviceConfig(settings)) {
       // Let the host page handle the signup request
@@ -190,10 +190,10 @@ function HypothesisAppController(
 
   this.search = {
     query: function () {
-      return annotationUI.getState().filterQuery;
+      return store.getState().filterQuery;
     },
     update: function (query) {
-      annotationUI.setFilterQuery(query);
+      store.setFilterQuery(query);
     },
   };
 

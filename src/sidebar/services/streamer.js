@@ -19,7 +19,7 @@ var Socket = require('../util/websocket');
  * @param settings - Application settings
  */
 // @ngInject
-function Streamer($rootScope, annotationMapper, annotationUI, auth,
+function Streamer($rootScope, annotationMapper, store, auth,
                   groups, session, settings) {
   // The randomly generated session UUID
   var clientId = uuid.v4();
@@ -44,18 +44,18 @@ function Streamer($rootScope, annotationMapper, annotationUI, auth,
         // focused group, since we only display annotations from the focused
         // group and reload all annotations and discard pending updates
         // when switching groups.
-        if (ann.group === groups.focused().id || !annotationUI.isSidebar()) {
-          annotationUI.addPendingUpdate(ann);
+        if (ann.group === groups.focused().id || !store.isSidebar()) {
+          store.addPendingUpdate(ann);
         }
       });
       break;
     case 'delete':
-      annotations.forEach(ann => annotationUI.addPendingDeletion(ann.id));
+      annotations.forEach(ann => store.addPendingDeletion(ann.id));
       break;
     }
 
-    if (!annotationUI.isSidebar()) {
-      annotationUI.applyPendingUpdates();
+    if (!store.isSidebar()) {
+      store.applyPendingUpdates();
     }
   }
 
@@ -93,7 +93,7 @@ function Streamer($rootScope, annotationMapper, annotationUI, auth,
       } else if (message.type === 'session-change') {
         handleSessionChangeNotification(message);
       } else if (message.type === 'whoyouare') {
-        var userid = annotationUI.getState().session.userid;
+        var userid = store.getState().session.userid;
         if (message.userid !== userid) {
           console.warn('WebSocket user ID "%s" does not match logged-in ID "%s"', message.userid, userid);
         }
@@ -202,9 +202,9 @@ function Streamer($rootScope, annotationMapper, annotationUI, auth,
     return _connect();
   }
 
-  this.applyPendingUpdates = annotationUI.applyPendingUpdates;
-  this.countPendingUpdates = annotationUI.pendingUpdateCount;
-  this.hasPendingDeletion = annotationUI.hasPendingDeletion;
+  this.applyPendingUpdates = store.applyPendingUpdates;
+  this.countPendingUpdates = store.pendingUpdateCount;
+  this.hasPendingDeletion = store.hasPendingDeletion;
   this.clientId = clientId;
   this.configMessages = configMessages;
   this.connect = connect;

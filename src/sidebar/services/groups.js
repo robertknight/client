@@ -14,24 +14,24 @@
 var STORAGE_KEY = 'hypothesis.groups.focus';
 
 // @ngInject
-function groups(annotationUI, localStorage, serviceUrl, $rootScope, apiClient) {
+function groups(store, localStorage, serviceUrl, $rootScope, apiClient) {
 
   function all() {
-    return annotationUI.allGroups();
+    return store.allGroups();
   }
 
   /**
    * Return the group with the given `id`.
    */
   function get(id) {
-    return annotationUI.getGroup(id);
+    return store.getGroup(id);
   }
 
   /**
    * Return the group that is currently focused in the drop-down menu.
    */
   function focused() {
-    return annotationUI.focusedGroup();
+    return store.focusedGroup();
   }
 
   /**
@@ -50,13 +50,13 @@ function groups(annotationUI, localStorage, serviceUrl, $rootScope, apiClient) {
 
   /** Set the group with the passed id as the currently focused group. */
   function focus(id) {
-    annotationUI.focusGroup(id);
+    store.focusGroup(id);
     localStorage.setItem(STORAGE_KEY, id);
   }
 
   // When groups are loaded, focus the group that was last-focused in the
   // previous session, if it exists.
-  annotationUI.watch(all, groups => {
+  store.watch(all, groups => {
     var focusedGroup = focused();
     if (!focusedGroup) {
       return;
@@ -69,7 +69,7 @@ function groups(annotationUI, localStorage, serviceUrl, $rootScope, apiClient) {
 
     var group = groups.find(g => g.id === lastFocusedGroupId);
     if (group) {
-      annotationUI.focusGroup(group.id);
+      store.focusGroup(group.id);
     }
   });
 

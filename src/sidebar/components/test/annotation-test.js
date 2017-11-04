@@ -104,7 +104,7 @@ describe('annotation', function() {
     var $window;
     var fakeAnalytics;
     var fakeAnnotationMapper;
-    var fakeAnnotationUI;
+    var fakeStore;
     var fakeFeatures;
     var fakeFlash;
     var fakeGroups;
@@ -124,7 +124,7 @@ describe('annotation', function() {
 
       // A new annotation won't have any saved drafts yet.
       if (!annotation.id) {
-        fakeAnnotationUI.getDraft.returns(null);
+        fakeStore.getDraft.returns(null);
       }
 
       return {
@@ -168,7 +168,7 @@ describe('annotation', function() {
         flagAnnotation: sandbox.stub(),
       };
 
-      fakeAnnotationUI = {
+      fakeStore = {
         updateFlagStatus: sandbox.stub().returns(true),
 
         getDraft: sandbox.stub(),
@@ -234,7 +234,7 @@ describe('annotation', function() {
 
       $provide.value('analytics', fakeAnalytics);
       $provide.value('annotationMapper', fakeAnnotationMapper);
-      $provide.value('annotationUI', fakeAnnotationUI);
+      $provide.value('store', fakeStore);
       $provide.value('features', fakeFeatures);
       $provide.value('flash', fakeFlash);
       $provide.value('groups', fakeGroups);
@@ -351,7 +351,7 @@ describe('annotation', function() {
         createDirective(annotation);
 
         assert.notCalled(fakeApiClient.annotation.create);
-        assert.called(fakeAnnotationUI.updateDraft);
+        assert.called(fakeStore.updateDraft);
       });
 
       it('does not save new annotations on initialization', function() {
@@ -381,7 +381,7 @@ describe('annotation', function() {
       it('creates drafts for new annotations on initialization', function() {
         var annotation = fixtures.newAnnotation();
         createDirective(annotation);
-        assert.calledWith(fakeAnnotationUI.updateDraft, annotation, {
+        assert.calledWith(fakeStore.updateDraft, annotation, {
           isPrivate: false,
           tags: annotation.tags,
           text: annotation.text,
@@ -393,13 +393,13 @@ describe('annotation', function() {
         var controller = createDirective(annotation).controller;
 
         assert.notOk(controller.editing());
-        assert.notCalled(fakeAnnotationUI.updateDraft);
+        assert.notCalled(fakeStore.updateDraft);
       });
 
       it('edits annotations with drafts on initialization', function() {
         var annotation = fixtures.oldAnnotation();
         // There are some draft changes for this annotation.
-        fakeAnnotationUI.getDraft.returns({text: 'foo', tags: []});
+        fakeStore.getDraft.returns({text: 'foo', tags: []});
 
         var controller = createDirective(annotation).controller;
 
@@ -415,13 +415,13 @@ describe('annotation', function() {
 
       it('returns true if the annotation has a draft', function () {
         var controller = createDirective().controller;
-        fakeAnnotationUI.getDraft.returns({tags: [], text: '', isPrivate: false});
+        fakeStore.getDraft.returns({tags: [], text: '', isPrivate: false});
         assert.isTrue(controller.editing());
       });
 
       it('returns false if the annotation has a draft but is being saved', function () {
         var controller = createDirective().controller;
-        fakeAnnotationUI.getDraft.returns({tags: [], text: '', isPrivate: false});
+        fakeStore.getDraft.returns({tags: [], text: '', isPrivate: false});
         controller.isSaving = true;
         assert.isFalse(controller.editing());
       });
@@ -586,7 +586,7 @@ describe('annotation', function() {
       it('makes the annotation private when level is "private"', function() {
         var parts = createDirective();
         parts.controller.setPrivacy('private');
-        assert.calledWith(fakeAnnotationUI.updateDraft, parts.controller.annotation, sinon.match({
+        assert.calledWith(fakeStore.updateDraft, parts.controller.annotation, sinon.match({
           isPrivate: true,
         }));
       });
@@ -594,7 +594,7 @@ describe('annotation', function() {
       it('makes the annotation shared when level is "shared"', function() {
         var parts = createDirective();
         parts.controller.setPrivacy('shared');
-        assert.calledWith(fakeAnnotationUI.updateDraft, parts.controller.annotation, sinon.match({
+        assert.calledWith(fakeStore.updateDraft, parts.controller.annotation, sinon.match({
           isPrivate: false,
         }));
       });
@@ -871,7 +871,7 @@ describe('annotation', function() {
       unroll('returns #expected if #case_', function (testCase) {
         var ann = fixtures.publicAnnotation();
         ann.group = testCase.group.id;
-        fakeAnnotationUI.getDraft.returns(testCase.draft);
+        fakeStore.getDraft.returns(testCase.draft);
         fakeGroups.get.returns(testCase.group);
 
         var controller = createDirective(ann).controller;
@@ -932,7 +932,7 @@ describe('annotation', function() {
       it('removes the draft when saving an annotation succeeds', function () {
         var controller = createController();
         return controller.save().then(function () {
-          assert.calledWith(fakeAnnotationUI.removeDraft, annotation);
+          assert.calledWith(fakeStore.removeDraft, annotation);
         });
       });
 
@@ -979,7 +979,7 @@ describe('annotation', function() {
         var controller = createController();
         fakeApiClient.annotation.create = sinon.stub().returns(Promise.reject({status: -1}));
         return controller.save().then(function () {
-          assert.notCalled(fakeAnnotationUI.removeDraft);
+          assert.notCalled(fakeStore.removeDraft);
         });
       });
 
@@ -997,7 +997,7 @@ describe('annotation', function() {
 
       beforeEach(function() {
         annotation = fixtures.defaultAnnotation();
-        fakeAnnotationUI.getDraft.returns({text: 'unsaved change'});
+        fakeStore.getDraft.returns({text: 'unsaved change'});
       });
 
       function createController() {
@@ -1024,7 +1024,7 @@ describe('annotation', function() {
 
     describe('drafts', function() {
       it('starts editing immediately if there is a draft', function() {
-        fakeAnnotationUI.getDraft.returns({
+        fakeStore.getDraft.returns({
           tags: ['unsaved'],
           text: 'unsaved-text',
         });
@@ -1033,7 +1033,7 @@ describe('annotation', function() {
       });
 
       it('uses the text and tags from the draft if present', function() {
-        fakeAnnotationUI.getDraft.returns({
+        fakeStore.getDraft.returns({
           tags: ['unsaved-tag'],
           text: 'unsaved-text',
         });
@@ -1046,15 +1046,15 @@ describe('annotation', function() {
         var parts = createDirective();
         parts.controller.edit();
         parts.controller.revert();
-        assert.calledWith(fakeAnnotationUI.removeDraft, parts.annotation);
+        assert.calledWith(fakeStore.removeDraft, parts.annotation);
       });
 
       it('removes the draft when changes are saved', function() {
         var annotation = fixtures.defaultAnnotation();
         var controller = createDirective(annotation).controller;
-        fakeAnnotationUI.getDraft.returns({text: 'unsaved changes'});
+        fakeStore.getDraft.returns({text: 'unsaved changes'});
         return controller.save().then(function() {
-          assert.calledWith(fakeAnnotationUI.removeDraft, annotation);
+          assert.calledWith(fakeStore.removeDraft, annotation);
         });
       });
     });
@@ -1064,7 +1064,7 @@ describe('annotation', function() {
         var controller = createDirective(fixtures.defaultAnnotation()).controller;
         controller.edit();
         controller.revert();
-        assert.calledWith(fakeAnnotationUI.removeDraft, controller.annotation);
+        assert.calledWith(fakeStore.removeDraft, controller.annotation);
       });
 
       it('deletes the annotation if it was new', function () {

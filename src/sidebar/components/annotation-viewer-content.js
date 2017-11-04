@@ -24,12 +24,12 @@ function fetchThread(apiClient, id) {
 
 // @ngInject
 function AnnotationViewerContentController (
-  $location, $routeParams, annotationUI, rootThread, streamer, apiClient,
+  $location, $routeParams, store, rootThread, streamer, apiClient,
   streamFilter, annotationMapper
 ) {
   var self = this;
 
-  annotationUI.setAppIsSidebar(false);
+  store.setAppIsSidebar(false);
 
   var id = $routeParams.id;
 
@@ -37,12 +37,12 @@ function AnnotationViewerContentController (
     $location.path('/stream').search('q', query);
   };
 
-  annotationUI.subscribe(function () {
-    self.rootThread = rootThread.thread(annotationUI.getState());
+  store.subscribe(function () {
+    self.rootThread = rootThread.thread(store.getState());
   });
 
   this.setCollapsed = function (id, collapsed) {
-    annotationUI.setCollapsed(id, collapsed);
+    store.setCollapsed(id, collapsed);
   };
 
   this.ready = fetchThread(apiClient, id).then(function (annots) {
@@ -64,11 +64,11 @@ function AnnotationViewerContentController (
     streamer.connect();
 
     annots.forEach(function (annot) {
-      annotationUI.setCollapsed(annot.id, false);
+      store.setCollapsed(annot.id, false);
     });
 
     if (topLevelAnnot.id !== id) {
-      annotationUI.highlightAnnotations([id]);
+      store.highlightAnnotations([id]);
     }
   });
 }

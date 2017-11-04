@@ -34,14 +34,14 @@ var sortFns = {
  * This performs two functions:
  *
  * 1. It listens for annotations being loaded, created and unloaded and
- *    dispatches annotationUI.{addAnnotations|removeAnnotations} actions.
+ *    dispatches store.{addAnnotations|removeAnnotations} actions.
  * 2. Listens for changes in the UI state and rebuilds the root conversation
  *    thread.
  *
  * The root thread is then displayed by viewer.html
  */
 // @ngInject
-function RootThread($rootScope, annotationUI, searchFilter, viewFilter) {
+function RootThread($rootScope, store, searchFilter, viewFilter) {
 
   /**
    * Build the root conversation thread from the given UI state.
@@ -87,11 +87,11 @@ function RootThread($rootScope, annotationUI, searchFilter, viewFilter) {
   }
 
   function deleteNewAndEmptyAnnotations() {
-    annotationUI.getState().annotations.filter(function (ann) {
-      var draft = annotationUI.getDraft(ann);
+    store.getState().annotations.filter(function (ann) {
+      var draft = store.getDraft(ann);
       return metadata.isNew(ann) && isDraftEmpty(draft);
     }).forEach(function (ann) {
-      annotationUI.removeDraft(ann);
+      store.removeDraft(ann);
       $rootScope.$broadcast(events.ANNOTATION_DELETED, ann);
     });
   }
@@ -100,13 +100,13 @@ function RootThread($rootScope, annotationUI, searchFilter, viewFilter) {
   // and show them in the UI.
   //
   // Note: These events could all be converted into actions that are handled by
-  // the Redux store in annotationUI.
+  // the Redux store in store.
   var loadEvents = [events.ANNOTATION_CREATED,
                     events.ANNOTATION_UPDATED,
                     events.ANNOTATIONS_LOADED];
   loadEvents.forEach(function (event) {
     $rootScope.$on(event, function (event, annotation) {
-      annotationUI.addAnnotations([].concat(annotation));
+      store.addAnnotations([].concat(annotation));
     });
   });
 
@@ -115,31 +115,31 @@ function RootThread($rootScope, annotationUI, searchFilter, viewFilter) {
     // that are empty.
     deleteNewAndEmptyAnnotations();
 
-    annotationUI.addAnnotations([ann]);
+    store.addAnnotations([ann]);
 
     // If the annotation is of type note or annotation, make sure
     // the appropriate tab is selected. If it is of type reply, user
     // stays in the selected tab.
     if (metadata.isPageNote(ann)) {
-      annotationUI.selectTab(uiConstants.TAB_NOTES);
+      store.selectTab(uiConstants.TAB_NOTES);
     } else if (metadata.isAnnotation(ann)) {
-      annotationUI.selectTab(uiConstants.TAB_ANNOTATIONS);
+      store.selectTab(uiConstants.TAB_ANNOTATIONS);
     }
 
     (ann.references || []).forEach(function (parent) {
-      annotationUI.setCollapsed(parent, false);
+      store.setCollapsed(parent, false);
     });
   });
 
   // Remove any annotations that are deleted or unloaded
   $rootScope.$on(events.ANNOTATION_DELETED, function (event, annotation) {
-    annotationUI.removeAnnotations([annotation]);
+    store.removeAnnotations([annotation]);
     if (annotation.id) {
-      annotationUI.removeSelectedAnnotation(annotation.id);
+      store.removeSelectedAnnotation(annotation.id);
     }
   });
   $rootScope.$on(events.ANNOTATIONS_UNLOADED, function (event, annotations) {
-    annotationUI.removeAnnotations(annotations);
+    store.removeAnnotations(annotations);
   });
 
   /**

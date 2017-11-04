@@ -209,7 +209,7 @@ module.exports = angular.module('h', [
   .directive('statusButton', require('./directive/status-button'))
   .directive('windowScroll', require('./directive/window-scroll'))
 
-  .service('annotationUI', createStore)
+  .service('store', createStore)
 
   .service('analytics', require('./services/analytics'))
   .service('annotationMapper', require('./services/annotation-mapper'))

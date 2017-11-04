@@ -51,7 +51,7 @@ var fixtures = {
 };
 
 describe('FrameSync', function () {
-  var fakeAnnotationUI;
+  var fakeStore;
   var fakeBridge;
   var frameSync;
   var $rootScope;
@@ -62,7 +62,7 @@ describe('FrameSync', function () {
   });
 
   beforeEach(function () {
-    fakeAnnotationUI = fakeStore({annotations: []}, {
+    fakeStore = fakeStore({annotations: []}, {
       connectFrame: sinon.stub(),
       destroyFrame: sinon.stub(),
       findIDsForTags: sinon.stub(),
@@ -92,7 +92,7 @@ describe('FrameSync', function () {
 
     angular.mock.module('app', {
       Discovery: FakeDiscovery,
-      annotationUI: fakeAnnotationUI,
+      store: fakeStore,
       bridge: fakeBridge,
     });
 
@@ -108,7 +108,7 @@ describe('FrameSync', function () {
 
   context('when annotations are loaded into the sidebar', function () {
     it('sends a "loadAnnotations" message to the frame', function () {
-      fakeAnnotationUI.setState({annotations: [fixtures.ann]});
+      fakeStore.setState({annotations: [fixtures.ann]});
       assert.calledWithMatch(fakeBridge.call, 'loadAnnotations', sinon.match([
         formatAnnot(fixtures.ann),
       ]));
@@ -116,10 +116,10 @@ describe('FrameSync', function () {
 
     it('sends a "loadAnnotations" message only for new annotations', function () {
       var ann2 = Object.assign({}, fixtures.ann, {$tag: 't2', id: 'a2'});
-      fakeAnnotationUI.setState({annotations: [fixtures.ann]});
+      fakeStore.setState({annotations: [fixtures.ann]});
       fakeBridge.call.reset();
 
-      fakeAnnotationUI.setState({annotations: [fixtures.ann, ann2]});
+      fakeStore.setState({annotations: [fixtures.ann, ann2]});
 
       assert.calledWithMatch(fakeBridge.call, 'loadAnnotations', sinon.match([
         formatAnnot(ann2),
@@ -127,37 +127,37 @@ describe('FrameSync', function () {
     });
 
     it('does not send a "loadAnnotations" message for replies', function () {
-      fakeAnnotationUI.setState({annotations: [annotationFixtures.newReply()]});
+      fakeStore.setState({annotations: [annotationFixtures.newReply()]});
       assert.isFalse(fakeBridge.call.calledWith('loadAnnotations'));
     });
   });
 
   context('when annotation count has changed', function () {
     it('sends a "publicAnnotationCountChanged" message to the frame when there are public annotations', function () {
-      fakeAnnotationUI.setState({
+      fakeStore.setState({
         annotations: [annotationFixtures.publicAnnotation()],
       });
       assert.calledWithMatch(fakeBridge.call, 'publicAnnotationCountChanged', sinon.match(1));
     });
 
     it('sends a "publicAnnotationCountChanged" message to the frame when there are only private annotations', function () {
-      fakeAnnotationUI.setState({
+      fakeStore.setState({
         annotations: [annotationFixtures.defaultAnnotation()],
       });
       assert.calledWithMatch(fakeBridge.call, 'publicAnnotationCountChanged', sinon.match(0));
     });
 
     it('does not send a "publicAnnotationCountChanged" message to the frame if annotation fetch is not complete', function () {
-      fakeAnnotationUI.frames.returns([{uri: 'http://example.com'}]);
-      fakeAnnotationUI.setState({
+      fakeStore.frames.returns([{uri: 'http://example.com'}]);
+      fakeStore.setState({
         annotations: [annotationFixtures.publicAnnotation()],
       });
       assert.isFalse(fakeBridge.call.calledWith('publicAnnotationCountChanged'));
     });
 
     it('does not send a "publicAnnotationCountChanged" message if there are no connected frames', function () {
-      fakeAnnotationUI.frames.returns([]);
-      fakeAnnotationUI.setState({
+      fakeStore.frames.returns([]);
+      fakeStore.setState({
         annotations: [annotationFixtures.publicAnnotation()],
       });
       assert.isFalse(fakeBridge.call.calledWith('publicAnnotationCountChanged'));
@@ -166,8 +166,8 @@ describe('FrameSync', function () {
 
   context('when annotations are removed from the sidebar', function () {
     it('sends a "deleteAnnotation" message to the frame', function () {
-      fakeAnnotationUI.setState({annotations: [fixtures.ann]});
-      fakeAnnotationUI.setState({annotations: []});
+      fakeStore.setState({annotations: [fixtures.ann]});
+      fakeStore.setState({annotations: []});
       assert.calledWithMatch(fakeBridge.call, 'deleteAnnotation',
         sinon.match(formatAnnot(fixtures.ann)));
     });
@@ -191,7 +191,7 @@ describe('FrameSync', function () {
   context('when anchoring completes', function () {
     it('updates the anchoring status for the annotation', function () {
       fakeBridge.emit('sync', [{tag: 't1', msg: {$orphan: false}}]);
-      assert.calledWith(fakeAnnotationUI.updateAnchorStatus, null, 't1', false);
+      assert.calledWith(fakeStore.updateAnchorStatus, null, 't1', false);
     });
 
     it('emits an ANNOTATIONS_SYNCED event', function () {
@@ -217,7 +217,7 @@ describe('FrameSync', function () {
 
       fakeBridge.emit('connect', fakeChannel);
 
-      assert.calledWith(fakeAnnotationUI.connectFrame, {
+      assert.calledWith(fakeStore.connectFrame, {
         id: frameInfo.frameIdentifier,
         metadata: frameInfo.metadata,
         uri: frameInfo.uri,
@@ -231,32 +231,32 @@ describe('FrameSync', function () {
     it('removes the frame from the frames list', function () {
       fakeBridge.emit('destroyFrame', frameId);
 
-      assert.calledWith(fakeAnnotationUI.destroyFrame, fixtures.framesListEntry);
+      assert.calledWith(fakeStore.destroyFrame, fixtures.framesListEntry);
     });
   });
 
   describe('on "showAnnotations" message', function () {
     it('selects annotations which have an ID', function () {
-      fakeAnnotationUI.findIDsForTags.returns(['id1','id2','id3']);
+      fakeStore.findIDsForTags.returns(['id1','id2','id3']);
       fakeBridge.emit('showAnnotations', ['tag1', 'tag2', 'tag3']);
 
-      assert.calledWith(fakeAnnotationUI.selectAnnotations, ['id1', 'id2', 'id3']);
-      assert.calledWith(fakeAnnotationUI.selectTab, uiConstants.TAB_ANNOTATIONS);
+      assert.calledWith(fakeStore.selectAnnotations, ['id1', 'id2', 'id3']);
+      assert.calledWith(fakeStore.selectTab, uiConstants.TAB_ANNOTATIONS);
     });
   });
 
   describe('on "focusAnnotations" message', function () {
     it('focuses the annotations', function () {
       fakeBridge.emit('focusAnnotations', ['tag1', 'tag2', 'tag3']);
-      assert.calledWith(fakeAnnotationUI.focusAnnotations, ['tag1', 'tag2', 'tag3']);
+      assert.calledWith(fakeStore.focusAnnotations, ['tag1', 'tag2', 'tag3']);
     });
   });
 
   describe('on "toggleAnnotationSelection" message', function () {
     it('toggles the selected state of the annotations', function () {
-      fakeAnnotationUI.findIDsForTags.returns(['id1','id2','id3']);
+      fakeStore.findIDsForTags.returns(['id1','id2','id3']);
       fakeBridge.emit('toggleAnnotationSelection', ['tag1', 'tag2', 'tag3']);
-      assert.calledWith(fakeAnnotationUI.toggleSelectedAnnotations, ['id1', 'id2', 'id3']);
+      assert.calledWith(fakeStore.toggleSelectedAnnotations, ['id1', 'id2', 'id3']);
     });
   });
 

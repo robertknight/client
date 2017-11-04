@@ -43,7 +43,7 @@ function sessionActions(options) {
  *
  * @ngInject
  */
-function session($http, $q, $resource, $rootScope, analytics, annotationUI, auth,
+function session($http, $q, $resource, $rootScope, analytics, store, auth,
                  flash, raven, settings, serviceConfig, apiClient) {
   // Headers sent by every request made by the session service.
   var headers = {};
@@ -131,12 +131,12 @@ function session($http, $q, $resource, $rootScope, analytics, annotationUI, auth
    *              when new state has been pushed to it by the server.
    */
   function update(model) {
-    var prevSession = annotationUI.getState().session;
+    var prevSession = store.getState().session;
     var userChanged = model.userid !== prevSession.userid;
     var groupsChanged = !angular.equals(model.groups, prevSession.groups);
 
     // Update the session model used by the application
-    annotationUI.updateSession(model);
+    store.updateSession(model);
 
     // Set up subsequent requests to send the CSRF token in the headers.
     if (model.csrf) {
@@ -265,9 +265,9 @@ function session($http, $q, $resource, $rootScope, analytics, annotationUI, auth
 
     // For the moment, we continue to expose the session state as a property on
     // this service. In future, other services which access the session state
-    // will do so directly from annotationUI or via selector functions
+    // will do so directly from store or via selector functions
     get state() {
-      return annotationUI.getState().session;
+      return store.getState().session;
     },
 
     update: update,

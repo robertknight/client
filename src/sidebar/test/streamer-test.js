@@ -67,7 +67,7 @@ inherits(FakeSocket, EventEmitter);
 
 describe('Streamer', function () {
   var fakeAnnotationMapper;
-  var fakeAnnotationUI;
+  var fakeStore;
   var fakeAuth;
   var fakeGroups;
   var fakeRootScope;
@@ -80,7 +80,7 @@ describe('Streamer', function () {
     activeStreamer = new Streamer(
       fakeRootScope,
       fakeAnnotationMapper,
-      fakeAnnotationUI,
+      fakeStore,
       fakeAuth,
       fakeGroups,
       fakeSession,
@@ -112,7 +112,7 @@ describe('Streamer', function () {
       unloadAnnotations: sinon.stub(),
     };
 
-    fakeAnnotationUI = {
+    fakeStore = {
       annotationExists: sinon.stub().returns(false),
       isSidebar: sinon.stub().returns(true),
       getState: sinon.stub().returns({
@@ -253,7 +253,7 @@ describe('Streamer', function () {
 
     context('when the app is the stream', function () {
       beforeEach(function () {
-        fakeAnnotationUI.isSidebar.returns(false);
+        fakeStore.isSidebar.returns(false);
       });
 
       it('does not defer updates', function () {
@@ -287,7 +287,7 @@ describe('Streamer', function () {
 
       it('saves pending deletions if the annotation is loaded', function () {
         var id = fixtures.deleteNotification.payload[0].id;
-        fakeAnnotationUI.annotationExists.returns(true);
+        fakeStore.annotationExists.returns(true);
 
         fakeWebSocket.notify(fixtures.deleteNotification);
 
@@ -297,7 +297,7 @@ describe('Streamer', function () {
 
       it('discards pending deletions if the annotation is not loaded', function () {
         var id = fixtures.deleteNotification.payload[0].id;
-        fakeAnnotationUI.annotationExists.returns(false);
+        fakeStore.annotationExists.returns(false);
 
         fakeWebSocket.notify(fixtures.deleteNotification);
 
@@ -311,7 +311,7 @@ describe('Streamer', function () {
       });
 
       it('discards pending updates if an unloaded annotation is deleted', function () {
-        fakeAnnotationUI.annotationExists.returns(false);
+        fakeStore.annotationExists.returns(false);
 
         fakeWebSocket.notify(fixtures.createNotification);
         fakeWebSocket.notify(fixtures.deleteNotification);
@@ -345,7 +345,7 @@ describe('Streamer', function () {
     });
 
     it('applies pending deletions', function () {
-      fakeAnnotationUI.annotationExists.returns(true);
+      fakeStore.annotationExists.returns(true);
 
       fakeWebSocket.notify(fixtures.deleteNotification);
       activeStreamer.applyPendingUpdates();
@@ -381,7 +381,7 @@ describe('Streamer', function () {
     }, changeEvents);
 
     unroll('discards pending deletions when #event occurs', function (testCase) {
-      fakeAnnotationUI.annotationExists.returns(true);
+      fakeStore.annotationExists.returns(true);
       fakeWebSocket.notify(fixtures.deleteNotification);
 
       fakeRootScope.$broadcast(testCase.event, {id: 'an-id'});
@@ -431,7 +431,7 @@ describe('Streamer', function () {
     });
 
     unroll('does nothing if the userid matches the logged-in userid', function (testCase) {
-      fakeAnnotationUI.getState.returns({
+      fakeStore.getState.returns({
         session: {
           userid: testCase.userid,
         },
@@ -453,7 +453,7 @@ describe('Streamer', function () {
     }]);
 
     unroll('logs a warning if the userid does not match the logged-in userid', function (testCase) {
-      fakeAnnotationUI.getState.returns({
+      fakeStore.getState.returns({
         session: {
           userid: testCase.userid,
         },

@@ -15,7 +15,7 @@ describe('StreamContentController', function () {
   var fakeRoute;
   var fakeRouteParams;
   var fakeAnnotationMapper;
-  var fakeAnnotationUI;
+  var fakeStore;
   var fakeQueryParser;
   var fakeRootThread;
   var fakeSearchFilter;
@@ -34,7 +34,7 @@ describe('StreamContentController', function () {
       loadAnnotations: sinon.spy(),
     };
 
-    fakeAnnotationUI = {
+    fakeStore = {
       clearAnnotations: sinon.spy(),
       setAppIsSidebar: sinon.spy(),
       setCollapsed: sinon.spy(),
@@ -83,7 +83,7 @@ describe('StreamContentController', function () {
       $route: fakeRoute,
       $routeParams: fakeRouteParams,
       annotationMapper: fakeAnnotationMapper,
-      annotationUI: fakeAnnotationUI,
+      store: fakeStore,
       queryParser: fakeQueryParser,
       rootThread: fakeRootThread,
       searchFilter: fakeSearchFilter,
@@ -135,7 +135,7 @@ describe('StreamContentController', function () {
       createController();
       fakeRouteParams.q = 'new query';
       $rootScope.$broadcast('$routeUpdate');
-      assert.called(fakeAnnotationUI.clearAnnotations);
+      assert.called(fakeStore.clearAnnotations);
       assert.calledOnce(fakeRoute.reload);
     });
 
@@ -143,7 +143,7 @@ describe('StreamContentController', function () {
       fakeRouteParams.q = 'test query';
       createController();
       $rootScope.$broadcast('$routeUpdate');
-      assert.notCalled(fakeAnnotationUI.clearAnnotations);
+      assert.notCalled(fakeStore.clearAnnotations);
       assert.notCalled(fakeRoute.reload);
     });
   });

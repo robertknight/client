@@ -33,14 +33,14 @@ var urlUtil = require('../util/url');
  *
  * @ngInject
  */
-function serviceUrl(annotationUI, apiRoutes) {
+function serviceUrl(store, apiRoutes) {
 
   apiRoutes.links()
-    .then(annotationUI.updateLinks)
+    .then(store.updateLinks)
     .catch(err => console.warn('Links API request failed', err));
 
   return function(linkName, params) {
-    var links = annotationUI.getState().links;
+    var links = store.getState().links;
 
     if (links === null) {
       return '';
