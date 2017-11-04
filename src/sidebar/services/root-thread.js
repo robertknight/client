@@ -1,12 +1,12 @@
 'use strict';
 
-var buildThread = require('./build-thread');
-var isDraftEmpty = require('./reducers/drafts').isDraftEmpty;
-var events = require('./events');
-var memoize = require('./util/memoize');
-var metadata = require('./annotation-metadata');
-var tabs = require('./tabs');
-var uiConstants = require('./ui-constants');
+var buildThread = require('../util/build-thread');
+var { isDraftEmpty } = require('../store/modules/drafts');
+var events = require('../events');
+var memoize = require('../util/memoize');
+var metadata = require('../util/annotation-metadata');
+var tabs = require('../tabs');
+var uiConstants = require('../ui-constants');
 
 function truthyKeys(map) {
   return Object.keys(map).filter(function (k) {

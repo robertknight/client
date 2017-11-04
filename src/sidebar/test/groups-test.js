@@ -1,7 +1,7 @@
 'use strict';
 
 var events = require('../events');
-var groups = require('../groups');
+var groups = require('../services/groups');
 
 // Return a mock session service containing three groups.
 var sessionWithThreeGroups = function() {

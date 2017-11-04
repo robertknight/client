@@ -1,6 +1,6 @@
 'use strict';
 
-var analyticsService = require('../analytics');
+var analyticsService = require('../services/analytics');
 
 var createEventObj = function(override){
   return {

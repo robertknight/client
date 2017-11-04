@@ -1,6 +1,6 @@
 'use strict';
 
-var hostPageConfig = require('../host-config');
+var hostPageConfig = require('../util/host-config');
 
 function fakeWindow(config) {
   return {

@@ -5,8 +5,8 @@
 
 'use strict';
 
-var arrayUtil = require('../../util/array-util');
-var metadata = require('../../annotation-metadata');
+var arrayUtil = require('../../util/array');
+var metadata = require('../../util/annotation-metadata');
 var uiConstants = require('../../ui-constants');
 
 var selection = require('./selection');

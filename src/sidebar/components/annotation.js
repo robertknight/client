@@ -1,8 +1,8 @@
 'use strict';
 
-var annotationMetadata = require('../annotation-metadata');
+var annotationMetadata = require('../util/annotation-metadata');
 var events = require('../events');
-var persona = require('../filter/persona');
+var persona = require('../util/account-id');
 
 var isNew = annotationMetadata.isNew;
 var isReply = annotationMetadata.isReply;

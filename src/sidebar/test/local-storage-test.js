@@ -1,7 +1,7 @@
 'use strict';
 
 var angular = require('angular');
-var service = require('../local-storage');
+var service = require('../services/local-storage');
 
 function windowWithLocalStoragePropertyThatThrows() {
   var win = {};

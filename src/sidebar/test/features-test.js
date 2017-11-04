@@ -1,6 +1,6 @@
 'use strict';
 
-var features = require('../features');
+var features = require('../services/features');
 var events = require('../events');
 var bridgeEvents = require('../../shared/bridge-events');
 

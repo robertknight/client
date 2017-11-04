@@ -2,9 +2,9 @@
 
 var queryString = require('query-string');
 
-var events = require('./events');
-var resolve = require('./util/url-util').resolve;
-var serviceConfig = require('./service-config');
+var events = require('../events');
+var resolve = require('../util/url').resolve;
+var serviceConfig = require('../util/service-config');
 
 /**
  * @typedef RefreshOptions

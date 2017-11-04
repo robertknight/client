@@ -1,6 +1,6 @@
 'use strict';
 
-var Socket = require('../websocket');
+var Socket = require('../util/websocket');
 
 describe('websocket wrapper', function () {
   var fakeSocket;

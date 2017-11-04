@@ -3,9 +3,9 @@
 // Selectors that calculate the annotation counts displayed in tab headings
 // and determine which tab an annotation should be displayed in.
 
-var countIf = require('./util/array-util').countIf;
-var metadata = require('./annotation-metadata');
-var session = require('./reducers/session');
+var countIf = require('./util/array').countIf;
+var metadata = require('./util/annotation-metadata');
+var session = require('./store/modules/session');
 var uiConstants = require('./ui-constants');
 
 /**

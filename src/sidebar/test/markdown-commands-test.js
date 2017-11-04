@@ -1,6 +1,6 @@
 'use strict';
 
-var commands = require('../markdown-commands');
+var commands = require('../util/markdown-commands');
 var unroll = require('../../shared/test/util').unroll;
 
 /**

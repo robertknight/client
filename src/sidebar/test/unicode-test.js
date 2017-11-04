@@ -1,6 +1,6 @@
 'use strict';
 
-var unicode = require('../unicode')();
+var unicode = require('../services/unicode')();
 
 describe('unicode', () => {
   describe('#fold', () => {

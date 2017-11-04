@@ -1,6 +1,6 @@
 'use strict';
 
-var mediaEmbedder = require('../media-embedder.js');
+var mediaEmbedder = require('../util/media-embedder.js');
 
 describe('media-embedder', function () {
   function domElement (html) {

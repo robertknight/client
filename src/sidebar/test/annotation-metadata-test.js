@@ -1,6 +1,6 @@
 'use strict';
 
-var annotationMetadata = require('../annotation-metadata');
+var annotationMetadata = require('../util/annotation-metadata');
 var fixtures = require('./annotation-fixtures');
 
 var unroll = require('../../shared/test/util').unroll;

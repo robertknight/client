@@ -3,9 +3,9 @@
 var scrollIntoView = require('scroll-into-view');
 
 var events = require('../events');
-var parseAccountID = require('../filter/persona').parseAccountID;
+var parseAccountID = require('../util/account-id').parseAccountID;
 var scopeTimeout = require('../util/scope-timeout');
-var serviceConfig = require('../service-config');
+var serviceConfig = require('../util/service-config');
 var bridgeEvents = require('../../shared/bridge-events');
 
 /**

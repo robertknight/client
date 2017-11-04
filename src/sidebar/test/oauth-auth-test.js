@@ -91,7 +91,7 @@ describe('sidebar.oauth-auth', function () {
 
   before(() => {
     angular.module('app', [])
-      .service('auth', require('../oauth-auth'));
+      .service('auth', require('../services/oauth-auth'));
   });
 
   beforeEach(function () {

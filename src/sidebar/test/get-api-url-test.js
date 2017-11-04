@@ -1,6 +1,6 @@
 'use strict';
 
-var getApiUrl = require('../get-api-url');
+var getApiUrl = require('../util/get-api-url');
 
 describe('sidebar.getApiUrl', function () {
   context('when there is a service object in settings', function () {

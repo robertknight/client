@@ -5,9 +5,9 @@ var EventEmitter = require('tiny-emitter');
 
 var annotationFixtures = require('./annotation-fixtures');
 var events = require('../events');
-var FrameSync = require('../frame-sync').default;
+var FrameSync = require('../services/frame-sync').default;
 var fakeStore = require('./fake-redux-store');
-var formatAnnot = require('../frame-sync').formatAnnot;
+var formatAnnot = require('../services/frame-sync').formatAnnot;
 var uiConstants = require('../ui-constants');
 
 var fixtures = {

@@ -1,8 +1,8 @@
 'use strict';
 
-var annotationMetadata = require('../annotation-metadata');
+var annotationMetadata = require('../util/annotation-metadata');
 var memoize = require('../util/memoize');
-var persona = require('../filter/persona');
+var persona = require('../util/account-id');
 
 // @ngInject
 function AnnotationHeaderController(groups, settings, serviceUrl) {

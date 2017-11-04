@@ -1,6 +1,6 @@
 'use strict';
 
-var SearchClient = require('../search-client');
+var SearchClient = require('../util/search-client');
 
 function awaitEvent(emitter, event) {
   return new Promise(function (resolve) {

@@ -1,6 +1,6 @@
 'use strict';
 
-var retryUtil = require('../retry-util');
+var retryUtil = require('../util/retry');
 var toResult = require('../../shared/test/promise-util').toResult;
 
 describe('retry-util', function () {

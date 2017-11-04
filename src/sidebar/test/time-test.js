@@ -1,6 +1,6 @@
 'use strict';
 
-var time = require('../time');
+var time = require('../util/time');
 
 var minute = 60;
 var hour = minute * 60;

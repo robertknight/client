@@ -1,6 +1,6 @@
 'use strict';
 
-var searchFilter = require('../search-filter')();
+var searchFilter = require('../services/search-filter')();
 
 describe('sidebar.search-filter', () => {
   describe('#toObject', () => {

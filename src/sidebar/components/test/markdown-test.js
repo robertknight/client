@@ -62,7 +62,7 @@ describe('markdown', function () {
           convertSelectionToLink: mockFormattingCommand,
           toggleBlockStyle: mockFormattingCommand,
           toggleSpanStyle: mockFormattingCommand,
-          LinkType: require('../../markdown-commands').LinkType,
+          LinkType: require('../../util/markdown-commands').LinkType,
         },
         '../media-embedder': noCallThru({
           replaceLinksWithEmbeds: function (element) {

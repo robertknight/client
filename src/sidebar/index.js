@@ -1,10 +1,10 @@
 'use strict';
 
-var addAnalytics = require('./ga');
+var addAnalytics = require('./util/ga-init');
 var disableOpenerForExternalLinks = require('./util/disable-opener-for-external-links');
-var getApiUrl = require('./get-api-url');
-var serviceConfig = require('./service-config');
-var crossOriginRPC = require('./cross-origin-rpc.js');
+var getApiUrl = require('./util/get-api-url');
+var serviceConfig = require('./util/service-config');
+var crossOriginRPC = require('./services/cross-origin-rpc.js');
 require('../shared/polyfills');
 
 var raven;
@@ -19,7 +19,7 @@ if (settings.raven) {
   raven.init(settings.raven);
 }
 
-var hostPageConfig = require('./host-config');
+var hostPageConfig = require('./util/host-config');
 Object.assign(settings, hostPageConfig(window));
 
 var { createStore } = require('./store');
@@ -112,7 +112,7 @@ function setupHttp($http, streamer) {
 
 function processAppOpts() {
   if (settings.liveReloadServer) {
-    require('./live-reload-client').connect(settings.liveReloadServer);
+    require('./util/live-reload-client').connect(settings.liveReloadServer);
   }
 }
 
@@ -139,9 +139,9 @@ function shouldUseOAuth() {
 
 var authService;
 if (shouldUseOAuth()) {
-  authService = require('./oauth-auth');
+  authService = require('./services/oauth-auth');
 } else {
-  authService = require('./auth');
+  authService = require('./services/auth');
 }
 
 module.exports = angular.module('h', [
@@ -211,40 +211,40 @@ module.exports = angular.module('h', [
 
   .service('annotationUI', createStore)
 
-  .service('analytics', require('./analytics'))
-  .service('annotationMapper', require('./annotation-mapper'))
-  .service('apiRoutes', require('./api-routes'))
+  .service('analytics', require('./services/analytics'))
+  .service('annotationMapper', require('./services/annotation-mapper'))
+  .service('apiRoutes', require('./services/api-routes'))
   .service('auth', authService)
   .service('bridge', require('../shared/bridge'))
-  .service('features', require('./features'))
-  .service('flash', require('./flash'))
-  .service('formRespond', require('./form-respond'))
-  .service('frameSync', require('./frame-sync').default)
-  .service('groups', require('./groups'))
-  .service('localStorage', require('./local-storage'))
-  .service('permissions', require('./permissions'))
-  .service('queryParser', require('./query-parser'))
-  .service('rootThread', require('./root-thread'))
-  .service('searchFilter', require('./search-filter'))
-  .service('serviceUrl', require('./service-url'))
-  .service('session', require('./session'))
-  .service('streamer', require('./streamer'))
-  .service('streamFilter', require('./stream-filter'))
-  .service('tags', require('./tags'))
-  .service('unicode', require('./unicode'))
-  .service('viewFilter', require('./view-filter'))
+  .service('features', require('./services/features'))
+  .service('flash', require('./services/flash'))
+  .service('formRespond', require('./services/form-respond'))
+  .service('frameSync', require('./services/frame-sync').default)
+  .service('groups', require('./services/groups'))
+  .service('localStorage', require('./services/local-storage'))
+  .service('permissions', require('./services/permissions'))
+  .service('queryParser', require('./services/query-parser'))
+  .service('rootThread', require('./services/root-thread'))
+  .service('searchFilter', require('./services/search-filter'))
+  .service('serviceUrl', require('./services/service-url'))
+  .service('session', require('./services/session'))
+  .service('streamer', require('./services/streamer'))
+  .service('streamFilter', require('./services/stream-filter'))
+  .service('tags', require('./services/tags'))
+  .service('unicode', require('./services/unicode'))
+  .service('viewFilter', require('./services/view-filter'))
 
-  .factory('apiClient', require('./api-client'))
+  .factory('apiClient', require('./services/api-client'))
 
   .value('Discovery', require('../shared/discovery'))
   .value('ExcerptOverflowMonitor', require('./util/excerpt-overflow-monitor'))
-  .value('VirtualThreadList', require('./virtual-thread-list'))
+  .value('VirtualThreadList', require('./util/virtual-thread-list'))
   .value('random', require('./util/random'))
   .value('raven', require('./raven'))
   .value('serviceConfig', serviceConfig)
   .value('settings', settings)
-  .value('time', require('./time'))
-  .value('urlEncodeFilter', require('./filter/url').encode)
+  .value('time', require('./util/time'))
+  .value('urlEncodeFilter', require('./util/url-encode').encode)
 
   .config(configureHttp)
   .config(configureLocation)

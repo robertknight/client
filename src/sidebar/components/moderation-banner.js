@@ -1,6 +1,6 @@
 'use strict';
 
-var annotationMetadata = require('../annotation-metadata');
+var annotationMetadata = require('../util/annotation-metadata');
 
 // @ngInject
 function ModerationBannerController(annotationUI, flash, apiClient) {

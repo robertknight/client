@@ -1,7 +1,7 @@
 'use strict';
 
-var persona = require('../filter/persona');
-var serviceConfig = require('../service-config');
+var persona = require('../util/account-id');
+var serviceConfig = require('../util/service-config');
 
 // @ngInject
 function GroupListController($window, analytics, groups, settings, serviceUrl) {

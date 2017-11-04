@@ -1,8 +1,8 @@
 'use strict';
 
 var bridgeEvents = require('../../shared/bridge-events');
-var persona = require('../filter/persona');
-var serviceConfig = require('../service-config');
+var persona = require('../util/account-id');
+var serviceConfig = require('../util/service-config');
 
 module.exports = {
   controllerAs: 'vm',

@@ -1,6 +1,6 @@
 'use strict';
 
-var Permissions = require('../permissions');
+var Permissions = require('../services/permissions');
 
 var userid = 'acct:flash@gord.on';
 

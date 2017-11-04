@@ -19,7 +19,7 @@ mockFlash = info: sandbox.spy()
 mockFormRespond = sandbox.spy()
 mockAnalytics = {
   track: sandbox.stub(),
-  events: require('../../analytics')().events,
+  events: require('../../services/analytics')().events,
 }
 
 describe 'loginForm.Controller', ->

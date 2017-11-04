@@ -1,6 +1,6 @@
 'use strict';
 
-var flash = require('../flash');
+var flash = require('../services/flash');
 
 describe('sidebar.flash', () => {
   ['info', 'success', 'warning', 'error'].forEach(method => {

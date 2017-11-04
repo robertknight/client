@@ -7,7 +7,7 @@ describe 'form-respond', ->
 
   before ->
     angular.module('h', [])
-    .service('formRespond', require('../form-respond'))
+    .service('formRespond', require('../services/form-respond'))
 
   beforeEach module('h')
   beforeEach inject (_$rootScope_, _formRespond_) ->

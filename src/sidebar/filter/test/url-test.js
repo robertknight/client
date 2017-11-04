@@ -1,6 +1,6 @@
 'use strict';
 
-var url = require('../url');
+var url = require('../../util/url-encode');
 
 describe('url.encode', function () {
   it('urlencodes its input', function () {

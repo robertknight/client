@@ -1,6 +1,6 @@
 'use strict';
 
-var serviceConfig = require('../service-config');
+var serviceConfig = require('../util/service-config');
 
 describe('serviceConfig', function () {
   it('returns null if services is not an array', function () {

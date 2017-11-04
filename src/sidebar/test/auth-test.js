@@ -1,6 +1,6 @@
 'use strict';
 
-var auth = require('../auth');
+var auth = require('../services/auth');
 
 describe('auth', function () {
   var fakeHttp;

@@ -3,7 +3,7 @@
 var queryString = require('query-string');
 var uuid = require('node-uuid');
 
-var Socket = require('./websocket');
+var Socket = require('../util/websocket');
 
 /**
  * Open a new WebSocket connection to the Hypothesis push notification service.

@@ -22,7 +22,7 @@ describe('sidebar.session', function () {
 
   before(function () {
     angular.module('h', ['ngResource'])
-      .service('session', require('../session'));
+      .service('session', require('../services/session'));
   });
 
   beforeEach(function () {
@@ -31,7 +31,7 @@ describe('sidebar.session', function () {
     var state = {};
     fakeAnalytics = {
       track: sinon.stub(),
-      events: require('../analytics')().events,
+      events: require('../services/analytics')().events,
     };
     var fakeAnnotationUI = {
       getState: function () {

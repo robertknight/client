@@ -1,7 +1,7 @@
 'use strict';
 
 var events = require('../events');
-var metadata = require('../annotation-metadata');
+var metadata = require('../util/annotation-metadata');
 
 /**
  * Component which displays a virtualized list of annotation threads.

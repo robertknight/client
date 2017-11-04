@@ -23,7 +23,7 @@ describe 'viewFilter', ->
 
   before ->
     angular.module('h', [])
-    .service('viewFilter', require('../view-filter'))
+    .service('viewFilter', require('../services/view-filter'))
 
 
   beforeEach module('h')

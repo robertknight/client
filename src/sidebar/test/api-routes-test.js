@@ -1,6 +1,6 @@
 'use strict';
 
-var apiRoutesFactory = require('../api-routes');
+var apiRoutesFactory = require('../services/api-routes');
 
 // Abridged version of the response returned by https://hypothes.is/api,
 // with the domain name changed.

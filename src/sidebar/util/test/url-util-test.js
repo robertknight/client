@@ -1,6 +1,6 @@
 'use strict';
 
-var urlUtil = require('../url-util');
+var urlUtil = require('../url');
 
 describe('url-util', function () {
   describe('replaceURLParams()', function () {

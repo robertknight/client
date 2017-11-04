@@ -12,7 +12,7 @@
 
 var immutable = require('seamless-immutable');
 
-var { toSet } = require('../../util/array-util');
+var { toSet } = require('../../util/array');
 var uiConstants = require('../../ui-constants');
 
 var { selectors: { getGroup } } = require('./session');

@@ -2,7 +2,7 @@
 
 var get = require('lodash.get');
 
-var urlUtil = require('./util/url-util');
+var urlUtil = require('../util/url');
 
 /**
  * Translate the response from a failed API call into an Error-like object.

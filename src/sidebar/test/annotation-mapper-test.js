@@ -20,7 +20,7 @@ describe('annotationMapper', function() {
       },
     };
     angular.module('app', [])
-      .service('annotationMapper', require('../annotation-mapper'))
+      .service('annotationMapper', require('../services/annotation-mapper'))
       .service('annotationUI', require('../annotation-ui'))
       .value('settings', {})
       .value('store', fakeApiClient);

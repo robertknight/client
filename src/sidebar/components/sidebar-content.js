@@ -1,6 +1,6 @@
 'use strict';
 
-var SearchClient = require('../search-client');
+var SearchClient = require('../util/search-client');
 var events = require('../events');
 var memoize = require('../util/memoize');
 var tabs = require('../tabs');

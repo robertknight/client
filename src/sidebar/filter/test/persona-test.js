@@ -1,6 +1,6 @@
 'use strict';
 
-var persona = require('../persona');
+var persona = require('../../util/account-id');
 
 describe('persona', function () {
   var term = 'acct:hacker@example.com';

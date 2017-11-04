@@ -2,9 +2,9 @@
 
 var debounce = require('lodash.debounce');
 
-var commands = require('../markdown-commands');
-var mediaEmbedder = require('../media-embedder');
-var renderMarkdown = require('../render-markdown');
+var commands = require('../util/markdown-commands');
+var mediaEmbedder = require('../util/media-embedder');
+var renderMarkdown = require('../util/render-markdown');
 var scopeTimeout = require('../util/scope-timeout');
 
 // @ngInject
