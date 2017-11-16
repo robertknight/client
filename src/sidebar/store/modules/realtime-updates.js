@@ -27,38 +27,30 @@ function filterKeys(obj, filterFn) {
 
 function init() {
   return {
-    realtimeUpdates: {
-      // Map of ID -> updated annotation for updates that have been received over
-      // the WS but not yet applied
-      pendingUpdates: {},
-      // Set of IDs of annotations which have been deleted but for which the
-      // deletion has not yet been applied
-      pendingDeletions: {},
-    },
+    // Map of ID -> updated annotation for updates that have been received over
+    // the WS but not yet applied
+    pendingUpdates: {},
+    // Set of IDs of annotations which have been deleted but for which the
+    // deletion has not yet been applied
+    pendingDeletions: {},
   };
 }
 
 var update = {
   ADD_PENDING_UPDATE: (state, action) => {
-    var pendingUpdates = Object.assign({}, state.realtimeUpdates.pendingUpdates, {
+    var pendingDeletions = state.pendingDeletions;
+    var pendingUpdates = Object.assign({}, state.pendingUpdates, {
       [action.update.id]: action.update,
     });
-    return {
-      realtimeUpdates: Object.assign({}, state.realtimeUpdates, {
-        pendingUpdates,
-      }),
-    };
+    return { pendingUpdates, pendingDeletions };
   },
 
   ADD_PENDING_DELETION: (state, action) => {
-    var pendingDeletions = Object.assign({}, state.realtimeUpdates.pendingDeletions, {
+    var pendingUpdates = state.pendingUpdates;
+    var pendingDeletions = Object.assign({}, state.pendingDeletions, {
       [action.id]: true,
     });
-    return {
-      realtimeUpdates: Object.assign({}, state.realtimeUpdates, {
-        pendingDeletions,
-      }),
-    };
+    return { pendingUpdates, pendingDeletions };
   },
 
   CLEAR_PENDING_UPDATES: () => {
@@ -66,22 +58,19 @@ var update = {
   },
 
   ADD_ANNOTATIONS: (state, action) => {
-    var { pendingUpdates } = state.realtimeUpdates;
     var ids = action.annotations.map(ann => ann.id);
-    var realtimeUpdates = Object.assign(state.realtimeUpdates, {
-      pendingUpdates: filterKeys(pendingUpdates, id => ids.indexOf(id) !== -1),
-    });
-    return { realtimeUpdates };
+    return {
+      pendingDeletions: state.pendingDeletions,
+      pendingUpdates: filterKeys(state.pendingUpdates, id => ids.indexOf(id) !== -1),
+    };
   },
 
   REMOVE_ANNOTATIONS: (state, action) => {
-    var { pendingUpdates, pendingDeletions } = state.realtimeUpdates;
     var ids = action.annotations.map(ann => ann.id);
-    var realtimeUpdates = Object.assign(state.realtimeUpdates, {
-      pendingUpdates: filterKeys(pendingUpdates, id => ids.indexOf(id) !== -1),
-      pendingDeletions: filterKeys(pendingDeletions, id => ids.indexOf(id) !== -1),
-    });
-    return { realtimeUpdates };
+    return {
+      pendingUpdates: filterKeys(state.pendingUpdates, id => ids.indexOf(id) !== -1),
+      pendingDeletions: filterKeys(state.pendingDeletions, id => ids.indexOf(id) !== -1),
+    };
   },
 
   FOCUS_GROUP: () => {
@@ -140,8 +129,8 @@ function applyPendingUpdates() {
 /**
  * Return the total number of annotations with un-applied updates.
  */
-function pendingUpdateCount(state) {
-  var { pendingUpdates, pendingDeletions } = state.realtimeUpdates;
+function pendingUpdateCount(ctx) {
+  var { pendingUpdates, pendingDeletions } = ctx.state;
   return Object.keys(pendingUpdates).length +
          Object.keys(pendingDeletions).length;
 }
@@ -152,8 +141,8 @@ function pendingUpdateCount(state) {
  *
  * @param {string} id
  */
-function hasPendingDeletion(state, id) {
-  return !!state.realtimeUpdates.pendingDeletions[id];
+function hasPendingDeletion(ctx, id) {
+  return !!ctx.state.pendingDeletions[id];
 }
 
 module.exports = {
@@ -169,4 +158,5 @@ module.exports = {
     pendingUpdateCount,
     hasPendingDeletion,
   },
+  isModule: true,
 };
