@@ -6,25 +6,21 @@ var util = require('./util');
 var { isFeatureEnabled } = session.selectors;
 
 function init() {
-  return {
-    // The list of frames connected to the sidebar app
-    frames: [],
-  };
+  // The list of frames connected to the sidebar app
+  return [];
 }
 
 var update = {
   CONNECT_FRAME: function (state, action) {
-    return {frames: state.frames.concat(action.frame)};
+    return state.concat(action.frame);
   },
 
   DESTROY_FRAME: function (state, action) {
-    return {
-      frames: state.frames.filter(f => f !== action.frame),
-    };
+    return state.filter(f => f !== action.frame);
   },
 
   UPDATE_FRAME_ANNOTATION_FETCH_STATUS: function (state, action) {
-    var frames = state.frames.map(function (frame) {
+    var frames = state.map(function (frame) {
       var match = (frame.uri && frame.uri === action.uri);
       if (match) {
         return Object.assign({}, frame, {
@@ -34,9 +30,7 @@ var update = {
         return frame;
       }
     });
-    return {
-      frames: frames,
-    };
+    return frames;
   },
 };
 
@@ -70,8 +64,8 @@ function updateFrameAnnotationFetchStatus(uri, status) {
 /**
  * Return the list of frames currently connected to the sidebar app.
  */
-function frames(state) {
-  return state.frames;
+function frames(ctx) {
+  return ctx.state;
 }
 
 function searchUrisForFrame(frame, includeDoi) {
@@ -100,9 +94,9 @@ function searchUrisForFrame(frame, includeDoi) {
  * Return the set of URIs that should be used to search for annotations on the
  * current page.
  */
-function searchUris(state) {
-  var includeDoi = isFeatureEnabled(state, 'search_for_doi');
-  return state.frames.reduce(function (uris, frame) {
+function searchUris(ctx) {
+  var includeDoi = isFeatureEnabled(ctx.rootState, 'search_for_doi');
+  return ctx.state.reduce(function (uris, frame) {
     return uris.concat(searchUrisForFrame(frame, includeDoi));
   }, []);
 }
@@ -121,4 +115,6 @@ module.exports = {
     frames,
     searchUris,
   },
+
+  isModule: true,
 };
