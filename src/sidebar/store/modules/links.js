@@ -1,15 +1,13 @@
 'use strict';
 
 function init() {
-  return {
-    // Map of link name to URL template returned by the API's "links" route.
-    links: null,
-  };
+  // Map of link name to URL template returned by the API's "links" route.
+  return {};
 }
 
 var update = {
   UPDATE_LINKS: (state, action) => {
-    return { links: action.newLinks };
+    return action.newLinks;
   },
 };
 
@@ -26,4 +24,6 @@ module.exports = {
     updateLinks,
   },
   selectors: {},
+
+  isModule: true,
 };
