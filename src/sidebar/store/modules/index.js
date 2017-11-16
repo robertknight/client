@@ -62,6 +62,8 @@ function init(settings) {
 function rootUpdateFns(name, localUpdateFns) {
   var result = {};
   Object.entries(localUpdateFns).forEach(([actionType, localUpdateFn]) => {
+    // TODO - Merge previous local state with new local state here rather than
+    // just replacing?
     var rootUpdateFn = (state, action) => ({
       [name]: localUpdateFn(state[name], action),
     });
