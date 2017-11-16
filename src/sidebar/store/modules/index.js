@@ -28,12 +28,16 @@ var viewer = require('./viewer');
 var util = require('./util');
 
 var modules = {
+  // Modules which still operate on root state.
+  // TODO: Make these operate on local state.
   annotations,
+  selection,
+
+  // Modules which operate on local state.
   drafts,
   frames,
   links,
   realtimeUpdates,
-  selection,
   session,
   viewer,
 };
