@@ -11,9 +11,7 @@
 var util = require('./util');
 
 function init() {
-  return {
-    drafts: [],
-  };
+  return [];
 }
 
 function matches(draft, action) {
@@ -27,7 +25,7 @@ function remove(drafts, action) {
 
 var update = {
   UPDATE_DRAFT: (state, action) => {
-    var drafts = remove(state.drafts, action);
+    var drafts = remove(state, action);
     drafts.push({
       id: action.id,
       $tag: action.$tag,
@@ -35,16 +33,15 @@ var update = {
       tags: action.tags,
       text: action.text,
     });
-    return { drafts: drafts };
+    return drafts;
   },
 
   REMOVE_DRAFT: (state, action) => {
-    var drafts = remove(state.drafts, action);
-    return { drafts: drafts };
+    return remove(state, action);
   },
 
   CLEAR_DRAFTS: () => {
-    return { drafts: [] };
+    return [];
   },
 };
 
@@ -79,15 +76,15 @@ function clearDrafts() {
   return { type: actions.CLEAR_DRAFTS };
 }
 
-function countDrafts(state) {
-  return state.drafts.length;
+function countDrafts(ctx) {
+  return ctx.state.length;
 }
 
 /**
  * Return the draft for a given annotation, if any.
  */
-function getDraft(state, annotation) {
-  return state.drafts.find(function (d) {
+function getDraft(ctx, annotation) {
+  return ctx.state.find(function (d) {
     return matches(d, annotation);
   });
 }
@@ -95,8 +92,8 @@ function getDraft(state, annotation) {
 /**
  * Return drafts for annotations which have not been saved.
  */
-function unsavedDrafts(state) {
-  return state.drafts.filter(function (d) {
+function unsavedDrafts(ctx) {
+  return ctx.state.filter(function (d) {
     return !d.id;
   });
 }
@@ -123,4 +120,6 @@ module.exports = {
 
   // Helpers
   isDraftEmpty,
+
+  isModule: true,
 };
