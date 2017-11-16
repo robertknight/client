@@ -19,10 +19,10 @@ function init() {
 
 var update = {
   SET_SIDEBAR: function (state, action) {
-    return {isSidebar: action.isSidebar};
+    return Object.assign({}, state, {isSidebar: action.isSidebar});
   },
   SET_HIGHLIGHTS_VISIBLE: function (state, action) {
-    return {visibleHighlights: action.visible};
+    return Object.assign({}, state, {visibleHighlights: action.visible});
   },
 };
 
@@ -45,8 +45,8 @@ function setShowHighlights(show) {
  * Returns true if the app is being used as the sidebar in the annotation
  * client, as opposed to the standalone annotation page or stream views.
  */
-function isSidebar(state) {
-  return state.isSidebar;
+function isSidebar(ctx) {
+  return ctx.state.isSidebar;
 }
 
 module.exports = {
@@ -60,4 +60,6 @@ module.exports = {
   selectors: {
     isSidebar,
   },
+
+  isModule: true,
 };
