@@ -321,7 +321,8 @@ function focusGroup(id) {
 }
 
 function focusedGroup(state) {
-  return getGroup(state, state.focusedGroup);
+  // TODO - Generating the context object manually here is ugly.
+  return getGroup({ state: state.session, rootState: state }, state.focusedGroup);
 }
 
 module.exports = {

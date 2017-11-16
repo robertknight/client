@@ -3,29 +3,27 @@
 var util = require('./util');
 
 function init() {
+  /**
+   * The state of the user's login session.
+   *
+   * This includes their user ID, set of enabled features, and the list of
+   * groups they are a member of.
+   */
   return {
     /**
-     * The state of the user's login session.
-     *
-     * This includes their user ID, set of enabled features, and the list of
-     * groups they are a member of.
+     * The CSRF token for requests to API endpoints that use cookie
+     * authentication.
      */
-    session: {
-      /**
-       * The CSRF token for requests to API endpoints that use cookie
-       * authentication.
-       */
-      csrf: null,
+    csrf: null,
 
-      /** A map of features that are enabled for the current user. */
-      features: {},
-      /** List of groups that the current user is a member of. */
-      groups: [],
-      /**
-       * The authenticated user ID or null if the user is not logged in.
-       */
-      userid: null,
-    },
+    /** A map of features that are enabled for the current user. */
+    features: {},
+    /** List of groups that the current user is a member of. */
+    groups: [],
+    /**
+     * The authenticated user ID or null if the user is not logged in.
+     */
+    userid: null,
   };
 }
 
@@ -34,9 +32,7 @@ var update = {
     // TODO - Reset focused group if user leaves.
     // TODO - Set focused group when groups are fetched.
 
-    return {
-      session: action.session,
-    };
+    return action.session;
   },
 };
 
@@ -59,8 +55,8 @@ function updateSession(session) {
  * @param {string} feature - The name of the feature flag. This matches the
  *        name of the feature flag as declared in the Hypothesis service.
  */
-function isFeatureEnabled(state, feature) {
-  return !!state.session.features[feature];
+function isFeatureEnabled(ctx, feature) {
+  return !!ctx.state.features[feature];
 }
 
 /**
@@ -68,16 +64,16 @@ function isFeatureEnabled(state, feature) {
  *
  * Returns the current user's profile fetched from the `/api/profile` endpoint.
  */
-function profile(state) {
-  return state.session;
+function profile(ctx) {
+  return ctx.state;
 }
 
-function getGroup(state, id) {
-  return state.session.groups.find(g => g.id === id);
+function getGroup(ctx, id) {
+  return ctx.state.groups.find(g => g.id === id);
 }
 
-function allGroups(state) {
-  return state.session.groups;
+function allGroups(ctx) {
+  return ctx.groups;
 }
 
 module.exports = {
@@ -94,4 +90,6 @@ module.exports = {
     isFeatureEnabled,
     profile,
   },
+
+  isModule: true,
 };

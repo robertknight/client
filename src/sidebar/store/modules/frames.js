@@ -95,7 +95,8 @@ function searchUrisForFrame(frame, includeDoi) {
  * current page.
  */
 function searchUris(ctx) {
-  var includeDoi = isFeatureEnabled(ctx.rootState, 'search_for_doi');
+  // TODO - Generating the context object here is ugly.
+  var includeDoi = isFeatureEnabled({ state: ctx.rootState.session, rootState: ctx.rootState }, 'search_for_doi');
   return ctx.state.reduce(function (uris, frame) {
     return uris.concat(searchUrisForFrame(frame, includeDoi));
   }, []);
