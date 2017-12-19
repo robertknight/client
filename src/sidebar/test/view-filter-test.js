@@ -64,7 +64,7 @@ describe('viewFilter', function() {
       };
 
       viewFilter.filter([], filters);
-      return assert.calledWith(fakeUnicode.fold, 'Tiger');
+      assert.calledWith(fakeUnicode.fold, 'Tiger');
     });
 
     describe('filter operators', function() {
@@ -86,10 +86,10 @@ describe('viewFilter', function() {
 
         const result = viewFilter.filter(annotations, filters);
         assert.equal(result.length, 1);
-        return assert.equal(result[0], 1);
+        assert.equal(result[0], 1);
       });
 
-      return it('only one term must match for "or" operator', function() {
+      it('only one term must match for "or" operator', function() {
         const filters = {
           text: {
             terms: ['Tiger', 'quaint'],
@@ -98,7 +98,7 @@ describe('viewFilter', function() {
         };
 
         const result = viewFilter.filter(annotations, filters);
-        return assert.equal(result.length, 2);
+        assert.equal(result.length, 2);
       });
     });
 
@@ -124,7 +124,7 @@ describe('viewFilter', function() {
 
           const result = viewFilter.filter(annotations, filters);
           assert.called(viewFilter.fields.test.autofalse);
-          return assert.equal(result.length, 0);
+          assert.equal(result.length, 0);
         });
 
         it('uses the value function to extract data from the annotation', function() {
@@ -147,10 +147,10 @@ describe('viewFilter', function() {
 
           const result = viewFilter.filter(annotations, filters);
           assert.called(viewFilter.fields.test.value);
-          return assert.equal(result.length, 1);
+          assert.equal(result.length, 1);
         });
 
-        return it('the match function determines the matching', function() {
+        it('the match function determines the matching', function() {
           viewFilter.fields = {
             test: {
               autofalse() { return false; },
@@ -175,7 +175,7 @@ describe('viewFilter', function() {
           viewFilter.fields.test.match.returns(true);
           result = viewFilter.filter(annotations, filters);
           assert.called(viewFilter.fields.test.match);
-          return assert.equal(result.length, 1);
+          assert.equal(result.length, 1);
         });
       })
     );
@@ -196,10 +196,10 @@ describe('viewFilter', function() {
         };
 
         const result = viewFilter.filter(annotations, filters);
-        return assert.equal(result.length, 3);
+        assert.equal(result.length, 3);
       });
 
-      return it('can find terms across different fields', function() {
+      it('can find terms across different fields', function() {
         const annotation = {
           id:1,
           text: poem.tiger,
@@ -223,7 +223,7 @@ describe('viewFilter', function() {
 
         const result = viewFilter.filter([annotation], filters);
         assert.equal(result.length, 1);
-        return assert.equal(result[0], 1);
+        assert.equal(result[0], 1);
       });
     });
 
@@ -242,11 +242,11 @@ describe('viewFilter', function() {
 
         const result = viewFilter.filter([ann], filters);
 
-        return assert.deepEqual(result, [1]);
+        assert.deepEqual(result, [1]);
       })
   );
 
-    return describe('"since" field', function() {
+    describe('"since" field', function() {
       it('matches if the annotation is newer than the query', function() {
         const ann = {
           id: 1,
@@ -261,10 +261,10 @@ describe('viewFilter', function() {
 
         const result = viewFilter.filter([ann], filters);
 
-        return assert.deepEqual(result, [1]);
+        assert.deepEqual(result, [1]);
       });
 
-      return it('does not match if the annotation is older than the query', function() {
+      it('does not match if the annotation is older than the query', function() {
         const ann = {
           id: 1,
           updated: isoDateWithAge(150),
@@ -278,12 +278,12 @@ describe('viewFilter', function() {
 
         const result = viewFilter.filter([ann], filters);
 
-        return assert.deepEqual(result, []);
+        assert.deepEqual(result, []);
       });
     });
   });
 
-  return it('ignores filters with no terms in the query', function() {
+  it('ignores filters with no terms in the query', function() {
     const ann = { id: 1, tags: ['foo'] };
     const filters = {
       any: {
@@ -298,6 +298,6 @@ describe('viewFilter', function() {
 
     const result = viewFilter.filter([ann], filters);
 
-    return assert.deepEqual(result, [1]);
+    assert.deepEqual(result, [1]);
   });
 });
