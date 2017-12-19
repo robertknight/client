@@ -32,7 +32,7 @@
 // }
 // The models is the direct output from visualsearch
 let QueryParser;
-module.exports = (QueryParser = (function() {
+module.exports = QueryParser = (function() {
   QueryParser = class QueryParser {
     constructor() {
       this.populateFilter = this.populateFilter.bind(this);
@@ -64,27 +64,37 @@ module.exports = (QueryParser = (function() {
           and_or: 'or',
           options: {
             es: {
-             query_type: 'match',
-             cutoff_frequency: 0.001,
-             and_or: 'and',
+              query_type: 'match',
+              cutoff_frequency: 0.001,
+              and_or: 'and',
             },
           },
         },
         since: {
           formatter(past) {
-            const seconds =
-              (() => { switch (past) {
-              case '5 min': return 5*60;
-              case '30 min': return 30*60;
-              case '1 hour': return 60*60;
-              case '12 hours': return 12*60*60;
-              case '1 day': return 24*60*60;
-              case '1 week': return 7*24*60*60;
-              case '1 month': return 30*24*60*60;
-              case '1 year': return 365*24*60*60;
-              default: return 0;
-              } })();
-            return new Date(new Date().valueOf() - (seconds*1000));
+            const seconds = (() => {
+              switch (past) {
+                case '5 min':
+                  return 5 * 60;
+                case '30 min':
+                  return 30 * 60;
+                case '1 hour':
+                  return 60 * 60;
+                case '12 hours':
+                  return 12 * 60 * 60;
+                case '1 day':
+                  return 24 * 60 * 60;
+                case '1 week':
+                  return 7 * 24 * 60 * 60;
+                case '1 month':
+                  return 30 * 24 * 60 * 60;
+                case '1 year':
+                  return 365 * 24 * 60 * 60;
+                default:
+                  return 0;
+              }
+            })();
+            return new Date(new Date().valueOf() - seconds * 1000);
           },
           path: '/created',
           and_or: 'and',
@@ -92,13 +102,13 @@ module.exports = (QueryParser = (function() {
         },
         any: {
           and_or: 'and',
-          path:   ['/quote', '/tags', '/text', '/uri', '/user'],
+          path: ['/quote', '/tags', '/text', '/uri', '/user'],
           options: {
             es: {
-             query_type: 'multi_match',
-             match_type: 'cross_fields',
-             and_or: 'and',
-             fields:   ['quote', 'tags', 'text', 'uri.parts', 'user'],
+              query_type: 'multi_match',
+              match_type: 'cross_fields',
+              and_or: 'and',
+              fields: ['quote', 'tags', 'text', 'uri.parts', 'user'],
             },
           },
         },
@@ -116,18 +126,23 @@ module.exports = (QueryParser = (function() {
           var oper_part;
           var value_part;
           const value = query[category];
-          if (this.rules[category] == null) { continue; }
+          if (this.rules[category] == null) {
+            continue;
+          }
           var { terms } = value;
-          if (!terms.length) { continue; }
+          if (!terms.length) {
+            continue;
+          }
           var rule = this.rules[category];
 
           // Now generate the clause with the help of the rule
-          var case_sensitive = (rule.case_sensitive != null) ? rule.case_sensitive : false;
-          const and_or = (rule.and_or != null) ? rule.and_or : 'or';
-          var mapped_field = (rule.path != null) ? rule.path : `/${category}`;
+          var case_sensitive =
+            rule.case_sensitive != null ? rule.case_sensitive : false;
+          const and_or = rule.and_or != null ? rule.and_or : 'or';
+          var mapped_field = rule.path != null ? rule.path : `/${category}`;
 
           if (and_or === 'or') {
-            oper_part = (rule.operator != null) ? rule.operator : 'match_of';
+            oper_part = rule.operator != null ? rule.operator : 'match_of';
 
             value_part = [];
             for (let term of Array.from(terms)) {
@@ -135,17 +150,35 @@ module.exports = (QueryParser = (function() {
               value_part.push(t);
             }
 
-            result.push(filter.addClause(mapped_field, oper_part, value_part, case_sensitive, rule.options));
+            result.push(
+              filter.addClause(
+                mapped_field,
+                oper_part,
+                value_part,
+                case_sensitive,
+                rule.options
+              )
+            );
           } else {
-            oper_part = (rule.operator != null) ? rule.operator : 'matches';
-            result.push((() => {
-              const result1 = [];
-              for (let val of Array.from(terms)) {
-                value_part = rule.formatter ? rule.formatter(val) : val;
-                result1.push(filter.addClause(mapped_field, oper_part, value_part, case_sensitive, rule.options));
-              }
-              return result1;
-            })());
+            oper_part = rule.operator != null ? rule.operator : 'matches';
+            result.push(
+              (() => {
+                const result1 = [];
+                for (let val of Array.from(terms)) {
+                  value_part = rule.formatter ? rule.formatter(val) : val;
+                  result1.push(
+                    filter.addClause(
+                      mapped_field,
+                      oper_part,
+                      value_part,
+                      case_sensitive,
+                      rule.options
+                    )
+                  );
+                }
+                return result1;
+              })()
+            );
           }
         }
         return result;
@@ -154,4 +187,4 @@ module.exports = (QueryParser = (function() {
   };
   QueryParser.initClass();
   return QueryParser;
-})());
+})();

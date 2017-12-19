@@ -6,17 +6,19 @@ const angular = require('angular');
  * DS102: Remove unnecessary code created because of implicit returns
  * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
  */
-const {module, inject} = angular.mock;
+const { module, inject } = angular.mock;
 
 // Return an ISO date string for a `Date` that is `age` seconds ago.
-const isoDateWithAge = age => new Date(Date.now() - (age * 1000)).toISOString();
+const isoDateWithAge = age => new Date(Date.now() - age * 1000).toISOString();
 
 const poem = {
-  tiger: 'Tiger! Tiger! burning bright \
+  tiger:
+    'Tiger! Tiger! burning bright \
 In the forest of the night \
 What immortal hand or eye \
 Could frame thy fearful symmetry?',
-  raven: 'Once upon a midnight dreary, while I pondered, weak and weary, \
+  raven:
+    'Once upon a midnight dreary, while I pondered, weak and weary, \
 Over many a quaint and curious volume of forgotten lore— \
 While I nodded, nearly napping, suddenly there came a tapping, \
 As of some one gently rapping, rapping at my chamber door. \
@@ -30,29 +32,26 @@ describe('viewFilter', function() {
   let viewFilter = null;
 
   before(() =>
-    angular.module('h', [])
-    .service('viewFilter', require('../view-filter'))
+    angular.module('h', []).service('viewFilter', require('../view-filter'))
   );
-
 
   beforeEach(module('h'));
-  beforeEach(module(function($provide) {
-    sandbox = sinon.sandbox.create();
+  beforeEach(
+    module(function($provide) {
+      sandbox = sinon.sandbox.create();
 
-    fakeUnicode = {
-      fold: sinon.stub().returnsArg(0),
-      normalize: sinon.stub().returnsArg(0),
-    };
+      fakeUnicode = {
+        fold: sinon.stub().returnsArg(0),
+        normalize: sinon.stub().returnsArg(0),
+      };
 
-    $provide.value('unicode', fakeUnicode);
-  })
+      $provide.value('unicode', fakeUnicode);
+    })
   );
 
-  beforeEach(inject(_viewFilter_ => viewFilter = _viewFilter_)
-  );
+  beforeEach(inject(_viewFilter_ => (viewFilter = _viewFilter_)));
 
   afterEach(() => sandbox.restore());
-
 
   describe('filter', function() {
     it('normalizes the filter terms', function() {
@@ -70,11 +69,13 @@ describe('viewFilter', function() {
     describe('filter operators', function() {
       let annotations = null;
 
-      beforeEach(() =>
-        annotations = [
-          {id: 1, text: poem.tiger},
-          {id: 2, text: poem.raven},
-        ]);
+      beforeEach(
+        () =>
+          (annotations = [
+            { id: 1, text: poem.tiger },
+            { id: 2, text: poem.raven },
+          ])
+      );
 
       it('all terms must match for "and" operator', function() {
         const filters = {
@@ -108,8 +109,12 @@ describe('viewFilter', function() {
           viewFilter.fields = {
             test: {
               autofalse: sandbox.stub().returns(true),
-              value(annotation) { return annotation.test; },
-              match(term, value) { return value.indexOf(term) > -1; },
+              value(annotation) {
+                return annotation.test;
+              },
+              match(term, value) {
+                return value.indexOf(term) > -1;
+              },
             },
           };
 
@@ -120,7 +125,7 @@ describe('viewFilter', function() {
             },
           };
 
-          const annotations = [{id: 1, test: poem.tiger}];
+          const annotations = [{ id: 1, test: poem.tiger }];
 
           const result = viewFilter.filter(annotations, filters);
           assert.called(viewFilter.fields.test.autofalse);
@@ -130,9 +135,13 @@ describe('viewFilter', function() {
         it('uses the value function to extract data from the annotation', function() {
           viewFilter.fields = {
             test: {
-              autofalse() { return false; },
+              autofalse() {
+                return false;
+              },
               value: sandbox.stub().returns('test'),
-              match(term, value) { return value.indexOf(term) > -1; },
+              match(term, value) {
+                return value.indexOf(term) > -1;
+              },
             },
           };
 
@@ -143,7 +152,7 @@ describe('viewFilter', function() {
             },
           };
 
-          const annotations = [{id: 1, test: poem.tiger}];
+          const annotations = [{ id: 1, test: poem.tiger }];
 
           const result = viewFilter.filter(annotations, filters);
           assert.called(viewFilter.fields.test.value);
@@ -153,8 +162,12 @@ describe('viewFilter', function() {
         it('the match function determines the matching', function() {
           viewFilter.fields = {
             test: {
-              autofalse() { return false; },
-              value(annotation) { return annotation.test; },
+              autofalse() {
+                return false;
+              },
+              value(annotation) {
+                return annotation.test;
+              },
               match: sandbox.stub().returns(false),
             },
           };
@@ -166,7 +179,7 @@ describe('viewFilter', function() {
             },
           };
 
-          const annotations = [{id: 1, test: poem.tiger}];
+          const annotations = [{ id: 1, test: poem.tiger }];
 
           let result = viewFilter.filter(annotations, filters);
           assert.called(viewFilter.fields.test.match);
@@ -177,14 +190,13 @@ describe('viewFilter', function() {
           assert.called(viewFilter.fields.test.match);
           assert.equal(result.length, 1);
         });
-      })
-    );
+      }));
 
     describe('any field', function() {
       it('finds matches across many fields', function() {
-        const annotation1 = {id: 1, text: poem.tiger};
-        const annotation2 = {id: 2, user: poem.tiger};
-        const annotation3 = {id: 3, tags: ['Tiger']};
+        const annotation1 = { id: 1, text: poem.tiger };
+        const annotation2 = { id: 2, user: poem.tiger };
+        const annotation3 = { id: 3, tags: ['Tiger'] };
 
         const annotations = [annotation1, annotation2, annotation3];
 
@@ -201,14 +213,17 @@ describe('viewFilter', function() {
 
       it('can find terms across different fields', function() {
         const annotation = {
-          id:1,
+          id: 1,
           text: poem.tiger,
-          target: [{
-            selector: [{
-              'type': 'TextQuoteSelector',
-              'exact': 'The Tiger by William Blake',
-            }],
-          },
+          target: [
+            {
+              selector: [
+                {
+                  type: 'TextQuoteSelector',
+                  exact: 'The Tiger by William Blake',
+                },
+              ],
+            },
           ],
           user: 'acct:poe@edgar.com',
           tags: ['poem', 'Blake', 'Tiger'],
@@ -243,8 +258,7 @@ describe('viewFilter', function() {
         const result = viewFilter.filter([ann], filters);
 
         assert.deepEqual(result, [1]);
-      })
-  );
+      }));
 
     describe('"since" field', function() {
       it('matches if the annotation is newer than the query', function() {
