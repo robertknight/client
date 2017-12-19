@@ -1,3 +1,6 @@
+'use strict';
+
+const angular = require('angular');
 /*
  * decaffeinate suggestions:
  * DS102: Remove unnecessary code created because of implicit returns
@@ -127,7 +130,7 @@ describe('viewFilter', function() {
         it('uses the value function to extract data from the annotation', function() {
           viewFilter.fields = {
             test: {
-              autofalse(annotation) { return false; },
+              autofalse() { return false; },
               value: sandbox.stub().returns('test'),
               match(term, value) { return value.indexOf(term) > -1; },
             },
@@ -150,7 +153,7 @@ describe('viewFilter', function() {
         return it('the match function determines the matching', function() {
           viewFilter.fields = {
             test: {
-              autofalse(annotation) { return false; },
+              autofalse() { return false; },
               value(annotation) { return annotation.test; },
               match: sandbox.stub().returns(false),
             },

@@ -1,3 +1,5 @@
+'use strict';
+
 /*
  * decaffeinate suggestions:
  * DS102: Remove unnecessary code created because of implicit returns
@@ -10,7 +12,6 @@ module.exports = (StreamFilter = (function() {
   StreamFilter = class StreamFilter {
     static initClass() {
       this.prototype.strategies = ['include_any', 'include_all', 'exclude_any', 'exclude_all'];
-  
       this.prototype.filter = {
           match_policy :  'include_any',
           clauses : [],
@@ -82,9 +83,7 @@ module.exports = (StreamFilter = (function() {
       return this;
     }
 
-    addClause(field, operator, value, case_sensitive, options) {
-      if (case_sensitive == null) { case_sensitive = false; }
-      if (options == null) { options = {}; }
+    addClause(field, operator, value, case_sensitive = false, options = {}) {
       this.filter.clauses.push({
         field,
         operator,

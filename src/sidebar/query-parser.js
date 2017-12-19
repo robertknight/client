@@ -1,3 +1,8 @@
+// Allow non-strict comparisons to `null`.
+/* eslint eqeqeq: ["error", "smart"] */
+
+'use strict';
+
 /*
  * decaffeinate suggestions:
  * DS101: Remove unnecessary use of Array.from
@@ -77,6 +82,7 @@ module.exports = (QueryParser = (function() {
               case '1 week': return 7*24*60*60;
               case '1 month': return 30*24*60*60;
               case '1 year': return 365*24*60*60;
+              default: return 0;
               } })();
             return new Date(new Date().valueOf() - (seconds*1000));
           },
@@ -104,8 +110,11 @@ module.exports = (QueryParser = (function() {
       return (() => {
         const result = [];
         for (let category in query) {
-          var oper_part, 
-            value_part;
+          if (!query.hasOwnProperty(category)) {
+            continue;
+          }
+          var oper_part;
+          var value_part;
           const value = query[category];
           if (this.rules[category] == null) { continue; }
           var { terms } = value;
