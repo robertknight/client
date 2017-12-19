@@ -9,16 +9,16 @@ const {module, inject} = angular.mock;
 const isoDateWithAge = age => new Date(Date.now() - (age * 1000)).toISOString();
 
 const poem = {
-  tiger: `Tiger! Tiger! burning bright \
+  tiger: 'Tiger! Tiger! burning bright \
 In the forest of the night \
 What immortal hand or eye \
-Could frame thy fearful symmetry?`,
-  raven: `Once upon a midnight dreary, while I pondered, weak and weary, \
+Could frame thy fearful symmetry?',
+  raven: 'Once upon a midnight dreary, while I pondered, weak and weary, \
 Over many a quaint and curious volume of forgotten lore— \
 While I nodded, nearly napping, suddenly there came a tapping, \
 As of some one gently rapping, rapping at my chamber door. \
 “’Tis some visitor,” I muttered, “tapping at my chamber door— \
-Only this and nothing more.”`
+Only this and nothing more.”',
 };
 
 describe('viewFilter', function() {
@@ -38,7 +38,7 @@ describe('viewFilter', function() {
 
     fakeUnicode = {
       fold: sinon.stub().returnsArg(0),
-      normalize: sinon.stub().returnsArg(0)
+      normalize: sinon.stub().returnsArg(0),
     };
 
     $provide.value('unicode', fakeUnicode);
@@ -56,8 +56,8 @@ describe('viewFilter', function() {
       const filters = {
         text: {
           terms: ['Tiger'],
-          operator: 'and'
-        }
+          operator: 'and',
+        },
       };
 
       viewFilter.filter([], filters);
@@ -70,15 +70,15 @@ describe('viewFilter', function() {
       beforeEach(() =>
         annotations = [
           {id: 1, text: poem.tiger},
-          {id: 2, text: poem.raven}
+          {id: 2, text: poem.raven},
         ]);
 
       it('all terms must match for "and" operator', function() {
         const filters = {
           text: {
             terms: ['Tiger', 'burning', 'bright'],
-            operator: 'and'
-          }
+            operator: 'and',
+          },
         };
 
         const result = viewFilter.filter(annotations, filters);
@@ -90,8 +90,8 @@ describe('viewFilter', function() {
         const filters = {
           text: {
             terms: ['Tiger', 'quaint'],
-            operator: 'or'
-          }
+            operator: 'or',
+          },
         };
 
         const result = viewFilter.filter(annotations, filters);
@@ -106,15 +106,15 @@ describe('viewFilter', function() {
             test: {
               autofalse: sandbox.stub().returns(true),
               value(annotation) { return annotation.test; },
-              match(term, value) { return value.indexOf(term) > -1; }
-            }
+              match(term, value) { return value.indexOf(term) > -1; },
+            },
           };
 
           const filters = {
             test: {
               terms: ['Tiger'],
-              operator: 'and'
-            }
+              operator: 'and',
+            },
           };
 
           const annotations = [{id: 1, test: poem.tiger}];
@@ -129,15 +129,15 @@ describe('viewFilter', function() {
             test: {
               autofalse(annotation) { return false; },
               value: sandbox.stub().returns('test'),
-              match(term, value) { return value.indexOf(term) > -1; }
-            }
+              match(term, value) { return value.indexOf(term) > -1; },
+            },
           };
 
           const filters = {
             test: {
               terms: ['test'],
-              operator: 'and'
-            }
+              operator: 'and',
+            },
           };
 
           const annotations = [{id: 1, test: poem.tiger}];
@@ -152,15 +152,15 @@ describe('viewFilter', function() {
             test: {
               autofalse(annotation) { return false; },
               value(annotation) { return annotation.test; },
-              match: sandbox.stub().returns(false)
-            }
+              match: sandbox.stub().returns(false),
+            },
           };
 
           const filters = {
             test: {
               terms: ['Tiger'],
-              operator: 'and'
-            }
+              operator: 'and',
+            },
           };
 
           const annotations = [{id: 1, test: poem.tiger}];
@@ -188,8 +188,8 @@ describe('viewFilter', function() {
         const filters = {
           any: {
             terms: ['Tiger'],
-            operator: 'and'
-          }
+            operator: 'and',
+          },
         };
 
         const result = viewFilter.filter(annotations, filters);
@@ -202,20 +202,20 @@ describe('viewFilter', function() {
           text: poem.tiger,
           target: [{
             selector: [{
-              "type": "TextQuoteSelector",
-              "exact": "The Tiger by William Blake",
-            }]
-          }
+              'type': 'TextQuoteSelector',
+              'exact': 'The Tiger by William Blake',
+            }],
+          },
           ],
-          user: "acct:poe@edgar.com",
-          tags: ["poem", "Blake", "Tiger"]
+          user: 'acct:poe@edgar.com',
+          tags: ['poem', 'Blake', 'Tiger'],
         };
 
         const filters = {
           any: {
             terms: ['burning', 'William', 'poem', 'bright'],
-            operator: 'and'
-          }
+            operator: 'and',
+          },
         };
 
         const result = viewFilter.filter([annotation], filters);
@@ -228,73 +228,73 @@ describe('viewFilter', function() {
       it("matches if the query occurs in the annotation's URI", function() {
         const ann = {
           id: 1,
-          uri: 'https://publisher.org/article'
+          uri: 'https://publisher.org/article',
         };
         const filters = {
           uri: {
             terms: ['publisher'],
-            operator: 'or'
-          }
+            operator: 'or',
+          },
         };
 
         const result = viewFilter.filter([ann], filters);
 
         return assert.deepEqual(result, [1]);
-    })
+      })
   );
 
     return describe('"since" field', function() {
       it('matches if the annotation is newer than the query', function() {
         const ann = {
           id: 1,
-          updated: isoDateWithAge(50)
+          updated: isoDateWithAge(50),
         };
         const filters = {
           since: {
             terms: [100],
-            operator: 'and'
-          }
+            operator: 'and',
+          },
         };
 
         const result = viewFilter.filter([ann], filters);
 
         return assert.deepEqual(result, [1]);
-    });
+      });
 
       return it('does not match if the annotation is older than the query', function() {
         const ann = {
           id: 1,
-          updated: isoDateWithAge(150)
+          updated: isoDateWithAge(150),
         };
         const filters = {
           since: {
             terms: [100],
-            operator: 'and'
-          }
+            operator: 'and',
+          },
         };
 
         const result = viewFilter.filter([ann], filters);
 
         return assert.deepEqual(result, []);
+      });
     });
   });
-});
 
   return it('ignores filters with no terms in the query', function() {
     const ann = { id: 1, tags: ['foo'] };
     const filters = {
       any: {
         terms: ['foo'],
-        operator: 'and'
+        operator: 'and',
       },
       tag: {
         terms: [],
-        operator: 'and'
-      }
+        operator: 'and',
+      },
     };
 
     const result = viewFilter.filter([ann], filters);
 
     return assert.deepEqual(result, [1]);
-});
+  });
 });

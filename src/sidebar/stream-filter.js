@@ -17,9 +17,9 @@ module.exports = (StreamFilter = (function() {
           actions : {
             create: true,
             update: true,
-            delete: true
-          }
-        };
+            delete: true,
+          },
+      };
     }
 
     constructor() {}
@@ -90,7 +90,7 @@ module.exports = (StreamFilter = (function() {
         operator,
         value,
         case_sensitive,
-        options
+        options,
       });
       return this;
     }

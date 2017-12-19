@@ -37,19 +37,19 @@ module.exports = (QueryParser = (function() {
       this.prototype.rules = {
         user: {
           path: '/user',
-          and_or: 'or'
+          and_or: 'or',
         },
         text: {
           path: '/text',
-          and_or: 'and'
+          and_or: 'and',
         },
         tag: {
           path: '/tags',
-          and_or: 'and'
+          and_or: 'and',
         },
         quote: {
           path: '/quote',
-          and_or: 'and'
+          and_or: 'and',
         },
         uri: {
           formatter(uri) {
@@ -61,28 +61,28 @@ module.exports = (QueryParser = (function() {
             es: {
              query_type: 'match',
              cutoff_frequency: 0.001,
-             and_or: 'and'
-           }
-          }
+             and_or: 'and',
+            },
+          },
         },
         since: {
           formatter(past) {
             const seconds =
               (() => { switch (past) {
-                case '5 min': return 5*60;
-                case '30 min': return 30*60;
-                case '1 hour': return 60*60;
-                case '12 hours': return 12*60*60;
-                case '1 day': return 24*60*60;
-                case '1 week': return 7*24*60*60;
-                case '1 month': return 30*24*60*60;
-                case '1 year': return 365*24*60*60;
+              case '5 min': return 5*60;
+              case '30 min': return 30*60;
+              case '1 hour': return 60*60;
+              case '12 hours': return 12*60*60;
+              case '1 day': return 24*60*60;
+              case '1 week': return 7*24*60*60;
+              case '1 month': return 30*24*60*60;
+              case '1 year': return 365*24*60*60;
               } })();
             return new Date(new Date().valueOf() - (seconds*1000));
           },
           path: '/created',
           and_or: 'and',
-          operator: 'ge'
+          operator: 'ge',
         },
         any: {
           and_or: 'and',
@@ -92,10 +92,10 @@ module.exports = (QueryParser = (function() {
              query_type: 'multi_match',
              match_type: 'cross_fields',
              and_or: 'and',
-             fields:   ['quote', 'tags', 'text', 'uri.parts', 'user']
-           }
-          }
-        }
+             fields:   ['quote', 'tags', 'text', 'uri.parts', 'user'],
+            },
+          },
+        },
       };
     }
 
@@ -104,7 +104,8 @@ module.exports = (QueryParser = (function() {
       return (() => {
         const result = [];
         for (let category in query) {
-          var oper_part, value_part;
+          var oper_part, 
+            value_part;
           const value = query[category];
           if (this.rules[category] == null) { continue; }
           var { terms } = value;
