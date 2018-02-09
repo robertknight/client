@@ -9,7 +9,8 @@ describe('tagEditor', function () {
 
   before(function () {
     angular.module('app',[])
-      .component('tagEditor', require('../tag-editor'));
+      .component('tagEditor', require('../tag-editor'))
+      .config(($compileProvider) => $compileProvider.preAssignBindingsEnabled(true));
   });
 
   beforeEach(function () {

@@ -21,7 +21,8 @@ describe('groupList', function () {
       .component('groupList', groupList)
       .factory('groups', function () {
         return fakeGroups;
-      });
+      })
+      .config(($compileProvider) => $compileProvider.preAssignBindingsEnabled(true));
   });
 
   beforeEach(function () {

@@ -25,7 +25,8 @@ describe('excerpt', function () {
 
   before(function () {
     angular.module('app', [])
-      .component('excerpt', excerpt);
+      .component('excerpt', excerpt)
+      .config(($compileProvider) => $compileProvider.preAssignBindingsEnabled(true));
   });
 
   beforeEach(function () {

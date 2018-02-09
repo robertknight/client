@@ -11,7 +11,8 @@ describe('timestamp', function () {
 
   before(function () {
     angular.module('app',[])
-      .component('timestamp', require('../timestamp'));
+      .component('timestamp', require('../timestamp'))
+      .config(($compileProvider) => $compileProvider.preAssignBindingsEnabled(true));
   });
 
   beforeEach(function () {

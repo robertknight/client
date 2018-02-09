@@ -7,7 +7,8 @@ var util = require('../../directive/test/util');
 describe('sortDropdown', function () {
   before(function () {
     angular.module('app', [])
-      .component('sortDropdown', require('../sort-dropdown'));
+      .component('sortDropdown', require('../sort-dropdown'))
+      .config(($compileProvider) => $compileProvider.preAssignBindingsEnabled(true));
   });
 
   beforeEach(function () {

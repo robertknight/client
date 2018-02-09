@@ -30,7 +30,8 @@ describe('annotationThread', function () {
       .component('annotationThread', annotationThread)
       .component('moderationBanner', {
         bindings: moderationBanner.bindings,
-      });
+      })
+      .config(($compileProvider) => $compileProvider.preAssignBindingsEnabled(true));
   });
 
   beforeEach(function () {

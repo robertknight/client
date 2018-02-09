@@ -21,7 +21,8 @@ describe('annotationShareDialog', function () {
       .component('annotationShareDialog',
         require('../annotation-share-dialog'))
       .value('analytics', fakeAnalytics)
-      .value('urlEncodeFilter', function (val) { return val; });
+      .value('urlEncodeFilter', function (val) { return val; })
+      .config(($compileProvider) => $compileProvider.preAssignBindingsEnabled(true));
   });
 
   beforeEach(function () {

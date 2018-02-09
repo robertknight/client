@@ -70,7 +70,8 @@ describe('markdown', function () {
             element.dataset.replacedLinksWithEmbeds = 'yes';
           },
         }),
-      })));
+      })))
+      .config(($compileProvider) => $compileProvider.preAssignBindingsEnabled(true));
   });
 
   beforeEach(function () {

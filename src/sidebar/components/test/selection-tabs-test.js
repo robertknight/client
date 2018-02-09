@@ -18,7 +18,8 @@ describe('selectionTabs', function () {
 
   before(function () {
     angular.module('app', [])
-      .component('selectionTabs', require('../selection-tabs'));
+      .component('selectionTabs', require('../selection-tabs'))
+      .config(($compileProvider) => $compileProvider.preAssignBindingsEnabled(true));
   });
 
   beforeEach(function () {

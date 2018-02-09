@@ -13,7 +13,8 @@ describe('helpPanel', function () {
     };
 
     angular.module('h', [])
-      .component('helpPanel', require('../help-panel'));
+      .component('helpPanel', require('../help-panel'))
+      .config(($compileProvider) => $compileProvider.preAssignBindingsEnabled(true));
 
     angular.mock.module('h', {
       annotationUI: fakeAnnotationUI,

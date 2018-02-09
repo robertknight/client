@@ -7,7 +7,8 @@ var util = require('../../directive/test/util');
 describe('searchStatusBar', function () {
   before(function () {
     angular.module('app', [])
-      .component('searchStatusBar', require('../search-status-bar'));
+      .component('searchStatusBar', require('../search-status-bar'))
+      .config(($compileProvider) => $compileProvider.preAssignBindingsEnabled(true));
   });
 
   beforeEach(function () {

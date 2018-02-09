@@ -23,7 +23,8 @@ describe('topBar', function () {
       })
       .component('sortDropdown', {
         bindings: require('../sort-dropdown').bindings,
-      });
+      })
+      .config(($compileProvider) => $compileProvider.preAssignBindingsEnabled(true));
   });
 
   beforeEach(function () {

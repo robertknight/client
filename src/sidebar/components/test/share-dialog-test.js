@@ -19,7 +19,8 @@ describe('shareDialog', function () {
       .component('shareDialog', require('../share-dialog'))
       .value('analytics', fakeAnalytics)
       .value('annotationUI', fakeAnnotationUI)
-      .value('urlEncodeFilter', function (val) { return val; });
+      .value('urlEncodeFilter', function (val) { return val; })
+      .config(($compileProvider) => $compileProvider.preAssignBindingsEnabled(true));
     angular.mock.module('h');
   });
 

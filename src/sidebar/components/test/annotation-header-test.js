@@ -38,7 +38,8 @@ describe('sidebar.components.annotation-header', function () {
     });
 
     angular.module('app', [])
-      .component('annotationHeader', annotationHeader);
+      .component('annotationHeader', annotationHeader)
+      .config(($compileProvider) => $compileProvider.preAssignBindingsEnabled(true));
   });
 
   beforeEach('Initialize and register fake AngularJS dependencies', function () {

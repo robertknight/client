@@ -76,7 +76,8 @@ describe('loginControl', function () {
           '../login-control',
           {'../service-config': fakeServiceConfig}
         )
-      );
+      )
+      .config(($compileProvider) => $compileProvider.preAssignBindingsEnabled(true));
   });
 
   beforeEach(function () {

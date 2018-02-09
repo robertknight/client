@@ -16,7 +16,8 @@ describe('moderationBanner', function () {
 
   before(function () {
     angular.module('app', [])
-      .component('moderationBanner', require('../moderation-banner'));
+      .component('moderationBanner', require('../moderation-banner'))
+      .config(($compileProvider) => $compileProvider.preAssignBindingsEnabled(true));
   });
 
   beforeEach(function () {

@@ -15,7 +15,8 @@ describe('newNoteBtn', function () {
   before(function () {
     angular.module('app', [])
       .component('selectionTabs', require('../selection-tabs'))
-      .component('newNoteBtn', require('../new-note-btn'));
+      .component('newNoteBtn', require('../new-note-btn'))
+      .config(($compileProvider) => $compileProvider.preAssignBindingsEnabled(true));
   });
 
   beforeEach(function () {

@@ -9,7 +9,8 @@ describe('searchInput', function () {
 
   before(function () {
     angular.module('app', [])
-      .component('searchInput', require('../search-input'));
+      .component('searchInput', require('../search-input'))
+      .config(($compileProvider) => $compileProvider.preAssignBindingsEnabled(true));
   });
 
   beforeEach(function () {
