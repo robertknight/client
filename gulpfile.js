@@ -358,10 +358,10 @@ function generateBootScript(manifest) {
   let defaultAssetRoot;
 
   if (process.env.NODE_ENV === 'production') {
-    defaultAssetRoot = `https://cdn.hypothes.is/hypothesis/${version}/`;
+    defaultAssetRoot = `https://cdn.hypothes.is/hypothesis/${version}/build/`;
   } else {
     const scheme = useSsl ? 'https' : 'http';
-    defaultAssetRoot = `${scheme}://${packageServerHostname()}:3001/hypothesis/${version}/`;
+    defaultAssetRoot = `${scheme}://${packageServerHostname()}:3001/hypothesis/${version}/build/`;
   }
 
   if (isFirstBuild) {
