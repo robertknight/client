@@ -4102,6 +4102,15 @@ gulp-match@^1.0.3:
   dependencies:
     minimatch "^3.0.3"
 
+gulp-mustache@^3.0.0:
+  version "3.0.0"
+  resolved "https://registry.yarnpkg.com/gulp-mustache/-/gulp-mustache-3.0.0.tgz#7ff0ba9502ca40550207b487a3e3b11c68d24014"
+  dependencies:
+    escape-string-regexp "^1.0.5"
+    gulp-util "^3.0.7"
+    mustache "^2.2.1"
+    through2 "^2.0.0"
+
 gulp-postcss@^8.0.0:
   version "8.0.0"
   resolved "https://registry.yarnpkg.com/gulp-postcss/-/gulp-postcss-8.0.0.tgz#8d3772cd4d27bca55ec8cb4c8e576e3bde4dc550"
@@ -6017,6 +6026,10 @@ multipipe@^0.1.2:
   integrity sha1-Ko8t33Du1WTf8tV/HhoTfZ8FB4s=
   dependencies:
     duplexer2 "0.0.2"
+
+mustache@^2.2.1:
+  version "2.3.0"
+  resolved "https://registry.yarnpkg.com/mustache/-/mustache-2.3.0.tgz#4028f7778b17708a489930a6e52ac3bca0da41d0"
 
 mute-stdout@^1.0.0:
   version "1.0.1"
