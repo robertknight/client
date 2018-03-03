@@ -65,6 +65,7 @@ describe('sidebar.frame-sync', function () {
     fakeAnnotationUI = fakeStore({annotations: []}, {
       connectFrame: sinon.stub(),
       destroyFrame: sinon.stub(),
+      updateFrame: sinon.stub(),
       findIDsForTags: sinon.stub(),
       focusAnnotations: sinon.stub(),
       frames: sinon.stub().returns([fixtures.framesListEntry]),
@@ -264,6 +265,18 @@ describe('sidebar.frame-sync', function () {
       fakeBridge.emit('destroyFrame', frameId);
 
       assert.calledWith(fakeAnnotationUI.destroyFrame, fixtures.framesListEntry);
+    });
+  });
+
+  context('when a frame is updated', () => {
+    it('updates the metadata and URI for the frame', () => {
+      var id = null;
+      var uri = 'https://example.com/new-url';
+      var metadata = { title: 'New Page' };
+
+      fakeBridge.emit('updateFrame', { frameIdentifier: id, uri, metadata  });
+
+      assert.calledWith(fakeAnnotationUI.updateFrame, { id, uri, metadata });
     });
   });
 
