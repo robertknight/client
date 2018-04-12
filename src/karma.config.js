@@ -1,8 +1,12 @@
+/* global process */
+
 'use strict';
 
 /* global __dirname */
 
 const path = require('path');
+
+process.env.CHROME_BIN = require('puppeteer').executablePath();
 
 module.exports = function(config) {
   config.set({
@@ -137,7 +141,7 @@ module.exports = function(config) {
 
     // start these browsers
     // available browser launchers: https://npmjs.org/browse/keyword/karma-launcher
-    browsers: ['PhantomJS'],
+    browsers: ['ChromeHeadless'],
     browserNoActivityTimeout: 20000, // Travis is slow...
 
     // Continuous Integration mode
