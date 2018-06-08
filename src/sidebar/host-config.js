@@ -33,6 +33,7 @@ function hostPageConfig(window) {
     'showHighlights',
     'services',
     'branding',
+    'collapseLongAnnotations',
 
     // New note button override.
     // This should be removed once new note button is enabled for everybody.

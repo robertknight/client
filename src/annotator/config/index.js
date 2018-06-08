@@ -20,6 +20,9 @@ function configFrom(window_) {
     // URL of the client's boot script. Used when injecting the client into
     // child iframes.
     clientUrl: settings.clientUrl,
+    collapseLongAnnotations: settings.hostPageSetting(
+      'collapseLongAnnotations'
+    ),
     enableExperimentalNewNoteButton: settings.hostPageSetting(
       'enableExperimentalNewNoteButton'
     ),

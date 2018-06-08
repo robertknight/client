@@ -90,6 +90,7 @@ describe('annotator.config.index', function() {
   [
     'assetRoot',
     'branding',
+    'collapseLongAnnotations',
     'openSidebar',
     'requestConfigFromFrame',
     'services',

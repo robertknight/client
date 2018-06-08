@@ -58,6 +58,12 @@ Client Behavior
 These settings configure the behavior and initial state of the client when it
 loads.
 
+.. option:: collapseLongAnnotations
+
+  ``Boolean``. Controls whether the content of long annotations is hidden
+   initially, requiring a tap or click to expand.
+   (Default: ``true``.)
+
 .. option:: openSidebar
 
    ``Boolean``. Controls whether the sidebar opens automatically on startup.

@@ -127,7 +127,11 @@ function AnnotationController(
     self.canCollapseBody = false;
 
     /** Determines whether the annotation body should be collapsed. */
-    self.collapseBody = true;
+    if (typeof settings.collapseLongAnnotations === 'undefined') {
+      self.collapseBody = true;
+    } else {
+      self.collapseBody = settings.collapseLongAnnotations;
+    }
 
     /** True if the annotation is currently being saved. */
     self.isSaving = false;
