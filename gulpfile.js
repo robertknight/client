@@ -270,11 +270,6 @@ gulp.task('build-html', () => {
     authDomain: url.parse(serviceUrl).hostname,
 
     oauthClientId: process.env.OAUTH_CLIENT_ID || clientIdRequiredMsg,
-    oauthEnabled: true,
-
-    // FIXME - Once the cookie auth code has been removed, this should no longer
-    // be required. It should be unused when using OAuth.
-    serviceUrl,
   };
   const htmlSafeJsonConfig = JSON.stringify(config).replace(/</g, '\\u003c');
   gulp
