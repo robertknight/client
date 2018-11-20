@@ -17,7 +17,7 @@ set -eu
 
 export NODE_ENV=production
 export OAUTH_CLIENT_ID=$1
-export API_URL=$2
+export API_URL=${2:-https://hypothes.is/api/}
 
 # Remove any outputs from previous builds.
 rm -rf build/
