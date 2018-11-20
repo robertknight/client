@@ -264,10 +264,10 @@ gulp.task(
 gulp.task('build-html', () => {
   const clientIdRequiredMsg =
     'You must configure an OAuth client ID with the "OAUTH_CLIENT_ID" env var';
-  const serviceUrl = process.env.H_SERVICE_URL || 'https://hypothes.is';
+  const apiUrl = process.env.API_URL || 'https://hypothes.is/api/';
   const config = {
-    apiUrl: `${serviceUrl}/api/`,
-    authDomain: url.parse(serviceUrl).hostname,
+    apiUrl,
+    authDomain: url.parse(apiUrl).hostname,
 
     oauthClientId: process.env.OAUTH_CLIENT_ID || clientIdRequiredMsg,
   };
