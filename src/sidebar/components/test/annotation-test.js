@@ -425,19 +425,23 @@ describe('annotation', function() {
         assert.isTrue(controller.editing());
       });
 
-      [{
-        collapseLongAnnotations: undefined,
-        collapseBody: true,
-      },{
-        collapseLongAnnotations: true,
-        collapseBody: true,
-      },{
-        collapseLongAnnotations: false,
-        collapseBody: false,
-      }].forEach(({ collapseLongAnnotations, collapseBody }) => {
+      [
+        {
+          collapseLongAnnotations: undefined,
+          collapseBody: true,
+        },
+        {
+          collapseLongAnnotations: true,
+          collapseBody: true,
+        },
+        {
+          collapseLongAnnotations: false,
+          collapseBody: false,
+        },
+      ].forEach(({ collapseLongAnnotations, collapseBody }) => {
         it('sets the collapsed state of the annotation depending on the "collapseLongAnnotations" setting', () => {
           fakeSettings.collapseLongAnnotations = collapseLongAnnotations;
-          var controller = createDirective().controller;
+          let controller = createDirective().controller;
           assert.equal(controller.collapseBody, collapseBody);
         });
       });

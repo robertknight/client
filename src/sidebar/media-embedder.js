@@ -117,7 +117,7 @@ function sandboxedIframe(src) {
     src = 'https:' + src;
   }
 
-  var iframe = document.createElement('iframe');
+  let iframe = document.createElement('iframe');
   iframe.src = src;
   iframe.frameBorder = '0';
 
@@ -130,7 +130,7 @@ function sandboxedIframe(src) {
   // Unfortunately in some browsers "allow-same-origin" is required for web
   // fonts to work 😞. However it also gives the iframe access to localStorage
   // and cookies and hence tracking tools.
-  var sandboxTokens = ['allow-scripts', 'allow-same-origin'];
+  let sandboxTokens = ['allow-scripts', 'allow-same-origin'];
   iframe.sandbox = sandboxTokens.join(' ');
 
   return iframe;
@@ -169,7 +169,7 @@ const embedGenerators = [
   // any other generator.
   function iframeFromEmbed(link) {
     if (link.classList.contains('js-embed')) {
-      var iframe = sandboxedIframe(link.href);
+      let iframe = sandboxedIframe(link.href);
       iframe.className = 'annotation-embed';
 
       // This might be H5P content (https://h5p.org/).

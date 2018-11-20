@@ -422,13 +422,13 @@ describe('media-embedder', function() {
   });
 
   it('replaces embed links with sandboxed iframes', () => {
-    var element = domElement(
+    let element = domElement(
       '<a class="js-embed" href="https://h5p.org/activity/1234">https://h5p.org/activity/1234</a>'
     );
 
     mediaEmbedder.replaceLinksWithEmbeds(element);
 
-    var frame = element.querySelector('iframe');
+    let frame = element.querySelector('iframe');
     assert.equal(frame.src, 'https://h5p.org/activity/1234');
     assert.equal(
       frame.getAttribute('sandbox'),
@@ -437,7 +437,7 @@ describe('media-embedder', function() {
   });
 
   it('initializes H5P resizing support when a possibly-H5P embed link is found', () => {
-    var element = domElement(
+    let element = domElement(
       '<a class="js-embed" href="https://h5p.org/activity/1234">https://h5p.org/activity/1234</a>'
     );
 
