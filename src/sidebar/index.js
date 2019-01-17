@@ -36,6 +36,16 @@ const angular = require('angular');
 // it must be require'd after angular is first require'd
 require('autofill-event');
 
+// Non-Angular UI components.
+require('@webcomponents/custom-elements/src/native-shim');
+
+const customElements = {
+  'markdown-editor': require('./components/markdown-editor'),
+};
+Object.keys(customElements).forEach(tag =>
+  window.customElements.define(tag, customElements[tag])
+);
+
 // Setup Angular integration for Raven
 if (appConfig.raven) {
   raven.angularModule(angular);

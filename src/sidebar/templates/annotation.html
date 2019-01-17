@@ -38,12 +38,12 @@
       collapsed-height="400"
       overflow-hysteresis="20"
       content-data="vm.state().text">
-      <markdown text="vm.state().text"
-                custom-text-class="{'annotation-body is-hidden':vm.isHiddenByModerator(),
-                                    'has-content':vm.hasContent()}"
-                on-edit-text="vm.setText(text)"
-                read-only="!vm.editing()">
-      </markdown>
+      <markdown-editor
+        ng-prop-read_only="!vm.editing()"
+        ng-prop-text="vm.state().text"
+        ng-on-edit_text="vm.setText($event.detail)"
+        >
+      </markdown-editor>
     </excerpt>
   </section>
   <!-- / Body -->
