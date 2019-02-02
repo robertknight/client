@@ -30,6 +30,7 @@ document.body.setAttribute('ng-csp', '');
 disableOpenerForExternalLinks(document.body);
 
 const angular = require('angular');
+const wrapReactComponent = require('./util/wrap-react-component.js');
 
 // autofill-event relies on the existence of window.angular so
 // it must be require'd after angular is first require'd
@@ -140,7 +141,7 @@ function startAngularApp(config) {
     .component('annotationHeader', require('./components/annotation-header'))
     .component(
       'annotationActionButton',
-      require('./components/annotation-action-button')
+      wrapReactComponent(require('./components/annotation-action-button-react'))
     )
     .component(
       'annotationShareDialog',
@@ -172,7 +173,10 @@ function startAngularApp(config) {
     .component('sidebarTutorial', require('./components/sidebar-tutorial'))
     .component('shareDialog', require('./components/share-dialog'))
     .component('sortDropdown', require('./components/sort-dropdown'))
-    .component('spinner', require('./components/spinner'))
+    .component(
+      'spinner',
+      wrapReactComponent(require('./components/spinner-react'))
+    )
     .component('streamContent', require('./components/stream-content'))
     .component('svgIcon', require('./components/svg-icon'))
     .component('tagEditor', require('./components/tag-editor'))
