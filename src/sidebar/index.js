@@ -184,7 +184,10 @@ function startAngularApp(config) {
     .component('svgIcon', require('./components/svg-icon'))
     .component('tagEditor', require('./components/tag-editor'))
     .component('threadList', require('./components/thread-list'))
-    .component('timestamp', require('./components/timestamp'))
+    .component(
+      'timestamp',
+      wrapReactComponent(require('./components/timestamp-react'))
+    )
     .component('topBar', require('./components/top-bar'))
 
     .directive('hAutofocus', require('./directive/h-autofocus'))
