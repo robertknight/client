@@ -171,7 +171,10 @@ function startAngularApp(config) {
     .component('selectionTabs', require('./components/selection-tabs'))
     .component('sidebarContent', require('./components/sidebar-content'))
     .component('sidebarTutorial', require('./components/sidebar-tutorial'))
-    .component('shareDialog', require('./components/share-dialog'))
+    .component(
+      'shareDialog',
+      wrapReactComponent(require('./components/share-dialog-react'))
+    )
     .component('sortDropdown', require('./components/sort-dropdown'))
     .component(
       'spinner',
