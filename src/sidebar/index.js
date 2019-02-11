@@ -159,7 +159,10 @@ function startAngularApp(config) {
     .component('helpPanel', require('./components/help-panel'))
     .component('loggedoutMessage', require('./components/loggedout-message'))
     .component('loginControl', require('./components/login-control'))
-    .component('markdown', require('./components/markdown'))
+    .component(
+      'markdown',
+      wrapReactComponent(require('./components/markdown-editor'))
+    )
     .component(
       'moderationBanner',
       wrapReactComponent(require('./components/moderation-banner-react'))
