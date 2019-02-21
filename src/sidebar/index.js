@@ -174,7 +174,10 @@ function startAngularApp(config) {
     )
     .component('searchInput', require('./components/search-input'))
     .component('searchStatusBar', require('./components/search-status-bar'))
-    .component('selectionTabs', require('./components/selection-tabs'))
+    .component(
+      'selectionTabs',
+      wrapReactComponent(require('./components/selection-tabs-react'))
+    )
     .component('sidebarContent', require('./components/sidebar-content'))
     .component('sidebarTutorial', require('./components/sidebar-tutorial'))
     .component(
