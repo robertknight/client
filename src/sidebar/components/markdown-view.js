@@ -1,6 +1,6 @@
 import classnames from 'classnames';
 import { createElement } from 'preact';
-import { useEffect, useMemo, useRef } from 'preact/hooks';
+import { useLayoutEffect, useMemo, useRef } from 'preact/hooks';
 import propTypes from 'prop-types';
 
 import { replaceLinksWithEmbeds } from '../media-embedder';
@@ -11,13 +11,15 @@ import renderMarkdown from '../render-markdown';
  * with embedded video/audio.
  */
 export default function MarkdownView({ markdown = '', textClass = {} }) {
-  const html = useMemo(() => (markdown ? renderMarkdown(markdown) : ''), [
-    markdown,
-  ]);
   const content = useRef(null);
 
-  useEffect(() => {
-    replaceLinksWithEmbeds(content.current);
+  useLayoutEffect(() => {
+    renderMarkdown(markdown).then(html => {
+      if (content.current) {
+        content.current.innerHTML = html;
+        replaceLinksWithEmbeds(content.current);
+      }
+    });
   }, [markdown]);
 
   // Use a blank string to indicate that the content language is unknown and may be
@@ -31,7 +33,6 @@ export default function MarkdownView({ markdown = '', textClass = {} }) {
       dir="auto"
       lang={contentLanguage}
       ref={content}
-      dangerouslySetInnerHTML={{ __html: html }}
     />
   );
 }

@@ -1,7 +1,8 @@
 import createDOMPurify from 'dompurify';
 import escapeHtml from 'escape-html';
-import * as katex from 'katex';
 import showdown from 'showdown';
+
+import { lazyLoad } from '../boot/lazy-load';
 
 const DOMPurify = createDOMPurify(window);
 
@@ -111,7 +112,7 @@ function extractMath(content) {
   };
 }
 
-function insertMath(html, mathBlocks) {
+function insertMath(katex, html, mathBlocks) {
   return mathBlocks.reduce(function (html, block) {
     let renderedMath;
     try {
@@ -129,13 +130,22 @@ function insertMath(html, mathBlocks) {
   }, html);
 }
 
-export default function renderMathAndMarkdown(markdown) {
+async function renderMathAndMarkdown(markdown) {
   // KaTeX takes care of escaping its input, so we want to avoid passing its
   // output through the HTML sanitizer. Therefore we first extract the math
   // blocks from the input, render and sanitize the remaining markdown and then
   // render and re-insert the math blocks back into the output.
-  const mathInfo = extractMath(markdown);
-  const markdownHTML = DOMPurify.sanitize(renderMarkdown(mathInfo.content));
-  const mathAndMarkdownHTML = insertMath(markdownHTML, mathInfo.mathBlocks);
-  return mathAndMarkdownHTML;
+  const { content, mathBlocks } = extractMath(markdown);
+  const markdownHTML = DOMPurify.sanitize(renderMarkdown(content));
+  if (mathBlocks.length === 0) {
+    return markdownHTML;
+  }
+
+  const katex = await lazyLoad('katex');
+  return insertMath(katex, markdownHTML, mathBlocks);
 }
+
+// Putting `export default` in front of the function declaration causes
+// a "We don't know what to do with this node type" build error, so we export
+// it separately.
+export default renderMathAndMarkdown;

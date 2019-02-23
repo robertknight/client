@@ -1,4 +1,5 @@
 import { requiredPolyfillSets } from '../shared/polyfills';
+import { registerModule } from './lazy-load';
 
 function injectStylesheet(doc, href) {
   const link = doc.createElement('link');
@@ -19,9 +20,13 @@ function injectScript(doc, src) {
   doc.head.appendChild(script);
 }
 
+function assetUrl(config, path) {
+  return config.assetRoot + 'build/' + config.manifest[path];
+}
+
 function injectAssets(doc, config, assets) {
   assets.forEach(function (path) {
-    const url = config.assetRoot + 'build/' + config.manifest[path];
+    const url = assetUrl(config, path);
     if (url.match(/\.css/)) {
       injectStylesheet(doc, url);
     } else {
@@ -113,7 +118,6 @@ function bootSidebarApp(doc, config) {
     // Vendor code required by sidebar.bundle.js
     'scripts/sentry.bundle.js',
     'scripts/angular.bundle.js',
-    'scripts/katex.bundle.js',
     'scripts/showdown.bundle.js',
 
     // The sidebar app
@@ -121,9 +125,15 @@ function bootSidebarApp(doc, config) {
 
     'styles/angular-csp.css',
     'styles/angular-toastr.css',
-    'styles/katex.min.css',
     'styles/sidebar.css',
   ]);
+
+  // Register modules that are lazily loaded when needed.
+  registerModule(
+    'katex',
+    assetUrl(config, 'scripts/katex.bundle.js'),
+    assetUrl(config, 'styles/katex.min.css')
+  );
 }
 
 export default function boot(document_, config) {
