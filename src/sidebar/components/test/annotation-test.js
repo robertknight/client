@@ -1237,56 +1237,6 @@ describe('annotation', function() {
       });
     });
 
-    it('renders quotes as plain text', function() {
-      const ann = fixtures.defaultAnnotation();
-      ann.target[0].selector = [
-        {
-          type: 'TextQuoteSelector',
-          exact: '<<-&->>',
-        },
-      ];
-      const el = createDirective(ann).element;
-      assert.equal(el[0].querySelector('blockquote').textContent, '<<-&->>');
-    });
-
-    unroll(
-      'renders hidden annotations with a custom text class (#context)',
-      function(testCase) {
-        const el = createDirective(testCase.ann).element;
-        assert.match(
-          el.find('markdown').controller('markdown'),
-          sinon.match({
-            customTextClass: testCase.textClass,
-          })
-        );
-      },
-      [
-        {
-          context: 'for moderators',
-          ann: Object.assign(fixtures.moderatedAnnotation({ hidden: true }), {
-            // Content still present.
-            text: 'Some offensive content',
-          }),
-          textClass: {
-            'annotation-body is-hidden': true,
-            'has-content': true,
-          },
-        },
-        {
-          context: 'for non-moderators',
-          ann: Object.assign(fixtures.moderatedAnnotation({ hidden: true }), {
-            // Content filtered out by service.
-            tags: [],
-            text: '',
-          }),
-          textClass: {
-            'annotation-body is-hidden': true,
-            'has-content': false,
-          },
-        },
-      ]
-    );
-
     it('flags the annotation when the user clicks the "Flag" button', function() {
       fakeAnnotationMapper.flagAnnotation.returns(Promise.resolve());
       const ann = Object.assign(fixtures.defaultAnnotation(), {

@@ -13,40 +13,19 @@
                      show-document-info="vm.showDocumentInfo">
   </annotation-header>
 
-  <!-- Excerpts -->
-  <section class="annotation-quote-list"
-    ng-class="{'is-orphan' : vm.isOrphan()}"
-    ng-if="vm.quote()">
-    <excerpt collapsed-height="35"
-      inline-controls="true"
-      overflow-hysteresis="20"
-      content-data="selector.exact">
-      <blockquote class="annotation-quote"
-        h-branding="selectionFontFamily"
-        ng-bind="vm.quote()"></blockquote>
-    </excerpt>
-  </section>
+  <annotation-quote is-orphan="vm.isOrphan()" quote="vm.quote()">
+  </annotation-quote>
 
-  <!-- / Excerpts -->
-
-  <!-- Body -->
-  <section name="text" class="annotation-body">
-    <excerpt enabled="!vm.editing()"
-      inline-controls="false"
-      on-collapsible-changed="vm.setBodyCollapsible(collapsible)"
-      collapse="vm.collapseBody"
-      collapsed-height="400"
-      overflow-hysteresis="20"
-      content-data="vm.state().text">
-      <markdown text="vm.state().text"
-                custom-text-class="{'annotation-body is-hidden':vm.isHiddenByModerator(),
-                                    'has-content':vm.hasContent()}"
-                on-edit-text="vm.setText(text)"
-                read-only="!vm.editing()">
-      </markdown>
-    </excerpt>
-  </section>
-  <!-- / Body -->
+  <annotation-body
+    collapse-body="vm.collapseBody"
+    has-content="vm.hasContent()"
+    is-editing="vm.editing()"
+    is-hidden="vm.isHiddenByModerator()"
+    on-collapsible-changed="vm.setBodyCollapsible(collapsible)"
+    on-edit-text="vm.setText(text)"
+    text="vm.state().text"
+    >
+  </annotation-body>
 
   <!-- Tags -->
   <div class="annotation-body form-field" ng-if="vm.editing()">

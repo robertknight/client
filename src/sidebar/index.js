@@ -138,10 +138,17 @@ function startAngularApp(config) {
 
     // UI components
     .component('annotation', require('./components/annotation'))
-    .component('annotationHeader', require('./components/annotation-header'))
     .component(
       'annotationActionButton',
       wrapReactComponent(require('./components/annotation-action-button-react'))
+    )
+    .component('annotationBody',
+      wrapReactComponent(require('./components/annotation-body'))
+    )
+    .component('annotationHeader', require('./components/annotation-header'))
+    .component(
+      'annotationQuote',
+      wrapReactComponent(require('./components/annotation-quote'))
     )
     .component(
       'annotationShareDialog',
