@@ -142,7 +142,8 @@ function startAngularApp(config) {
       'annotationActionButton',
       wrapReactComponent(require('./components/annotation-action-button-react'))
     )
-    .component('annotationBody',
+    .component(
+      'annotationBody',
       wrapReactComponent(require('./components/annotation-body'))
     )
     .component('annotationHeader', require('./components/annotation-header'))
