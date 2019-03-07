@@ -1,8 +1,9 @@
 'use strict';
 
 const get = require('lodash.get');
+const queryString = require('query-string');
 
-const urlUtil = require('../util/url-util');
+const { replaceURLParams } = require('../util/url-util');
 
 /**
  * Translate the response from a failed API call into an Error-like object.
@@ -10,14 +11,14 @@ const urlUtil = require('../util/url-util');
  * The details of the response are available on the `response` property of the
  * error.
  */
-function translateResponseToError(response) {
+function translateResponseToError(response, data) {
   let message;
   if (response.status <= 0) {
     message = 'Service unreachable.';
   } else {
     message = response.status + ' ' + response.statusText;
-    if (response.data && response.data.reason) {
-      message = message + ': ' + response.data.reason;
+    if (data && data.reason) {
+      message = message + ': ' + data.reason;
     }
   }
   const err = new Error(message);
@@ -39,59 +40,6 @@ function stripInternalProperties(obj) {
   }
 
   return result;
-}
-
-function forEachSorted(obj, iterator, context) {
-  const keys = Object.keys(obj).sort();
-  for (let i = 0; i < keys.length; i++) {
-    iterator.call(context, obj[keys[i]], keys[i]);
-  }
-  return keys;
-}
-
-function serializeValue(v) {
-  if (typeof v === 'object') {
-    return v instanceof Date ? v.toISOString() : JSON.stringify(v);
-  }
-  return v;
-}
-
-function encodeUriQuery(val) {
-  return encodeURIComponent(val).replace(/%20/g, '+');
-}
-
-// Serialize an object containing parameters into a form suitable for a query
-// string.
-//
-// This is an almost identical copy of the default Angular parameter serializer
-// ($httpParamSerializer), with one important change. In Angular 1.4.x
-// semicolons are not encoded in query parameter values. This is a problem for
-// us as URIs around the web may well contain semicolons, which our backend will
-// then proceed to parse as a delimiter in the query string. To avoid this
-// problem we use a very conservative encoder, found above.
-function serializeParams(params) {
-  if (!params) {
-    return '';
-  }
-  const parts = [];
-  forEachSorted(params, function(value, key) {
-    if (value === null || typeof value === 'undefined') {
-      return;
-    }
-    if (Array.isArray(value)) {
-      value.forEach(function(v) {
-        parts.push(
-          encodeUriQuery(key) + '=' + encodeUriQuery(serializeValue(v))
-        );
-      });
-    } else {
-      parts.push(
-        encodeUriQuery(key) + '=' + encodeUriQuery(serializeValue(value))
-      );
-    }
-  });
-
-  return parts.join('&');
 }
 
 /**
@@ -123,8 +71,6 @@ function serializeParams(params) {
 /**
  * Creates a function that will make an API call to a named route.
  *
- * @param $http - The Angular HTTP service
- * @param $q - The Angular Promises ($q) service.
  * @param links - Object or promise for an object mapping named API routes to
  *                URL templates and methods
  * @param route - The dotted path of the named API route (eg. `annotation.create`)
@@ -132,18 +78,14 @@ function serializeParams(params) {
  *                   access token for the API.
  * @return {APICallFunction}
  */
-function createAPICall($http, $q, links, route, tokenGetter) {
-  return function(params, data, options = {}) {
-    // `$q.all` is used here rather than `Promise.all` because testing code that
-    // mixes native Promises with the `$q` promises returned by `$http`
-    // functions gets awkward in tests.
+function createAPICall(links, route, tokenGetter) {
+  return (params, data, options = {}) => {
     let accessToken;
-    return $q
-      .all([links, tokenGetter()])
+    return Promise.all([links, tokenGetter()])
       .then(([links, token]) => {
         const descriptor = get(links, route);
-        const url = urlUtil.replaceURLParams(descriptor.url, params);
         const headers = {
+          'Content-Type': 'application/json',
           'Hypothesis-Client-Version': '__VERSION__', // replaced by versionify
         };
 
@@ -152,30 +94,36 @@ function createAPICall($http, $q, links, route, tokenGetter) {
           headers.Authorization = 'Bearer ' + token;
         }
 
-        const req = {
-          data: data ? stripInternalProperties(data) : null,
-          headers: headers,
+        const { url, params: queryParams } = replaceURLParams(
+          descriptor.url,
+          params
+        );
+        const apiUrl = new URL(url);
+        apiUrl.search = queryString.stringify(queryParams);
+
+        return fetch(apiUrl.toString(), {
+          body: data ? JSON.stringify(stripInternalProperties(data)) : null,
+          headers,
           method: descriptor.method,
-          params: url.params,
-          paramSerializer: serializeParams,
-          url: url.url,
-        };
-        return $http(req);
+        });
       })
-      .then(function(response) {
-        if (options.includeMetadata) {
-          return { data: response.data, token: accessToken };
-        } else {
-          return response.data;
+      .then(response => {
+        // TODO - Handle 500 responses here which may not have a decodable JSON
+        // body.
+        return Promise.all([response, response.json()]);
+      })
+      .then(([response, data]) => {
+        if (response.status >= 400) {
+          // Translate the API result into an `Error` to follow the convention that
+          // Promises should be rejected with an Error or Error-like object.
+          throw translateResponseToError(response, data);
         }
-      })
-      .catch(function(response) {
-        // Translate the API result into an `Error` to follow the convention that
-        // Promises should be rejected with an Error or Error-like object.
-        //
-        // Use `$q.reject` rather than just rethrowing the Error here due to
-        // mishandling of errors thrown inside `catch` handlers in Angular < 1.6
-        return $q.reject(translateResponseToError(response));
+
+        if (options.includeMetadata) {
+          return { data, token: accessToken };
+        } else {
+          return data;
+        }
       });
   };
 }
@@ -201,10 +149,10 @@ function createAPICall($http, $q, links, route, tokenGetter) {
  * not use authentication.
  */
 // @ngInject
-function api($http, $q, apiRoutes, auth) {
+function api(apiRoutes, auth) {
   const links = apiRoutes.routes();
   function apiCall(route) {
-    return createAPICall($http, $q, links, route, auth.tokenGetter);
+    return createAPICall(links, route, auth.tokenGetter);
   }
 
   return {
