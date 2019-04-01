@@ -1,0 +1,17 @@
+.group-actions-pane__link {
+  margin-bottom: 50px;
+  & > img {
+    vertical-align: middle;
+    padding-left: 5px;
+  }
+  color: $grey-6;
+  &:hover {
+    color: $brand;
+  }
+}
+
+.group-actions-pane__title {
+  font-size: $title-font-size;
+  font-weight: $title-font-weight;
+  margin-bottom: 40px;
+}

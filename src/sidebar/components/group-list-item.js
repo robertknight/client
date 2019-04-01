@@ -3,14 +3,26 @@
 const classnames = require('classnames');
 const propTypes = require('prop-types');
 const { createElement } = require('preact');
+const { useState } = require('preact/hooks');
 
 const { orgName } = require('../util/group-list-item-common');
 
+const GroupActionsPane = require('./group-actions-pane');
+const Icon = require('./icon');
+
 function GroupListItem({ analytics, group, store }) {
+  const [isActionsPaneVisible, setActionsPaneVisible] = useState(false);
+
   const focusGroup = () => {
     analytics.track(analytics.events.GROUP_SWITCH);
     store.focusGroup(group.id);
   };
+
+  const showActions = event => {
+    event.stopPropagation();
+    setActionsPaneVisible(true);
+  };
+  const hideActions = () => setActionsPaneVisible(false);
 
   const isSelected = group.id === store.focusedGroupId();
   const groupOrgName = orgName(group);
@@ -48,6 +60,16 @@ function GroupListItem({ analytics, group, store }) {
           {group.name}
         </a>
       </div>
+      <button
+        aria-label="Actions"
+        className="group-list-item__menu"
+        onClick={showActions}
+      >
+        <Icon className="group-list-item__menu-icon" type="more-options" />
+      </button>
+      {isActionsPaneVisible && (
+        <GroupActionsPane onClose={hideActions} group={group} />
+      )}
     </div>
   );
 }

@@ -1,0 +1,51 @@
+.button {
+  @include font-normal;
+
+  min-height: 30px;
+
+  background-color: $grey-6;
+  border: none;
+  border-radius: 2px;
+  color: $white;
+  font-weight: bold;
+  padding-left: 15px;
+  padding-right: 15px;
+  white-space: nowrap;
+
+  &:hover {
+    background-color: $brand;
+  }
+
+  &:not(:first-child) {
+    margin-left: 5px;
+  }
+}
+
+.button.is-hidden {
+  display: none;
+}
+
+.button--cancel {
+  color: $grey-6;
+  background-color: $grey-2;
+
+  &:hover {
+    background-color: $grey-3;
+    color: $brand;
+  }
+}
+
+.button--muted {
+  background-color: $grey-3;
+  color: $grey-6;
+}
+
+.button--danger {
+  background-color: $brand;
+}
+
+// @include touch-input {
+//   .button {
+//     min-height: $touch-target-size;
+//   }
+// }

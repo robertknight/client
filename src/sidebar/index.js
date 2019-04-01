@@ -39,6 +39,7 @@ require('autofill-event');
 require('preact/debug');
 
 const wrapReactComponent = require('./util/wrap-react-component');
+const { setInjector } = require('./util/inject-props');
 
 // Setup Angular integration for Raven
 if (appConfig.raven) {
@@ -104,6 +105,11 @@ function configureToastr(toastrConfig) {
 // @ngInject
 function setupApi(api, streamer) {
   api.setClientId(streamer.clientId);
+}
+
+// @ngInject
+function configureInjectProps($injector) {
+  setInjector($injector);
 }
 
 /**
@@ -239,10 +245,12 @@ function startAngularApp(config) {
     .config(configureLocation)
     .config(configureRoutes)
     .config(configureToastr)
+    .config(configureInjectProps)
 
     .run(sendPageView)
     .run(setupApi)
-    .run(crossOriginRPC.server.start);
+    .run(crossOriginRPC.server.start)
+    .run(configureInjectProps);
 
   if (config.liveReloadServer) {
     require('./live-reload-client').connect(config.liveReloadServer);
