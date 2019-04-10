@@ -79,7 +79,7 @@ function organizations(groups) {
  * organization).
  *
  * @param {Array<Group>} groups
- * @return {Array<Object>} - groups sorted by which organization they're in
+ * @return {Array<Group>} - groups sorted by which organization they're in
  */
 function groupsByOrganization(groups) {
   const orgs = organizations(groups);
