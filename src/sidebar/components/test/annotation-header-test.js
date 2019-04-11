@@ -1,9 +1,9 @@
 'use strict';
 
 const angular = require('angular');
-const proxyquire = require('proxyquire');
 
 const fixtures = require('../../test/annotation-fixtures');
+const annotationHeader = require('../annotation-header');
 
 const fakeDocumentMeta = {
   domain: 'docs.io',
@@ -27,7 +27,8 @@ describe('sidebar.components.annotation-header', function() {
   });
 
   beforeEach('Import and register the annotationHeader component', function() {
-    const annotationHeader = proxyquire('../annotation-header', {
+    angular.module('app', []).component('annotationHeader', annotationHeader);
+    annotationHeader.$imports.$mock({
       '../annotation-metadata': {
         // eslint-disable-next-line no-unused-vars
         domainAndTitle: function(ann) {
@@ -35,10 +36,11 @@ describe('sidebar.components.annotation-header', function() {
         },
       },
       '../util/account-id': fakeAccountID,
-      '@noCallThru': true,
     });
+  });
 
-    angular.module('app', []).component('annotationHeader', annotationHeader);
+  afterEach(() => {
+    annotationHeader.$imports.$restore();
   });
 
   beforeEach('Initialize and register fake AngularJS dependencies', function() {
