@@ -1,6 +1,8 @@
 'use strict';
 
 const { createElement } = require('preact');
+const preact = require('preact');
+
 const { mount } = require('enzyme');
 const proxyquire = require('proxyquire');
 
@@ -19,6 +21,10 @@ describe('GroupListItem', () => {
     };
 
     GroupListItem = proxyquire('../group-list-item', {
+      // Use same instance of Preact module in tests and mocked module.
+      // See https://robertknight.me.uk/posts/browserify-dependency-mocking/
+      preact,
+
       '../util/group-list-item-common': fakeGroupListItemCommon,
       '@noCallThru': true,
     });
