@@ -1,6 +1,7 @@
 'use strict';
 
 const { createElement, render } = require('preact');
+const { ServiceContext, withServices } = require('./service-context');
 
 function useExpressionBinding(propName) {
   return propName.match(/^on[A-Z]/);
@@ -14,15 +15,27 @@ function useExpressionBinding(propName) {
  * has been created.
  */
 class ReactController {
-  constructor($element, $scope, injectedProps, type) {
+  constructor($element, $injector, $scope, type) {
     /** The DOM element where the React component should be rendered. */
     this.domElement = $element[0];
+
+    /**
+     * The Angular service injector, used by this component and possibly
+     * children as well.
+     */
+    this.$injector = $injector;
 
     /** The React component function or class. */
     this.type = type;
 
+    /**
+     * The React component, wrapped to inject any Angular services it depends
+     * upon.
+     */
+    this.typeWithServices = withServices(type);
+
     /** The input props to the React component. */
-    this.props = injectedProps;
+    this.props = {};
 
     // Wrap callback properties (eg. `onClick`) with `$scope.$apply` to trigger
     // a digest cycle after the function is called. This ensures that the
@@ -48,12 +61,14 @@ class ReactController {
 
   $onInit() {
     // Copy properties supplied by the parent Angular component to React props.
+    const injectedProps = this.type.injectedProps || [];
     Object.keys(this.type.propTypes).forEach(propName => {
-      if (propName in this.props) {
-        // Skip properties already handled in the constructor.
-        return;
+      if (
+        !useExpressionBinding(propName) &&
+        !injectedProps.includes(propName)
+      ) {
+        this.props[propName] = this[propName];
       }
-      this.props[propName] = this[propName];
     });
     this.updateReactComponent();
   }
@@ -61,8 +76,12 @@ class ReactController {
   $onChanges(changes) {
     // Copy updated property values from parent Angular component to React
     // props.
+    const injectedProps = this.type.injectedProps || [];
     Object.keys(changes).forEach(propName => {
-      if (!useExpressionBinding(propName)) {
+      if (
+        !useExpressionBinding(propName) &&
+        !injectedProps.includes(propName)
+      ) {
         this.props[propName] = changes[propName].currentValue;
       }
     });
@@ -77,16 +96,13 @@ class ReactController {
   }
 
   updateReactComponent() {
-    render(createElement(this.type, this.props), this.domElement);
+    render(
+      <ServiceContext.Provider value={this.$injector}>
+        <this.typeWithServices {...this.props} />
+      </ServiceContext.Provider>,
+      this.domElement
+    );
   }
-}
-
-function objectWithKeysAndValues(keys, values) {
-  const obj = {};
-  for (let i = 0; i < keys.length; i++) {
-    obj[keys[i]] = values[i];
-  }
-  return obj;
 }
 
 /**
@@ -131,30 +147,22 @@ function wrapReactComponent(type) {
     );
   }
 
-  // Create controller.
-  const injectedPropNames = type.injectedProps || [];
-  class Controller extends ReactController {
-    constructor($element, $scope, ...injectedPropValues) {
-      const injectedProps = objectWithKeysAndValues(
-        injectedPropNames,
-        injectedPropValues
-      );
-      super($element, $scope, injectedProps, type);
-    }
+  // @ngInject
+  function createController($element, $injector, $scope) {
+    return new ReactController($element, $injector, $scope, type);
   }
-  Controller.$inject = ['$element', '$scope', ...injectedPropNames];
 
-  // Create bindings object.
   const bindings = {};
+  const injectedProps = type.injectedProps || [];
   Object.keys(type.propTypes)
-    .filter(name => !injectedPropNames.includes(name))
+    .filter(name => !injectedProps.includes(name))
     .forEach(propName => {
       bindings[propName] = useExpressionBinding(propName) ? '&' : '<';
     });
 
   return {
     bindings,
-    controller: Controller,
+    controller: createController,
   };
 }
 
