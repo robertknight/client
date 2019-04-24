@@ -42,6 +42,10 @@ describe('GroupListV2', () => {
     };
   });
 
+  afterEach(() => {
+    GroupListV2.$imports.$restore();
+  });
+
   it('displays no sections if there are no groups', () => {
     const wrapper = createGroupList();
     assert.isFalse(wrapper.exists('GroupListSection'));
@@ -67,6 +71,39 @@ describe('GroupListV2', () => {
     fakeStore.getMyGroups.returns([testGroup]);
     const wrapper = createGroupList();
     assert.isTrue(wrapper.exists('GroupListSection[heading="My Groups"]'));
+  });
+
+  it('sorts groups within each section by organization', () => {
+    const testGroups = [
+      {
+        ...testGroup,
+        id: 'zzz',
+      },
+      {
+        ...testGroup,
+        id: 'aaa',
+      },
+    ];
+    fakeStore.getMyGroups.returns(testGroups);
+    fakeStore.getCurrentlyViewingGroups.returns(testGroups);
+    fakeStore.getFeaturedGroups.returns(testGroups);
+
+    const fakeGroupOrganizations = groups =>
+      groups.sort((a, b) => a.id.localeCompare(b.id));
+    GroupListV2.$imports.$mock({
+      '../util/group-organizations': fakeGroupOrganizations,
+    });
+
+    const wrapper = createGroupList();
+    const sections = wrapper.find('GroupListSection');
+
+    assert.equal(sections.length, 3);
+    sections.forEach(section => {
+      assert.deepEqual(
+        section.prop('groups'),
+        fakeGroupOrganizations(testGroups)
+      );
+    });
   });
 
   [
