@@ -7,6 +7,7 @@ const propTypes = require('prop-types');
 const { isThirdPartyUser } = require('../util/account-id');
 const groupsByOrganization = require('../util/group-organizations');
 
+const GroupListItemBase = require('./group-list-item-base');
 const GroupListSection = require('./group-list-section');
 
 /**
@@ -62,26 +63,18 @@ function GroupListV2({ analytics, serviceUrl, settings, store }) {
         />
       )}
 
-      <ul className="dropdown-menu__section dropdown-menu__section--no-header">
-        {canCreateNewGroup && (
-          <li className="dropdown-community-groups-menu__row dropdown-menu__row--unpadded new-group-btn">
-            <a
-              className="group-item-community-groups"
-              href={newGroupLink}
-              target="_blank"
-              rel="noopener noreferrer"
-              tabIndex="0"
-            >
-              <div className="group-icon-container">
-                <i className="h-icon-add" />
-              </div>
-              <div className="group-details-community-groups">
-                New private group
-              </div>
-            </a>
-          </li>
-        )}
-      </ul>
+      {canCreateNewGroup && (
+        <GroupListItemBase
+          className="new-group-btn"
+          cssIcon="h-icon-add"
+          href={newGroupLink}
+          label="New private group"
+        />
+      )}
+
+      {
+        <span /> /* Work around https://github.com/developit/preact/issues/1567 */
+      }
     </Fragment>
   );
 }

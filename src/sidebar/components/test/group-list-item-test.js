@@ -47,7 +47,7 @@ describe('GroupListItem', () => {
   };
 
   it('changes the focused group when group is clicked', () => {
-    const fakeGroup = { id: 'groupid' };
+    const fakeGroup = { id: 'groupid', name: 'Test' };
 
     const wrapper = createGroupListItem(fakeGroup);
     wrapper.find('.group-list-item__item').simulate('click');
@@ -61,6 +61,7 @@ describe('GroupListItem', () => {
       id: 'groupid',
       // Dummy scheme to avoid actually trying to load image.
       logo: 'dummy://hypothes.is/logo.svg',
+      name: 'Test',
       organization: { name: 'org' },
     };
     fakeGroupListItemCommon.orgName
@@ -88,7 +89,7 @@ describe('GroupListItem', () => {
     ].forEach(({ description, focusedGroupId, expectedIsSelected }) => {
       it(description, () => {
         fakeStore.focusedGroupId.returns(focusedGroupId);
-        const fakeGroup = { id: 'groupid' };
+        const fakeGroup = { id: 'groupid', name: 'Test' };
 
         const wrapper = createGroupListItem(fakeGroup);
 

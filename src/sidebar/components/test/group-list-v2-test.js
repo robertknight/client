@@ -123,9 +123,9 @@ describe('GroupListV2', () => {
     it('displays "New private group" button if user is logged in with first-party account', () => {
       fakeStore.profile.returns({ userid });
       const wrapper = createGroupList();
-      const newGroupButton = wrapper
-        .find('a')
-        .filterWhere(link => link.text() === 'New private group');
+      const newGroupButton = wrapper.find(
+        'GroupListItemBase[label="New private group"]'
+      );
       assert.equal(newGroupButton.length, expectNewGroupButton ? 1 : 0);
     });
   });
@@ -136,9 +136,9 @@ describe('GroupListV2', () => {
       .returns('https://example.com/groups/new');
     fakeStore.profile.returns({ userid: 'jsmith@hypothes.is' });
     const wrapper = createGroupList();
-    const newGroupButton = wrapper
-      .find('a')
-      .filterWhere(link => link.text() === 'New private group');
+    const newGroupButton = wrapper.find(
+      'GroupListItemBase[label="New private group"]'
+    );
     assert.equal(newGroupButton.props().href, 'https://example.com/groups/new');
   });
 });
