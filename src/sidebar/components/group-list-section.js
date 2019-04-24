@@ -21,7 +21,6 @@ function GroupListSection({ analytics, groups, heading, store }) {
       <ul className="group-list-section__content">
         {groups.map(group => (
           <li
-            className="dropdown-menu__row dropdown-menu__row--no-border dropdown-menu__row--unpadded"
             key={group.id}
           >
             {isSelectable(group.id) ? (

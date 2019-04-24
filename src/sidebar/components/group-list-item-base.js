@@ -13,6 +13,7 @@ function GroupListItemBase({
   href,
   imgAlt,
   imgIcon,
+  isExpanded,
   label,
   onClick,
   title,
@@ -47,6 +48,9 @@ function GroupListItemBase({
           </a>
         )}
       </div>
+      {typeof isExpanded === 'boolean' && (
+        isExpanded ? <div>^</div> : <div>V</div>
+      )}
     </div>
   );
 }
@@ -69,6 +73,8 @@ GroupListItemBase.propTypes = {
 
   /** URL of the `<img>` icon. */
   imgIcon: propTypes.string,
+
+  isExpanded: propTypes.bool,
 
   /** Label of the menu item. */
   label: propTypes.string.isRequired,

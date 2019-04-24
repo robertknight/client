@@ -25,6 +25,10 @@
     background: $gray-lightest;
   }
 
+  &.is-expanded {
+    background: $grey-6;
+  }
+
   &.is-selected {
     .name-link {
       font-size: $body2-font-size;
