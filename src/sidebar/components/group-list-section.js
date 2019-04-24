@@ -20,9 +20,7 @@ function GroupListSection({ analytics, groups, heading, store }) {
       <h2 className="group-list-section__heading">{heading}</h2>
       <ul className="group-list-section__content">
         {groups.map(group => (
-          <li
-            key={group.id}
-          >
+          <li key={group.id}>
             {isSelectable(group.id) ? (
               <GroupListItem
                 className="group-list-item"

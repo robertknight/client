@@ -7,14 +7,24 @@
 }
 
 .group-list-item__item {
-  border: solid 1px transparent;
   display: flex;
   flex-direction: row;
   flex-grow: 1;
-  margin: 1px;
 
   padding: 10px;
   cursor: pointer;
+
+  // Prevent menu item text from being selected when user toggles menu.
+  user-select: none;
+
+  &--submenu {
+    padding-top: 5px;
+    padding-bottom: 5px;
+    background: $grey-1;
+    &:hover {
+      background: $grey-1;
+    }
+  }
 
   &:focus {
     outline: none;
@@ -22,11 +32,11 @@
   }
 
   &:hover {
-    background: $gray-lightest;
+    background: $grey-1;
   }
 
   &.is-expanded {
-    background: $grey-6;
+    background: $grey-1;
   }
 
   &.is-selected {
@@ -68,10 +78,53 @@
 .group-list-item__name-link {
   white-space: nowrap;
   color: inherit;
+
+  // Make the link expand to fill the available space so that the user has a
+  // large click target.
+  display: flex;
 }
 
 .group-list-item__details {
   flex-grow: 1;
   flex-shrink: 1;
   font-weight: 500;
+
+  &--submenu {
+    font-weight: 300;
+  }
+
+  &:hover {
+    color: $brand;
+  }
+}
+
+.group-list-item__toggle {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  width: 44px;
+
+  // The toggle button has a wide transparent border to give it a larger hit
+  // target than the visual size of the button.
+  background-color: $grey-1;
+  background-clip: content-box;
+  border: 7px solid transparent;
+  border-left-width: 9px;
+  border-right-width: 9px;
+
+  // This cancels out the padding on the parent and makes the toggle fill
+  // up the full height of the item.
+  margin: -10px;
+
+  &:hover {
+    background-color: $grey-3;
+  }
+
+  // The toggle icon is loaded from a string, so we can't apply a class to it
+  // directly.
+  svg {
+    width: 12px;
+    height: 12px;
+  }
 }

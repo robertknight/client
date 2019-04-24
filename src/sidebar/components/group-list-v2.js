@@ -66,7 +66,7 @@ function GroupListV2({ analytics, serviceUrl, settings, store }) {
       {canCreateNewGroup && (
         <GroupListItemBase
           className="new-group-btn"
-          cssIcon="h-icon-add"
+          icon="add-group"
           href={newGroupLink}
           label="New private group"
         />

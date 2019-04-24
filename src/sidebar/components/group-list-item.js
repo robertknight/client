@@ -1,6 +1,7 @@
 'use strict';
 
 const classnames = require('classnames');
+const copyTextToClipboard = require('copy-text-to-clipboard');
 const propTypes = require('prop-types');
 const { Fragment, createElement } = require('preact');
 const { useState } = require('preact/hooks');
@@ -8,21 +9,39 @@ const { useState } = require('preact/hooks');
 const { orgName } = require('../util/group-list-item-common');
 const GroupListItemBase = require('./group-list-item-base');
 
+/**
+ * An item in the groups selection menu.
+ *
+ * The item has a primary action which selects the group, along with a set of
+ * secondary actions accessible via a toggle menu.
+ */
 function GroupListItem({ analytics, group, store }) {
-  const [isExpanded, setExpanded] = useState(false);
+  const canLeaveGroup = group.type === 'private';
+  const activityUrl = group.links.html;
+  const hasActionMenu = activityUrl || canLeaveGroup;
+
+  const [isExpanded, setExpanded] = useState(hasActionMenu ? false : undefined);
+  const isSelected = group.id === store.focusedGroupId();
+
   const focusGroup = () => {
-    setExpanded(false);
     analytics.track(analytics.events.GROUP_SWITCH);
     store.focusGroup(group.id);
   };
 
-  const isSelected = group.id === store.focusedGroupId();
-  const groupOrgName = orgName(group);
+  const copyLink = () => {
+    copyTextToClipboard(group.links.html);
+  };
 
-  const copyLink = () => {};
-  const leaveGroup = () => {};
+  const leaveGroup = () => {
+    const message = `Are you sure you want to leave the group "${group.name}"?`;
+    if (window.confirm(message)) {
+      analytics.track(analytics.events.GROUP_LEAVE);
+      // TODO - Actually leave the group.
+      // groups.leave(group.id);
+    }
+  };
 
-  const toggle = event => {
+  const toggleSubmenu = event => {
     event.stopPropagation();
 
     // Prevents group items opening a new window when clicked.
@@ -32,6 +51,9 @@ function GroupListItem({ analytics, group, store }) {
     setExpanded(!isExpanded);
   };
 
+  // Close the submenu when any clicks happen which close the top-level menu.
+  const collapseSubmenu = () => setExpanded(false);
+
   return (
     <Fragment>
       <GroupListItemBase
@@ -39,11 +61,12 @@ function GroupListItem({ analytics, group, store }) {
           'is-selected': isSelected,
           'is-expanded': isExpanded,
         })}
-        imgIcon={group.logo}
-        imgAlt={groupOrgName}
-        isExpanded={isExpanded}
+        icon={group.logo}
+        iconAlt={orgName(group)}
+        isSubmenuVisible={isExpanded}
         label={group.name}
-        onClick={toggle}
+        onClick={focusGroup}
+        onToggleSubmenu={toggleSubmenu}
         title={
           group.type === 'private'
             ? `Show and create annotations in ${group.name}`
@@ -51,22 +74,43 @@ function GroupListItem({ analytics, group, store }) {
         }
       />
       {isExpanded && (
-        <ul>
-          <li>
-            <GroupListItemBase label="Select group" onClick={focusGroup} />
-          </li>
-          <li>
-            <GroupListItemBase label="View group activity" href={group.url} />
-          </li>
-          <li>
-            <GroupListItemBase label="Copy invite link" onClick={copyLink} />
-          </li>
-          <li>
-            <GroupListItemBase label="Leave group" onClick={leaveGroup} />
-          </li>
+        <ul onClick={collapseSubmenu}>
+          {activityUrl && (
+            <li>
+              <GroupListItemBase
+                href={activityUrl}
+                icon="share"
+                isSubmenuItem={true}
+                label="View group activity"
+              />
+            </li>
+          )}
+          {activityUrl && (
+            <li>
+              <GroupListItemBase
+                icon="copy"
+                isSubmenuItem={true}
+                label="Copy invite link"
+                onClick={copyLink}
+              />
+            </li>
+          )}
+          {canLeaveGroup && (
+            <li>
+              <GroupListItemBase
+                icon="leave"
+                isSubmenuItem={true}
+                label="Leave group"
+                onClick={leaveGroup}
+              />
+            </li>
+          )}
         </ul>
       )}
-      {<span/> /* work around https://github.com/developit/preact/issues/1567 */}
+      {
+        // Work around https://github.com/developit/preact/issues/1567.
+        <span />
+      }
     </Fragment>
   );
 }

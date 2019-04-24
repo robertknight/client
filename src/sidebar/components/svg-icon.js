@@ -5,8 +5,14 @@ const propTypes = require('prop-types');
 
 // The list of supported icons
 const icons = {
-  refresh: require('../../images/icons/refresh.svg'),
+  'add-group': require('../../images/icons/add-group.svg'),
+  'collapse-menu': require('../../images/icons/collapse-menu.svg'),
+  'expand-menu': require('../../images/icons/expand-menu.svg'),
+  copy: require('../../images/icons/copy.svg'),
   cursor: require('../../images/icons/cursor.svg'),
+  leave: require('../../images/icons/leave.svg'),
+  refresh: require('../../images/icons/refresh.svg'),
+  share: require('../../images/icons/share.svg'),
 };
 
 /**
@@ -21,7 +27,7 @@ function SvgIcon({ name }) {
     throw new Error(`Unknown icon ${name}`);
   }
   const markup = { __html: icons[name] };
-  return <span dangerouslySetInnerHTML={markup} />;
+  return <span style={{ display: 'flex' }} dangerouslySetInnerHTML={markup} />;
 }
 
 SvgIcon.propTypes = {

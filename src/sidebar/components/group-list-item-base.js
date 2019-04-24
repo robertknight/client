@@ -4,33 +4,50 @@ const classnames = require('classnames');
 const { createElement } = require('preact');
 const propTypes = require('prop-types');
 
+const SvgIcon = require('./svg-icon');
+
 /**
  * An item in the groups menu.
+ *
+ * This is a presentational base component for items in the groups menu. It has
+ * no specific logic associated with it.
  */
 function GroupListItemBase({
   className = '',
-  cssIcon,
   href,
-  imgAlt,
-  imgIcon,
-  isExpanded,
+  icon,
+  iconAlt,
+  isSubmenuVisible,
+  isSubmenuItem = false,
   label,
   onClick,
+  onToggleSubmenu,
   title,
 }) {
   const iconClass = 'group-list-item__icon group-list-item__icon--organization';
+  const iconIsUrl = icon && icon.indexOf('/') !== -1;
 
   return (
     <div
-      className={classnames('group-list-item__item', className)}
+      className={classnames('group-list-item__item', className, {
+        'group-list-item__item--submenu': isSubmenuItem,
+      })}
       tabIndex={0}
       onClick={onClick}
     >
       <div className="group-list-item__icon-container">
-        {cssIcon && <i className={classnames(iconClass, cssIcon)} />}
-        {imgIcon && <img className={iconClass} alt={imgAlt} src={imgIcon} />}
+        {icon &&
+          (iconIsUrl ? (
+            <img className={iconClass} alt={iconAlt} src={icon} />
+          ) : (
+            <SvgIcon name={icon} />
+          ))}
       </div>
-      <div className="group-list-item__details">
+      <div
+        className={classnames('group-list-item__details', {
+          'group-list-item__details--submenu': isSubmenuItem,
+        })}
+      >
         {href && (
           <a
             className="group-list-item__name-link"
@@ -48,8 +65,16 @@ function GroupListItemBase({
           </a>
         )}
       </div>
-      {typeof isExpanded === 'boolean' && (
-        isExpanded ? <div>^</div> : <div>V</div>
+      {typeof isSubmenuVisible === 'boolean' && (
+        <div
+          className="group-list-item__toggle"
+          role="button"
+          onClick={onToggleSubmenu}
+          tabIndex={0}
+          aria-label="Toggle item sub-menu"
+        >
+          <SvgIcon name={isSubmenuVisible ? 'collapse-menu' : 'expand-menu'} />
+        </div>
       )}
     </div>
   );
@@ -59,28 +84,43 @@ GroupListItemBase.propTypes = {
   /** Additional class names to apply to the item. */
   className: propTypes.string,
 
-  /** CSS class to use if this item displays an icon font icon. */
-  cssIcon: propTypes.string,
-
   /**
    * URL of the external link to open when this item is clicked.
    * Either the `href` or an  `onClick` callback should be supplied.
    */
   href: propTypes.string,
 
-  /** Alt text for the `<img>` icon. */
-  imgAlt: propTypes.string,
+  /** Alt text for icon. */
+  iconAlt: propTypes.string,
 
-  /** URL of the `<img>` icon. */
-  imgIcon: propTypes.string,
+  /**
+   * Name or URL of icon to display. If the value is a URL it is displayed
+   * using an `<img>`, if it is a name it is displayed using `SvgIcon`.
+   */
+  icon: propTypes.string,
 
-  isExpanded: propTypes.bool,
+  /**
+   * If present, display a button to toggle the sub-menu associated with this
+   * item and indicate the current state; `true` if the submenu is visible.
+   */
+  isSubmenuVisible: propTypes.bool,
+
+  /**
+   * `true` if this item is part of a sub-menu associated with a top-level item.
+   */
+  isSubmenuItem: propTypes.bool,
 
   /** Label of the menu item. */
   label: propTypes.string.isRequired,
 
   /** Callback to invoke when the menu item is clicked. */
   onClick: propTypes.func,
+
+  /**
+   * Callback when the user clicks on the toggle to change the expanded
+   * state of the menu.
+   */
+  onToggleSubmenu: propTypes.func,
 
   /** Title attribute for the item. */
   title: propTypes.string,
