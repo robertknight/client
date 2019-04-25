@@ -66,12 +66,6 @@ html {
 //DROPDOWNS////////////////////////////////
 .dropdown {
   position: relative;
-  span {
-    cursor: pointer;
-    &:hover {
-      color: black;
-    }
-  }
 }
 
 .dropdown-toggle {

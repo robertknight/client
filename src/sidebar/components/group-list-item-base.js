@@ -5,6 +5,7 @@ const { createElement } = require('preact');
 const propTypes = require('prop-types');
 
 const SvgIcon = require('./svg-icon');
+const { onActivate } = require('../util/on-activate');
 
 /**
  * An item in the groups menu.
@@ -32,8 +33,7 @@ function GroupListItemBase({
       className={classnames('group-list-item__item', className, {
         'group-list-item__item--submenu': isSubmenuItem,
       })}
-      tabIndex={0}
-      onClick={onClick}
+      {...(onClick && onActivate('menuitem', onClick))}
     >
       <div className="group-list-item__icon-container">
         {icon &&
@@ -50,7 +50,7 @@ function GroupListItemBase({
       >
         {href && (
           <a
-            className="group-list-item__name-link"
+            className="group-list-item__label"
             href={href}
             target="_blank"
             rel="noopener noreferrer"
@@ -60,18 +60,16 @@ function GroupListItemBase({
           </a>
         )}
         {!href && (
-          <a className="group-list-item__name-link" href="" title={title}>
+          <span className="group-list-item__label" title={title}>
             {label}
-          </a>
+          </span>
         )}
       </div>
       {typeof isSubmenuVisible === 'boolean' && (
         <div
           className="group-list-item__toggle"
-          role="button"
-          onClick={onToggleSubmenu}
-          tabIndex={0}
           aria-label="Toggle item sub-menu"
+          {...onActivate('button', onToggleSubmenu)}
         >
           <SvgIcon name={isSubmenuVisible ? 'collapse-menu' : 'expand-menu'} />
         </div>

@@ -5,6 +5,7 @@ const copyTextToClipboard = require('copy-text-to-clipboard');
 const propTypes = require('prop-types');
 const { Fragment, createElement } = require('preact');
 const { useState } = require('preact/hooks');
+const { withStoreState } = require('./util/connect-store');
 
 const { orgName } = require('../util/group-list-item-common');
 const GroupListItemBase = require('./group-list-item-base');
@@ -15,13 +16,14 @@ const GroupListItemBase = require('./group-list-item-base');
  * The item has a primary action which selects the group, along with a set of
  * secondary actions accessible via a toggle menu.
  */
-function GroupListItem({ analytics, group, store }) {
+function GroupListItem({ analytics, focusedGroupId, group, store }) {
   const canLeaveGroup = group.type === 'private';
   const activityUrl = group.links.html;
   const hasActionMenu = activityUrl || canLeaveGroup;
+  const isSelectable = !group.scopes.enforced || group.isScopedToUri;
 
   const [isExpanded, setExpanded] = useState(hasActionMenu ? false : undefined);
-  const isSelected = group.id === store.focusedGroupId();
+  const isSelected = group.id === focusedGroupId;
 
   const focusGroup = () => {
     analytics.track(analytics.events.GROUP_SWITCH);
@@ -58,14 +60,15 @@ function GroupListItem({ analytics, group, store }) {
     <Fragment>
       <GroupListItemBase
         className={classnames({
-          'is-selected': isSelected,
+          'is-disabled': !isSelectable,
           'is-expanded': isExpanded,
+          'is-selected': isSelected,
         })}
         icon={group.logo}
         iconAlt={orgName(group)}
         isSubmenuVisible={isExpanded}
         label={group.name}
-        onClick={focusGroup}
+        onClick={isSelectable ? focusGroup : toggleSubmenu}
         onToggleSubmenu={toggleSubmenu}
         title={
           group.type === 'private'
@@ -74,38 +77,49 @@ function GroupListItem({ analytics, group, store }) {
         }
       />
       {isExpanded && (
-        <ul onClick={collapseSubmenu}>
-          {activityUrl && (
-            <li>
-              <GroupListItemBase
-                href={activityUrl}
-                icon="share"
-                isSubmenuItem={true}
-                label="View group activity"
-              />
-            </li>
+        <Fragment>
+          <ul onClick={collapseSubmenu}>
+            {activityUrl && (
+              <li>
+                <GroupListItemBase
+                  href={activityUrl}
+                  icon="share"
+                  isSubmenuItem={true}
+                  label="View group activity"
+                />
+              </li>
+            )}
+            {activityUrl && (
+              <li>
+                <GroupListItemBase
+                  icon="copy"
+                  isSubmenuItem={true}
+                  label="Copy invite link"
+                  onClick={copyLink}
+                />
+              </li>
+            )}
+            {canLeaveGroup && (
+              <li>
+                <GroupListItemBase
+                  icon="leave"
+                  isSubmenuItem={true}
+                  label="Leave group"
+                  onClick={leaveGroup}
+                />
+              </li>
+            )}
+          </ul>
+          {!isSelectable && (
+            <p className="group-list-item__footer">
+              This group is restricted to specific URLs.
+            </p>
           )}
-          {activityUrl && (
-            <li>
-              <GroupListItemBase
-                icon="copy"
-                isSubmenuItem={true}
-                label="Copy invite link"
-                onClick={copyLink}
-              />
-            </li>
-          )}
-          {canLeaveGroup && (
-            <li>
-              <GroupListItemBase
-                icon="leave"
-                isSubmenuItem={true}
-                label="Leave group"
-                onClick={leaveGroup}
-              />
-            </li>
-          )}
-        </ul>
+        {
+          // Work around https://github.com/developit/preact/issues/1567.
+          <span />
+        }
+        </Fragment>
       )}
       {
         // Work around https://github.com/developit/preact/issues/1567.
@@ -117,6 +131,7 @@ function GroupListItem({ analytics, group, store }) {
 
 GroupListItem.propTypes = {
   group: propTypes.object.isRequired,
+  focusedGroupId: propTypes.string,
 
   analytics: propTypes.object.isRequired,
   store: propTypes.object.isRequired,
@@ -124,4 +139,6 @@ GroupListItem.propTypes = {
 
 GroupListItem.injectedProps = ['analytics', 'store'];
 
-module.exports = GroupListItem;
+module.exports = withStoreState(GroupListItem, store => ({
+  focusedGroupId: store.focusedGroupId(),
+}));

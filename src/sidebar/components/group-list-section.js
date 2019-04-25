@@ -4,37 +4,23 @@ const { Fragment, createElement } = require('preact');
 const propTypes = require('prop-types');
 
 const GroupListItem = require('./group-list-item');
-const GroupListItemOutOfScope = require('./group-list-item-out-of-scope');
 
 /**
  * A labeled section of the groups list.
  */
 function GroupListSection({ analytics, groups, heading, store }) {
-  const isSelectable = groupId => {
-    const group = groups.find(g => g.id === groupId);
-    return !group.scopes.enforced || group.isScopedToUri;
-  };
-
   return (
     <Fragment>
       <h2 className="group-list-section__heading">{heading}</h2>
       <ul className="group-list-section__content">
         {groups.map(group => (
           <li key={group.id}>
-            {isSelectable(group.id) ? (
-              <GroupListItem
-                className="group-list-item"
-                group={group}
-                analytics={analytics}
-                store={store}
-              />
-            ) : (
-              <GroupListItemOutOfScope
-                className="group-list-item-out-of-scope"
-                group={group}
-                analytics={analytics}
-              />
-            )}
+            <GroupListItem
+              className="group-list-item"
+              group={group}
+              analytics={analytics}
+              store={store}
+            />
           </li>
         ))}
       </ul>

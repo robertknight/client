@@ -1,5 +1,7 @@
 /* The group. */
 
+$group-list-item-padding: 10px;
+
 .group-list-item {
   display: flex;
   flex-direction: row;
@@ -11,7 +13,7 @@
   flex-direction: row;
   flex-grow: 1;
 
-  padding: 10px;
+  padding: $group-list-item-padding;
   cursor: pointer;
 
   // Prevent menu item text from being selected when user toggles menu.
@@ -35,15 +37,19 @@
     background: $grey-1;
   }
 
+  &.is-disabled {
+    .group-list-item__label {
+      color: $grey-4;
+    }
+  }
+
   &.is-expanded {
     background: $grey-1;
   }
 
   &.is-selected {
-    .name-link {
-      font-size: $body2-font-size;
-      font-weight: 600;
-    }
+    border-left: 4px solid $brand;
+    padding-left: $group-list-item-padding - 3px;
   }
 }
 
@@ -75,13 +81,17 @@
 
 // the name of a group in the groups drop-down list
 // and 'Post to <Group>' button for saving annotations
-.group-list-item__name-link {
+.group-list-item__label {
   white-space: nowrap;
   color: inherit;
 
   // Make the link expand to fill the available space so that the user has a
   // large click target.
   display: flex;
+
+  &:hover {
+    color: inherit;
+  }
 }
 
 .group-list-item__details {
@@ -103,15 +113,17 @@
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  width: 44px;
+  width: 40px;
 
-  // The toggle button has a wide transparent border to give it a larger hit
-  // target than the visual size of the button.
+  // Add a wide transparent border to provide a large-enough hit target (~40px),
+  // larger than the visual size of the button (~20px).
   background-color: $grey-1;
   background-clip: content-box;
   border: 7px solid transparent;
-  border-left-width: 9px;
-  border-right-width: 9px;
+
+  // Add slight rounded borders. border-radius sets the outer radius, but
+  // what the user sees is the inner radius, which is much smaller.
+  border-radius: 12px;
 
   // This cancels out the padding on the parent and makes the toggle fill
   // up the full height of the item.
@@ -127,4 +139,16 @@
     width: 12px;
     height: 12px;
   }
+}
+
+// A footer which displays notes about this group when the submenu is expanded.
+.group-list-item__footer {
+  background-color: $grey-1;
+  margin: 0;
+  padding-top: 15px;
+  padding: 10px;
+
+  // Align the left edge of the footer text with menu item labels above.
+  padding-left: 35px;
+  white-space: normal;
 }
