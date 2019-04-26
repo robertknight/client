@@ -1,6 +1,5 @@
 @import '../base';
 @import '../forms';
-@import '../mixins/responsive';
 
 @import './styled-text';
 
@@ -71,9 +70,7 @@ html {
 .dropdown-toggle {
   cursor: pointer;
 
-  &:active {
-    outline: 0;
-  }
+  @include outline-on-keyboard-focus;
 }
 
 .dropdown-menu {
