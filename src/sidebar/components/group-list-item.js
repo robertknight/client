@@ -1,6 +1,5 @@
 'use strict';
 
-const classnames = require('classnames');
 const copyTextToClipboard = require('copy-text-to-clipboard');
 const propTypes = require('prop-types');
 const { Fragment, createElement } = require('preact');
@@ -8,7 +7,7 @@ const { useState } = require('preact/hooks');
 const { withStoreState } = require('./util/connect-store');
 
 const { orgName } = require('../util/group-list-item-common');
-const GroupListItemBase = require('./group-list-item-base');
+const MenuItem = require('./menu-item');
 
 /**
  * An item in the groups selection menu.
@@ -47,7 +46,7 @@ function GroupListItem({ analytics, focusedGroupId, group, store }) {
     event.stopPropagation();
 
     // Prevents group items opening a new window when clicked.
-    // TODO - Fix this more cleanly in `GroupListItemBase`.
+    // TODO - Fix this more cleanly in `MenuItem`.
     event.preventDefault();
 
     setExpanded(!isExpanded);
@@ -58,30 +57,23 @@ function GroupListItem({ analytics, focusedGroupId, group, store }) {
 
   return (
     <Fragment>
-      <GroupListItemBase
-        className={classnames({
-          'is-disabled': !isSelectable,
-          'is-expanded': isExpanded,
-          'is-selected': isSelected,
-        })}
+      <MenuItem
         icon={group.logo}
         iconAlt={orgName(group)}
+        isDisabled={!isSelectable}
+        isExpanded={isExpanded}
+        isSelected={isSelected}
         isSubmenuVisible={isExpanded}
         label={group.name}
         onClick={isSelectable ? focusGroup : toggleSubmenu}
         onToggleSubmenu={toggleSubmenu}
-        title={
-          group.type === 'private'
-            ? `Show and create annotations in ${group.name}`
-            : 'Show public annotations'
-        }
       />
       {isExpanded && (
         <Fragment>
           <ul onClick={collapseSubmenu}>
             {activityUrl && (
               <li>
-                <GroupListItemBase
+                <MenuItem
                   href={activityUrl}
                   icon="share"
                   label="View group activity"
@@ -91,7 +83,7 @@ function GroupListItem({ analytics, focusedGroupId, group, store }) {
             )}
             {activityUrl && (
               <li>
-                <GroupListItemBase
+                <MenuItem
                   icon="copy"
                   label="Copy invite link"
                   onClick={copyLink}
@@ -101,17 +93,19 @@ function GroupListItem({ analytics, focusedGroupId, group, store }) {
             )}
             {canLeaveGroup && (
               <li>
-                <GroupListItemBase
+                <MenuItem
                   icon="leave"
-                  isSubmenuItem={true}
                   label="Leave group"
                   onClick={leaveGroup}
+                  style="submenu"
                 />
               </li>
             )}
           </ul>
           {!isSelectable && (
-            <p className="group-list-item__footer">
+            // TODO - This should be a `group-list-item` class, not a `menu-item`
+            // class.
+            <p className="menu-item__footer">
               This group is restricted to specific URLs.
             </p>
           )}

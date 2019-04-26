@@ -16,7 +16,6 @@ function GroupListSection({ analytics, groups, heading, store }) {
         {groups.map(group => (
           <li key={group.id}>
             <GroupListItem
-              className="group-list-item"
               group={group}
               analytics={analytics}
               store={store}

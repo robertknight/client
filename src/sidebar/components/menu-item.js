@@ -8,38 +8,49 @@ const SvgIcon = require('./svg-icon');
 const { onActivate } = require('../util/on-activate');
 
 /**
- * An item in the groups menu.
+ * An item in a dropdown menu.
  *
- * This is a presentational base component for items in the groups menu. It has
- * no specific logic associated with it.
+ * Dropdown menu items display an icon, a label and can optionally have a submenu
+ * associated with them.
+ *
+ * When clicked, menu items either open an external link, if the `href` prop
+ * is provided, or perform a custom action via the `onClick` callback.
+ *
+ * The icon can either be an external SVG image, referenced by URL, or a named
+ * icon rendered by an `SvgIcon`.
  */
-function GroupListItemBase({
+function MenuItem({
   className = '',
   href,
   icon,
   iconAlt,
+  isDisabled,
+  isExpanded,
+  isSelected,
   isSubmenuVisible,
   label,
   onClick,
   onToggleSubmenu,
   style,
-  title,
 }) {
-  const iconClass = 'group-list-item__icon';
+  const iconClass = 'menu-item__icon';
   const iconIsUrl = icon && icon.indexOf('/') !== -1;
-  const labelClass = classnames('group-list-item__label', {
-    'group-list-item__label--submenu': style === 'submenu',
+  const labelClass = classnames('menu-item__label', {
+    'menu-item__label--submenu': style === 'submenu',
   });
 
   return (
     <div
-      className={classnames('group-list-item', className, {
-        'group-list-item--submenu': style === 'submenu',
-        'group-list-item--shaded': style === 'shaded',
+      className={classnames('menu-item', className, {
+        'menu-item--submenu': style === 'submenu',
+        'menu-item--shaded': style === 'shaded',
+        'is-disabled': isDisabled,
+        'is-expanded': isExpanded,
+        'is-selected': isSelected,
       })}
       {...onClick && onActivate('menuitem', onClick)}
     >
-      <div className="group-list-item__icon-container">
+      <div className="menu-item__icon-container">
         {icon &&
           (iconIsUrl ? (
             <img className={iconClass} alt={iconAlt} src={icon} />
@@ -53,19 +64,18 @@ function GroupListItemBase({
           href={href}
           target="_blank"
           rel="noopener noreferrer"
-          title={title}
         >
           {label}
         </a>
       )}
       {!href && (
-        <span className={labelClass} title={title}>
+        <span className={labelClass}>
           {label}
         </span>
       )}
       {typeof isSubmenuVisible === 'boolean' && (
         <div
-          className="group-list-item__toggle"
+          className="menu-item__toggle"
           // TODO - Look into why just passing `isSubmenuVisible` doesn't work
           // when false. No attribute is added and VoiceOver doesn't read the item
           // as collapsed.
@@ -80,7 +90,7 @@ function GroupListItemBase({
   );
 }
 
-GroupListItemBase.propTypes = {
+MenuItem.propTypes = {
   /** Additional class names to apply to the item. */
   className: propTypes.string,
 
@@ -100,15 +110,29 @@ GroupListItemBase.propTypes = {
   icon: propTypes.string,
 
   /**
+   * Dim the label to indicate that this item is not currently available.
+   *
+   * The `onClick` callback will still be invoked when this item is clicked and
+   * the submenu, if any, can still be toggled.
+   */
+  isDisabled: propTypes.bool,
+
+  /**
+   * Indicates that the submenu associated with this item is currently open.
+   */
+  isExpanded: propTypes.bool,
+
+  /**
+   * Display an indicator to show that this menu item represents something
+   * which is currently selected/active/focused.
+   */
+  isSelected: propTypes.bool,
+
+  /**
    * If present, display a button to toggle the sub-menu associated with this
    * item and indicate the current state; `true` if the submenu is visible.
    */
   isSubmenuVisible: propTypes.bool,
-
-  /**
-   * `true` if this item is part of a sub-menu associated with a top-level item.
-   */
-  isSubmenuItem: propTypes.bool,
 
   /** Label of the menu item. */
   label: propTypes.string.isRequired,
@@ -122,11 +146,8 @@ GroupListItemBase.propTypes = {
    */
   onToggleSubmenu: propTypes.func,
 
-  /** Title attribute for the item. */
-  title: propTypes.string,
-
   /** Style of menu item. */
   style: propTypes.oneOf(['submenu', 'shaded']),
 };
 
-module.exports = GroupListItemBase;
+module.exports = MenuItem;

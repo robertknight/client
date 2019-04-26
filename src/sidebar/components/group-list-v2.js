@@ -7,7 +7,7 @@ const propTypes = require('prop-types');
 const { isThirdPartyUser } = require('../util/account-id');
 const groupsByOrganization = require('../util/group-organizations');
 
-const GroupListItemBase = require('./group-list-item-base');
+const MenuItem = require('./menu-item');
 const GroupListSection = require('./group-list-section');
 
 /**
@@ -64,7 +64,7 @@ function GroupListV2({ analytics, serviceUrl, settings, store }) {
       )}
 
       {canCreateNewGroup && (
-        <GroupListItemBase
+        <MenuItem
           className="group-list-item--shaded"
           icon="add-group"
           href={newGroupLink}

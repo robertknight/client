@@ -1,7 +1,6 @@
-.group-list-item {
+.menu-item {
   $item-padding: 10px;
   $item-height: 40px;
-
 
   display: flex;
   flex-direction: row;
@@ -37,7 +36,7 @@
   }
 
   &.is-disabled {
-    .group-list-item__label {
+    .menu-item__label {
       color: $grey-4;
     }
   }
@@ -53,31 +52,23 @@
   }
 }
 
-.group-list-item__icon-container {
+.menu-item__icon-container {
   margin-right: 10px;
   width: 15px;
   height: 15px;
 }
 
-// the icon indicating the type of group currently selected at
-// the top of the groups list
-.group-list-item__icon {
+.menu-item__icon {
   color: $color-gray;
   display: inline-block;
   margin-right: 4px;
   position: relative;
 
-  // align the base of the chat-heads icon for groups
-  // with the baseline of the group name label
-  transform: translateY(1px);
-
   height: 15px;
   width: 15px;
 }
 
-// the name of a group in the groups drop-down list
-// and 'Post to <Group>' button for saving annotations
-.group-list-item__label {
+.menu-item__label {
   align-self: stretch;
 
   display: flex;
@@ -99,7 +90,9 @@
   }
 }
 
-.group-list-item__toggle {
+// Toggle button used to expand or collapse the submenu associated with a menu
+// item.
+.menu-item__toggle {
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -131,8 +124,8 @@
   @include outline-on-keyboard-focus;
 }
 
-// A footer which displays notes about this group when the submenu is expanded.
-.group-list-item__footer {
+// Footer to display at the bottom of a menu item.
+.menu-item__footer {
   background-color: $grey-1;
   margin: 0;
   padding-top: 15px;
