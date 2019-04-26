@@ -65,6 +65,9 @@ function GroupListItemBase({
       {typeof isSubmenuVisible === 'boolean' && (
         <div
           className="group-list-item__toggle"
+          // TODO - Look into why just passing `isSubmenuVisible` doesn't work
+          // when false. No attribute is added and VoiceOver doesn't read the item
+          // as collapsed.
           aria-expanded={isSubmenuVisible ? 'true' : 'false'}
           aria-label={`Show actions for ${label}`}
           {...onActivate('button', onToggleSubmenu)}
