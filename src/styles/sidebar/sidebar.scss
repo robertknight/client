@@ -7,6 +7,8 @@ $base-line-height: 20px;
 @import './elements';
 @import './common';
 
+@import '../mixins/focus';
+
 // Components
 // ----------
 @import './components/annotation';
