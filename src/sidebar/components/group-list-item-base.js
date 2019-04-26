@@ -19,22 +19,23 @@ function GroupListItemBase({
   icon,
   iconAlt,
   isSubmenuVisible,
-  isSubmenuItem = false,
   label,
   onClick,
   onToggleSubmenu,
+  style,
   title,
 }) {
   const iconClass = 'group-list-item__icon';
   const iconIsUrl = icon && icon.indexOf('/') !== -1;
   const labelClass = classnames('group-list-item__label', {
-    'group-list-item__label--submenu': isSubmenuItem,
+    'group-list-item__label--submenu': style === 'submenu',
   });
 
   return (
     <div
       className={classnames('group-list-item', className, {
-        'group-list-item--submenu': isSubmenuItem,
+        'group-list-item--submenu': style === 'submenu',
+        'group-list-item--shaded': style === 'shaded',
       })}
       {...onClick && onActivate('menuitem', onClick)}
     >
@@ -123,6 +124,9 @@ GroupListItemBase.propTypes = {
 
   /** Title attribute for the item. */
   title: propTypes.string,
+
+  /** Style of menu item. */
+  style: propTypes.oneOf(['submenu', 'shaded']),
 };
 
 module.exports = GroupListItemBase;

@@ -84,8 +84,8 @@ function GroupListItem({ analytics, focusedGroupId, group, store }) {
                 <GroupListItemBase
                   href={activityUrl}
                   icon="share"
-                  isSubmenuItem={true}
                   label="View group activity"
+                  style="submenu"
                 />
               </li>
             )}
@@ -93,9 +93,9 @@ function GroupListItem({ analytics, focusedGroupId, group, store }) {
               <li>
                 <GroupListItemBase
                   icon="copy"
-                  isSubmenuItem={true}
                   label="Copy invite link"
                   onClick={copyLink}
+                  style="submenu"
                 />
               </li>
             )}
