@@ -7,6 +7,7 @@ const MenuItem = require('./menu-item');
 const MenuSection = require('./menu-section');
 const { withPropsFromStore } = require('./util/connect-store');
 const { username: extractUsername } = require('../util/account-id');
+const { withServices } = require('../util/service-context');
 
 /**
  * Menu displaying account-related information and actions.
@@ -38,7 +39,9 @@ function AccountMenu({ onLogout, onShowHelp, profile, serviceUrl }) {
         <MenuItem onClick={onShowHelp} label="Help" />
       </MenuSection>
       {loggedIn && <MenuItem onClick={onLogout} label="Log out" />}
-      {<span/> /* work around https://github.com/developit/preact/issues/1567 */ }
+      {
+        <span /> /* work around https://github.com/developit/preact/issues/1567 */
+      }
     </Fragment>
   );
 }
@@ -64,6 +67,8 @@ AccountMenu.propTypes = {
 
 AccountMenu.injectedProps = ['serviceUrl'];
 
-module.exports = withPropsFromStore(AccountMenu, {
-  profile: store => store.profile(),
-});
+module.exports = withServices(
+  withPropsFromStore(AccountMenu, {
+    profile: store => store.profile(),
+  })
+);

@@ -7,6 +7,8 @@ const { useState } = require('preact/hooks');
 const { withPropsFromStore } = require('./util/connect-store');
 
 const { orgName } = require('../util/group-list-item-common');
+const { withServices } = require('../util/service-context');
+
 const MenuItem = require('./menu-item');
 
 /**
@@ -131,6 +133,8 @@ GroupListItem.propTypes = {
 
 GroupListItem.injectedProps = ['analytics', 'groups', 'store'];
 
-module.exports = withPropsFromStore(GroupListItem, {
-  focusedGroupId: store => store.focusedGroupId(),
-});
+module.exports = withServices(
+  withPropsFromStore(GroupListItem, {
+    focusedGroupId: store => store.focusedGroupId(),
+  })
+);

@@ -12,9 +12,7 @@ function MenuSection({ heading, children }) {
       {heading && <h2 className="menu-section__heading">{heading}</h2>}
       <ul className="menu-section__content">
         {children.map(child => (
-          <li key={child.key}>
-            {child}
-          </li>
+          <li key={child.key}>{child}</li>
         ))}
       </ul>
     </Fragment>

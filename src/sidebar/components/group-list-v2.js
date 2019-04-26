@@ -7,6 +7,7 @@ const propTypes = require('prop-types');
 const { isThirdPartyUser } = require('../util/account-id');
 const groupsByOrganization = require('../util/group-organizations');
 const { withPropsFromStore } = require('./util/connect-store');
+const { withServices } = require('../util/service-context');
 
 const MenuItem = require('./menu-item');
 const GroupListSection = require('./group-list-section');
@@ -15,14 +16,12 @@ const GroupListSection = require('./group-list-section');
  * The list of groups in the dropdown menu at the top of the client.
  */
 function GroupListV2({
-  analytics,
   currentGroups,
   featuredGroups,
-  groups,
   myGroups,
+  profile,
   serviceUrl,
   settings,
-  store,
 }) {
   const myGroupsSorted = useMemo(() => groupsByOrganization(myGroups), [
     myGroups,
@@ -39,7 +38,7 @@ function GroupListV2({
   );
 
   const { authDomain } = settings;
-  const userid = store.profile().userid;
+  const userid = profile.userid;
   const canCreateNewGroup = userid && !isThirdPartyUser(userid, authDomain);
   const newGroupLink = serviceUrl('groups.new');
 
@@ -47,30 +46,18 @@ function GroupListV2({
     <Fragment>
       {currentGroupsSorted.length > 0 && (
         <GroupListSection
-          analytics={analytics}
-          groups={groups}
-          store={store}
           heading="Currently Viewing"
-          sectionGroups={currentGroupsSorted}
+          groups={currentGroupsSorted}
         />
       )}
       {featuredGroupsSorted.length > 0 && (
         <GroupListSection
-          analytics={analytics}
-          groups={groups}
-          store={store}
           heading="Featured Groups"
-          sectionGroups={featuredGroupsSorted}
+          groups={featuredGroupsSorted}
         />
       )}
       {myGroupsSorted.length > 0 && (
-        <GroupListSection
-          analytics={analytics}
-          groups={groups}
-          store={store}
-          heading="My Groups"
-          sectionGroups={myGroupsSorted}
-        />
+        <GroupListSection heading="My Groups" groups={myGroupsSorted} />
       )}
 
       {canCreateNewGroup && (
@@ -93,24 +80,19 @@ GroupListV2.propTypes = {
   currentGroups: propTypes.arrayOf(propTypes.object),
   myGroups: propTypes.arrayOf(propTypes.object),
   featuredGroups: propTypes.arrayOf(propTypes.object),
+  profile: propTypes.object,
 
-  analytics: propTypes.object,
-  groups: propTypes.object,
   serviceUrl: propTypes.func,
   settings: propTypes.object,
-  store: propTypes.object,
 };
 
-GroupListV2.injectedProps = [
-  'analytics',
-  'groups',
-  'serviceUrl',
-  'settings',
-  'store',
-];
+GroupListV2.injectedProps = ['serviceUrl', 'settings'];
 
-module.exports = withPropsFromStore(GroupListV2, {
-  currentGroups: store => store.getCurrentlyViewingGroups(),
-  featuredGroups: store => store.getFeaturedGroups(),
-  myGroups: store => store.getMyGroups(),
-});
+module.exports = withServices(
+  withPropsFromStore(GroupListV2, {
+    currentGroups: store => store.getCurrentlyViewingGroups(),
+    featuredGroups: store => store.getFeaturedGroups(),
+    myGroups: store => store.getMyGroups(),
+    profile: store => store.profile(),
+  })
+);

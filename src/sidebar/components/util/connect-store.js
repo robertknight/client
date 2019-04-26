@@ -18,9 +18,7 @@ const { useEffect, useRef, useReducer } = require('preact/hooks');
 
 function getState(store, storeProps) {
   const state = {};
-  Object.keys(storeProps).forEach(key =>
-    state[key] = storeProps[key](store)
-  );
+  Object.keys(storeProps).forEach(key => (state[key] = storeProps[key](store)));
   return state;
 }
 
@@ -87,7 +85,7 @@ function withPropsFromStore(Component, storeProps) {
     const state = useStoreState(props.store, storeProps);
     return <Component {...state} {...props} />;
   }
-  Wrapper.displayName = `withStoreState(${Component.displayName ||
+  Wrapper.displayName = `withPropsFromStore(${Component.displayName ||
     Component.name})`;
 
   // When using the wrapped component with the `wrapReactComponent` utility,
