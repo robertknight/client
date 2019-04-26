@@ -139,6 +139,8 @@ $group-list-item-padding: 10px;
     width: 12px;
     height: 12px;
   }
+
+  @include outline-on-keyboard-focus;
 }
 
 // A footer which displays notes about this group when the submenu is expanded.
