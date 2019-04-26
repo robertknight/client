@@ -88,11 +88,9 @@ GroupListV2.propTypes = {
 
 GroupListV2.injectedProps = ['serviceUrl', 'settings'];
 
-module.exports = withServices(
-  withPropsFromStore(GroupListV2, {
-    currentGroups: store => store.getCurrentlyViewingGroups(),
-    featuredGroups: store => store.getFeaturedGroups(),
-    myGroups: store => store.getMyGroups(),
-    profile: store => store.profile(),
-  })
-);
+module.exports = withPropsFromStore(withServices(GroupListV2), {
+  currentGroups: store => store.getCurrentlyViewingGroups(),
+  featuredGroups: store => store.getFeaturedGroups(),
+  myGroups: store => store.getMyGroups(),
+  profile: store => store.profile(),
+});

@@ -67,8 +67,6 @@ AccountMenu.propTypes = {
 
 AccountMenu.injectedProps = ['serviceUrl'];
 
-module.exports = withServices(
-  withPropsFromStore(AccountMenu, {
-    profile: store => store.profile(),
-  })
-);
+module.exports = withPropsFromStore(withServices(AccountMenu), {
+  profile: store => store.profile(),
+});

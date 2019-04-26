@@ -133,8 +133,6 @@ GroupListItem.propTypes = {
 
 GroupListItem.injectedProps = ['analytics', 'groups', 'store'];
 
-module.exports = withServices(
-  withPropsFromStore(GroupListItem, {
-    focusedGroupId: store => store.focusedGroupId(),
-  })
-);
+module.exports = withPropsFromStore(withServices(GroupListItem), {
+  focusedGroupId: store => store.focusedGroupId(),
+});

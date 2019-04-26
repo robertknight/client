@@ -11,10 +11,10 @@
  */
 
 const shallowEqual = require('shallowequal');
-const propTypes = require('prop-types');
 const { createElement } = require('preact');
+const { useContext, useEffect, useRef, useReducer } = require('preact/hooks');
 
-const { useEffect, useRef, useReducer } = require('preact/hooks');
+const { ServiceContext } = require('../../util/service-context');
 
 function getState(store, storeProps) {
   const state = {};
@@ -25,15 +25,12 @@ function getState(store, storeProps) {
 /**
  * Extract state from a Redux store and subscribe to future updates.
  *
- * Returns `getState(store)` and set up a subscription that will cause the
- * current component to re-render whenever that changes.
- *
- * @param {Object} store - Redux store
- * @param {Function} getState -
+ * @param {Function} storeProps -
  *   Function that takes a store and returns an object with state of interest
  * @return {Object} - Extracted state
  */
-function useStoreState(store, storeProps) {
+function useStateFromStore(storeProps) {
+  const store = useContext(ServiceContext).get('store');
   const state = useRef(getState(store, storeProps));
   const [, forceUpdate] = useReducer(x => x + 1, 0);
 
@@ -82,31 +79,24 @@ function useStoreState(store, storeProps) {
  */
 function withPropsFromStore(Component, storeProps) {
   function Wrapper(props) {
-    const state = useStoreState(props.store, storeProps);
+    const state = useStateFromStore(storeProps);
     return <Component {...state} {...props} />;
   }
   Wrapper.displayName = `withPropsFromStore(${Component.displayName ||
     Component.name})`;
 
-  // When using the wrapped component with the `wrapReactComponent` utility,
-  // make sure that the application's Redux store gets injected.
-  Wrapper.propTypes = {
-    store: propTypes.object,
-  };
-
   // Copy across the prop types for props that do not come from the store.
+  Wrapper.propTypes = {};
   Object.keys(Component.propTypes).forEach(key => {
     if (!(key in storeProps)) {
       Wrapper.propTypes[key] = Component.propTypes[key];
     }
   });
 
-  Wrapper.injectedProps = ['store', ...(Component.injectedProps || [])];
-
   return Wrapper;
 }
 
 module.exports = {
-  useStoreState,
+  useStateFromStore,
   withPropsFromStore,
 };
