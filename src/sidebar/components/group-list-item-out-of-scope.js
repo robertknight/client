@@ -47,7 +47,7 @@ function GroupListItemOutOfScope({ analytics, group }) {
       <div className="group-list-item__icon-container">
         {group.logo && (
           <img
-            className="group-list-item__icon group-list-item__icon--organization"
+            className="group-list-item__icon"
             alt={groupOrgName}
             src={group.logo}
           />

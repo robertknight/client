@@ -1,24 +1,19 @@
-/* The group. */
-
 $group-list-item-padding: 10px;
 
 .group-list-item {
   display: flex;
   flex-direction: row;
   flex-grow: 1;
-}
+  align-items: center;
 
-.group-list-item__item {
-  display: flex;
-  flex-direction: row;
-  flex-grow: 1;
-
+  // TODO - Make the link fill the full available vertical space.
   padding: $group-list-item-padding;
   cursor: pointer;
 
   // Prevent menu item text from being selected when user toggles menu.
   user-select: none;
 
+  // An item in a submenu associated with a top-level item.
   &--submenu {
     padding-top: 5px;
     padding-bottom: 5px;
@@ -28,9 +23,11 @@ $group-list-item-padding: 10px;
     }
   }
 
-  &:focus {
-    outline: none;
-    @include focus-outline;
+  // Shaded item at the bottom of the menu.
+  // This is used to indicate an action which is different in functionality
+  // from a list of items above which do the same thing.
+  &--shaded {
+    background: $grey-1;
   }
 
   &:hover {
@@ -48,8 +45,9 @@ $group-list-item-padding: 10px;
   }
 
   &.is-selected {
-    border-left: 4px solid $brand;
-    padding-left: $group-list-item-padding - 3px;
+    $border-width: 4px;
+    border-left: $border-width solid $brand;
+    padding-left: $group-list-item-padding - $border-width;
   }
 }
 
@@ -66,35 +64,20 @@ $group-list-item-padding: 10px;
   display: inline-block;
   margin-right: 4px;
   position: relative;
-  vertical-align: baseline;
 
   // align the base of the chat-heads icon for groups
   // with the baseline of the group name label
   transform: translateY(1px);
-}
 
-.group-list-item__icon--organization {
   height: 15px;
   width: 15px;
-  top: 2px;
 }
 
 // the name of a group in the groups drop-down list
 // and 'Post to <Group>' button for saving annotations
 .group-list-item__label {
-  white-space: nowrap;
   color: inherit;
-
-  // Make the link expand to fill the available space so that the user has a
-  // large click target.
-  display: flex;
-
-  &:hover {
-    color: inherit;
-  }
-}
-
-.group-list-item__details {
+  white-space: nowrap;
   flex-grow: 1;
   flex-shrink: 1;
   font-weight: 500;
@@ -113,6 +96,7 @@ $group-list-item-padding: 10px;
   flex-direction: column;
   justify-content: center;
   align-items: center;
+  align-self: stretch;
   width: 40px;
 
   // Add a wide transparent border to provide a large-enough hit target (~40px),

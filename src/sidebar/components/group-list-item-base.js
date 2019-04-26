@@ -25,15 +25,18 @@ function GroupListItemBase({
   onToggleSubmenu,
   title,
 }) {
-  const iconClass = 'group-list-item__icon group-list-item__icon--organization';
+  const iconClass = 'group-list-item__icon';
   const iconIsUrl = icon && icon.indexOf('/') !== -1;
+  const labelClass = classnames('group-list-item__label', {
+    'group-list-item__label--submenu': isSubmenuItem,
+  });
 
   return (
     <div
-      className={classnames('group-list-item__item', className, {
-        'group-list-item__item--submenu': isSubmenuItem,
+      className={classnames('group-list-item', className, {
+        'group-list-item--submenu': isSubmenuItem,
       })}
-      {...(onClick && onActivate('menuitem', onClick))}
+      {...onClick && onActivate('menuitem', onClick)}
     >
       <div className="group-list-item__icon-container">
         {icon &&
@@ -43,32 +46,27 @@ function GroupListItemBase({
             <SvgIcon name={icon} />
           ))}
       </div>
-      <div
-        className={classnames('group-list-item__details', {
-          'group-list-item__details--submenu': isSubmenuItem,
-        })}
-      >
-        {href && (
-          <a
-            className="group-list-item__label"
-            href={href}
-            target="_blank"
-            rel="noopener noreferrer"
-            title={title}
-          >
-            {label}
-          </a>
-        )}
-        {!href && (
-          <span className="group-list-item__label" title={title}>
-            {label}
-          </span>
-        )}
-      </div>
+      {href && (
+        <a
+          className={labelClass}
+          href={href}
+          target="_blank"
+          rel="noopener noreferrer"
+          title={title}
+        >
+          {label}
+        </a>
+      )}
+      {!href && (
+        <span className={labelClass} title={title}>
+          {label}
+        </span>
+      )}
       {typeof isSubmenuVisible === 'boolean' && (
         <div
           className="group-list-item__toggle"
-          aria-label="Toggle item sub-menu"
+          aria-expanded={isSubmenuVisible ? 'true' : 'false'}
+          aria-label={`Show actions for ${label}`}
           {...onActivate('button', onToggleSubmenu)}
         >
           <SvgIcon name={isSubmenuVisible ? 'collapse-menu' : 'expand-menu'} />
