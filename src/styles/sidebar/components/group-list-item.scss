@@ -1,13 +1,16 @@
-$group-list-item-padding: 10px;
-
 .group-list-item {
+  $item-padding: 10px;
+  $item-height: 40px;
+
+
   display: flex;
   flex-direction: row;
   flex-grow: 1;
   align-items: center;
+  min-height: $item-height;
+  padding-left: $item-padding;
 
   // TODO - Make the link fill the full available vertical space.
-  padding: $group-list-item-padding;
   cursor: pointer;
 
   // Prevent menu item text from being selected when user toggles menu.
@@ -15,8 +18,7 @@ $group-list-item-padding: 10px;
 
   // An item in a submenu associated with a top-level item.
   &--submenu {
-    padding-top: 5px;
-    padding-bottom: 5px;
+    min-height: $item-height - 10px;
     background: $grey-1;
     &:hover {
       background: $grey-1;
@@ -47,7 +49,7 @@ $group-list-item-padding: 10px;
   &.is-selected {
     $border-width: 4px;
     border-left: $border-width solid $brand;
-    padding-left: $group-list-item-padding - $border-width;
+    padding-left: $item-padding - $border-width;
   }
 }
 
@@ -76,6 +78,12 @@ $group-list-item-padding: 10px;
 // the name of a group in the groups drop-down list
 // and 'Post to <Group>' button for saving annotations
 .group-list-item__label {
+  align-self: stretch;
+
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+
   color: inherit;
   white-space: nowrap;
   flex-grow: 1;
@@ -108,10 +116,6 @@ $group-list-item-padding: 10px;
   // Add slight rounded borders. border-radius sets the outer radius, but
   // what the user sees is the inner radius, which is much smaller.
   border-radius: 12px;
-
-  // This cancels out the padding on the parent and makes the toggle fill
-  // up the full height of the item.
-  margin: -10px;
 
   &:hover {
     background-color: $grey-3;
