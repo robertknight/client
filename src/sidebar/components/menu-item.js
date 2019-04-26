@@ -20,7 +20,6 @@ const { onActivate } = require('../util/on-activate');
  * icon rendered by an `SvgIcon`.
  */
 function MenuItem({
-  className = '',
   href,
   icon,
   iconAlt,
@@ -41,7 +40,8 @@ function MenuItem({
 
   return (
     <div
-      className={classnames('menu-item', className, {
+      aria-checked={isSelected}
+      className={classnames('menu-item', {
         'menu-item--submenu': style === 'submenu',
         'menu-item--shaded': style === 'shaded',
         'is-disabled': isDisabled,
@@ -91,9 +91,6 @@ function MenuItem({
 }
 
 MenuItem.propTypes = {
-  /** Additional class names to apply to the item. */
-  className: propTypes.string,
-
   /**
    * URL of the external link to open when this item is clicked.
    * Either the `href` or an  `onClick` callback should be supplied.

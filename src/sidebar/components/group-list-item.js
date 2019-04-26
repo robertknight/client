@@ -103,9 +103,7 @@ function GroupListItem({ analytics, focusedGroupId, group, store }) {
             )}
           </ul>
           {!isSelectable && (
-            // TODO - This should be a `group-list-item` class, not a `menu-item`
-            // class.
-            <p className="menu-item__footer">
+            <p className="group-list-item__footer">
               This group is restricted to specific URLs.
             </p>
           )}
