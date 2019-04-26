@@ -141,6 +141,7 @@ function startAngularApp(config) {
     .component('hypothesisApp', require('./components/hypothesis-app'))
 
     // UI components
+    .component('accountMenu', wrapReactComponent(require('./components/account-menu')))
     .component('annotation', require('./components/annotation'))
     .component('annotationHeader', require('./components/annotation-header'))
     .component(

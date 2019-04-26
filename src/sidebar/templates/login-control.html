@@ -18,28 +18,12 @@
     <i class="h-icon-account" ng-if="vm.auth.status === 'logged-in'"></i><!--
     !--><i class="h-icon-arrow-drop-down top-bar__dropdown-arrow"></i>
   </a>
-  <ul class="dropdown-menu pull-right" role="menu">
-    <li class="dropdown-menu__row" ng-if="vm.auth.status === 'logged-in'">
-      <span ng-if="!vm.shouldEnableProfileButton()"
-            class="dropdown-menu__link dropdown-menu__link--disabled js-user-profile-btn is-disabled">
-        {{vm.auth.displayName}}</span>
-      <a ng-if="vm.shouldEnableProfileButton()"
-         ng-click="vm.showProfile()"
-         class="dropdown-menu__link js-user-profile-btn is-enabled"
-         title="View all your annotations"
-         target="_blank">{{vm.auth.displayName}}</a>
-    </li>
-    <li class="dropdown-menu__row" ng-if="vm.auth.status === 'logged-in' && !vm.isThirdPartyUser()">
-      <a class="dropdown-menu__link js-account-settings-btn" href="{{vm.serviceUrl('account.settings')}}" target="_blank">Account settings</a>
-    </li>
-    <li class="dropdown-menu__row">
-      <a class="dropdown-menu__link js-help-btn" ng-click="vm.onShowHelpPanel()">Help</a>
-    </li>
-    <li class="dropdown-menu__row" ng-if="vm.shouldShowLogOutButton()">
-      <a class="dropdown-menu__link dropdown-menu__link--subtle js-log-out-btn"
-         href="" ng-click="vm.onLogout()">Log out</a>
-    </li>
-  </ul>
+  <div class="dropdown-menu pull-right" role="menu">
+    <account-menu
+      on-show-help="vm.onShowHelpPanel()"
+      on-logout="vm.onLogout()">
+    </account-menu>
+  </div>
 </div>
 
 <!-- Old controls -->

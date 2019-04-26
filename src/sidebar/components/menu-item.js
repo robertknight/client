@@ -50,14 +50,16 @@ function MenuItem({
       })}
       {...onClick && onActivate('menuitem', onClick)}
     >
-      <div className="menu-item__icon-container">
-        {icon &&
-          (iconIsUrl ? (
-            <img className={iconClass} alt={iconAlt} src={icon} />
-          ) : (
-            <SvgIcon name={icon} />
-          ))}
-      </div>
+      {icon !== undefined && (
+        <div className="menu-item__icon-container">
+          {icon &&
+            (iconIsUrl ? (
+              <img className={iconClass} alt={iconAlt} src={icon} />
+            ) : (
+              <SvgIcon name={icon} />
+            ))}
+        </div>
+      )}
       {href && (
         <a
           className={labelClass}
@@ -68,11 +70,7 @@ function MenuItem({
           {label}
         </a>
       )}
-      {!href && (
-        <span className={labelClass}>
-          {label}
-        </span>
-      )}
+      {!href && <span className={labelClass}>{label}</span>}
       {typeof isSubmenuVisible === 'boolean' && (
         <div
           className="menu-item__toggle"
@@ -103,6 +101,9 @@ MenuItem.propTypes = {
   /**
    * Name or URL of icon to display. If the value is a URL it is displayed
    * using an `<img>`, if it is a name it is displayed using `SvgIcon`.
+   *
+   * If the property is `null` a blank placeholder is displayed in place of an
+   * icon. If the property is omitted, no placeholder is displayed.
    */
   icon: propTypes.string,
 

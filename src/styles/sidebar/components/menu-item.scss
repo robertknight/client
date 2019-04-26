@@ -1,5 +1,7 @@
+$menu-item-padding: 10px;
+
 .menu-item {
-  $item-padding: 10px;
+  $item-padding: $menu-item-padding;
   $item-height: 40px;
 
   display: flex;
@@ -80,6 +82,8 @@
   flex-grow: 1;
   flex-shrink: 1;
   font-weight: 500;
+
+  padding-right: $menu-item-padding;
 
   &--submenu {
     font-weight: 300;

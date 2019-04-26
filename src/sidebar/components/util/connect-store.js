@@ -16,6 +16,14 @@ const { createElement } = require('preact');
 
 const { useEffect, useRef, useReducer } = require('preact/hooks');
 
+function getState(store, storeProps) {
+  const state = {};
+  Object.keys(storeProps).forEach(key =>
+    state[key] = storeProps[key](store)
+  );
+  return state;
+}
+
 /**
  * Extract state from a Redux store and subscribe to future updates.
  *
@@ -27,13 +35,13 @@ const { useEffect, useRef, useReducer } = require('preact/hooks');
  *   Function that takes a store and returns an object with state of interest
  * @return {Object} - Extracted state
  */
-function useStoreState(store, getState) {
-  const state = useRef(getState(store));
+function useStoreState(store, storeProps) {
+  const state = useRef(getState(store, storeProps));
   const [, forceUpdate] = useReducer(x => x + 1, 0);
 
   useEffect(() => {
     const checkForUpdate = () => {
-      const newState = getState(store);
+      const newState = getState(store, storeProps);
       if (!shallowEqual(state.current, newState)) {
         state.current = newState;
         forceUpdate();
@@ -48,7 +56,7 @@ function useStoreState(store, getState) {
     // component is removed.
     const unsubscribe = store.subscribe(checkForUpdate);
     return unsubscribe;
-  }, [getState, store]);
+  }, [storeProps, store]);
 
   return state.current;
 }
@@ -63,20 +71,20 @@ function useStoreState(store, getState) {
  *      Logged in as {currentUser}. <button onClick={logOut}>Log out</button>
  *     </div>
  *   }
- *   MyWidget = withStoreState(MyWidget, store => ({
- *     currentUser: store.getLoggedInUser(),
- *     logOut: store.logOut,
+ *   MyWidget = withPropsFromStore(MyWidget, {
+ *     currentUser: store => store.getLoggedInUser(),
+ *     logOut: store => store.logOut,
  *   }))
  *
  * @param {Function} Component - The React component to wrap
- * @param {Function} getState -
- *   Function that accepts a store and returns an object with extracted state.
- *   This state is passed to the wrapped component.
+ * @param {Object} storeProps -
+ *   Object that maps prop names to functions that extract that property from
+ *   the store.
  * @return {Function} The wrapped component
  */
-function withStoreState(Component, getState) {
+function withPropsFromStore(Component, storeProps) {
   function Wrapper(props) {
-    const state = useStoreState(props.store, getState);
+    const state = useStoreState(props.store, storeProps);
     return <Component {...state} {...props} />;
   }
   Wrapper.displayName = `withStoreState(${Component.displayName ||
@@ -87,6 +95,14 @@ function withStoreState(Component, getState) {
   Wrapper.propTypes = {
     store: propTypes.object,
   };
+
+  // Copy across the prop types for props that do not come from the store.
+  Object.keys(Component.propTypes).forEach(key => {
+    if (!(key in storeProps)) {
+      Wrapper.propTypes[key] = Component.propTypes[key];
+    }
+  });
+
   Wrapper.injectedProps = ['store', ...(Component.injectedProps || [])];
 
   return Wrapper;
@@ -94,5 +110,5 @@ function withStoreState(Component, getState) {
 
 module.exports = {
   useStoreState,
-  withStoreState,
+  withPropsFromStore,
 };
