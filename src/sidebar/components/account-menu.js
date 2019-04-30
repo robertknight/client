@@ -3,6 +3,7 @@
 const { Fragment, createElement } = require('preact');
 const propTypes = require('prop-types');
 
+const Menu = require('./menu');
 const MenuItem = require('./menu-item');
 const MenuSection = require('./menu-section');
 const { withPropsFromStore } = require('./util/connect-store');
@@ -30,7 +31,16 @@ function AccountMenu({ onLogout, onShowHelp, profile, serviceUrl }) {
   //   is provided.
 
   return (
-    <Fragment>
+    <Menu
+      align="right"
+      toggle={
+        loggedIn ? (
+          <i className="h-icon-account" />
+        ) : (
+          <i className="h-icon-arrow-drop-down top-bar__dropdown-arrow" />
+        )
+      }
+    >
       <MenuSection>
         {loggedIn && <MenuItem href={profileUrl} label={displayName} />}
         {loggedIn && accountSettingsUrl && (
@@ -42,7 +52,7 @@ function AccountMenu({ onLogout, onShowHelp, profile, serviceUrl }) {
       {
         <span /> /* work around https://github.com/developit/preact/issues/1567 */
       }
-    </Fragment>
+    </Menu>
   );
 }
 
