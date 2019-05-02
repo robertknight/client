@@ -6,6 +6,7 @@ const isThirdPartyService = require('../util/is-third-party-service');
 const memoize = require('../util/memoize');
 const tabs = require('../tabs');
 const uiConstants = require('../ui-constants');
+const { reactToStoreChanges } = require('../store/connect-store');
 
 function firstKey(object) {
   for (const k in object) {
@@ -226,7 +227,7 @@ function SidebarContentController(
     }
   };
 
-  $scope.$on(events.USER_CHANGED, function() {
+  reactToStoreChanges(store, { userid: () => store.profile().userid }, () => {
     streamer.reconnect();
   });
 

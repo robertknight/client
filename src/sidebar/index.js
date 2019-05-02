@@ -59,7 +59,7 @@ if (appConfig.googleAnalytics) {
 const resolve = {
   // @ngInject
   state: function(groups, session) {
-    return Promise.all([groups.load(), session.load()]);
+    return Promise.all([groups.waitForFirstLoad(), session.load()]);
   },
 };
 

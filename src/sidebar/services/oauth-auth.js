@@ -31,7 +31,8 @@ function auth(
   apiRoutes,
   flash,
   localStorage,
-  settings
+  settings,
+  store,
 ) {
   /**
    * Authorization code from auth popup window.
@@ -137,12 +138,17 @@ function auth(
    * client.
    */
   function listenForTokenStorageEvents() {
-    $window.addEventListener('storage', ({ key }) => {
+    $window.addEventListener('storage', async ({ key }) => {
       if (key === storageKey()) {
         // Reset cached token information. Tokens will be reloaded from storage
         // on the next call to `tokenGetter()`.
         tokenInfoPromise = null;
         $rootScope.$broadcast(events.OAUTH_TOKENS_CHANGED);
+
+        // Persist access token to store for use by components/services that
+        // may need to re-fetch data when it changes.
+        const token = await tokenGetter();
+        store.updateAccessToken(token);
       }
     });
   }
@@ -251,6 +257,11 @@ function auth(
       } else {
         return token.accessToken;
       }
+    }).then(token => {
+      if (token !== store.accessToken()) {
+        store.updateAccessToken(token);
+      }
+      return token;
     });
   }
 

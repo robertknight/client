@@ -48,6 +48,7 @@ function MenuItem({
         'is-expanded': isExpanded,
         'is-selected': isSelected,
       })}
+      role="menuitem"
       {...onClick && onActivate('menuitem', onClick)}
     >
       {icon !== undefined && (
@@ -56,7 +57,7 @@ function MenuItem({
             (iconIsUrl ? (
               <img className={iconClass} alt={iconAlt} src={icon} />
             ) : (
-              <SvgIcon name={icon} />
+              <SvgIcon name={icon} size={10} />
             ))}
         </div>
       )}

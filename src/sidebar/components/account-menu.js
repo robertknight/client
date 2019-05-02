@@ -1,12 +1,12 @@
 'use strict';
 
-const { Fragment, createElement } = require('preact');
+const { createElement } = require('preact');
 const propTypes = require('prop-types');
 
 const Menu = require('./menu');
 const MenuItem = require('./menu-item');
 const MenuSection = require('./menu-section');
-const { withPropsFromStore } = require('./util/connect-store');
+const { withPropsFromStore } = require('../store/connect-store');
 const { username: extractUsername } = require('../util/account-id');
 const { withServices } = require('../util/service-context');
 
@@ -33,13 +33,14 @@ function AccountMenu({ onLogout, onShowHelp, profile, serviceUrl }) {
   return (
     <Menu
       align="right"
-      toggle={
+      label={
         loggedIn ? (
           <i className="h-icon-account" />
         ) : (
           <i className="h-icon-arrow-drop-down top-bar__dropdown-arrow" />
         )
       }
+      title='Account'
     >
       <MenuSection>
         {loggedIn && <MenuItem href={profileUrl} label={displayName} />}

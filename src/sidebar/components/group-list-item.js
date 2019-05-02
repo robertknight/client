@@ -4,7 +4,7 @@ const copyTextToClipboard = require('copy-text-to-clipboard');
 const propTypes = require('prop-types');
 const { Fragment, createElement } = require('preact');
 const { useState } = require('preact/hooks');
-const { withPropsFromStore } = require('./util/connect-store');
+const { withPropsFromStore } = require('../store/connect-store');
 
 const { orgName } = require('../util/group-list-item-common');
 const { withServices } = require('../util/service-context');

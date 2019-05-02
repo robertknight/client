@@ -22,17 +22,23 @@ const icons = {
  * This matches the way we do icons on the website, see
  * https://github.com/hypothesis/h/pull/3675
  */
-function SvgIcon({ name }) {
+function SvgIcon({ name, size }) {
   if (!icons[name]) {
     throw new Error(`Unknown icon ${name}`);
   }
   const markup = { __html: icons[name] };
-  return <span style={{ display: 'flex' }} dangerouslySetInnerHTML={markup} />;
+  return (
+    <span
+      style={{ display: 'flex', width: `${size}px`, height: size }}
+      dangerouslySetInnerHTML={markup}
+    />
+  );
 }
 
 SvgIcon.propTypes = {
   /** The name of the icon to load. */
   name: propTypes.string,
+  size: propTypes.number,
 };
 
 module.exports = SvgIcon;

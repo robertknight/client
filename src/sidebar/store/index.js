@@ -36,6 +36,7 @@ const debugMiddleware = require('./debug-middleware');
 
 const activity = require('./modules/activity');
 const annotations = require('./modules/annotations');
+const api = require('./modules/api');
 const frames = require('./modules/frames');
 const links = require('./modules/links');
 const groups = require('./modules/groups');
@@ -86,6 +87,7 @@ function store($rootScope, settings) {
   const modules = [
     activity,
     annotations,
+    api,
     frames,
     links,
     groups,

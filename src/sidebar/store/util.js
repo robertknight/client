@@ -1,5 +1,29 @@
 'use strict';
 
+/* global Symbol */
+
+/**
+ * A placeholder value to represent a piece of data that has not yet been
+ * fetched.
+ *
+ * This is useful when the result of the fetch can either be `null` to represent
+ * that it doesn't exist.
+ */
+const DATA_NOT_FETCHED = Symbol.for('data-not-fetched');
+
+/**
+ * Create a simple action creator.
+ *
+ * The result is a function that takes a single argument and returns an action.
+ *
+ * @param {string} type
+ * @param {string} payloadKey
+ * @return {(arg: any) => 
+ */
+function createSimpleAction(type, payloadKey) {
+  return payload => ({ type, [payloadKey]: payload });
+}
+
 /**
  * Return an object where each key in `updateFns` is mapped to the key itself.
  */
@@ -55,7 +79,10 @@ function bindSelectors(selectors, getState) {
 }
 
 module.exports = {
-  actionTypes: actionTypes,
-  bindSelectors: bindSelectors,
-  createReducer: createReducer,
+  DATA_NOT_FETCHED,
+
+  actionTypes,
+  bindSelectors,
+  createReducer,
+  createSimpleAction,
 };

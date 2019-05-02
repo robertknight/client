@@ -2,6 +2,7 @@
 
 const STORAGE_KEY = 'hypothesis.groups.focus';
 const DEFAULT_ORG_ID = '__default__';
+const { DATA_NOT_FETCHED } = require('../store/util');
 
 /**
  * FIXME: There is almost assuredly a better way to handle a fallback, default logo
@@ -18,6 +19,7 @@ const { awaitStateChange } = require('../util/state-util');
 const { combineGroups } = require('../util/groups');
 const memoize = require('../util/memoize');
 const serviceConfig = require('../service-config');
+const { reactToStoreChanges } = require('../store/connect-store');
 
 // @ngInject
 function groups(
@@ -35,18 +37,19 @@ function groups(
   const svc = serviceConfig(settings);
   const authority = svc ? svc.authority : null;
 
-  function getDocumentUriForGroupSearch() {
-    function mainUri() {
-      const uris = store.searchUris();
-      if (uris.length === 0) {
-        return null;
-      }
-
-      // We get the first HTTP URL here on the assumption that group scopes must
-      // be domains (+paths)? and therefore we need to look up groups based on
-      // HTTP URLs (so eg. we cannot use a "file:" URL or PDF fingerprint).
-      return uris.find(uri => uri.startsWith('http'));
+  function mainUri() {
+    const uris = store.searchUris();
+    if (uris.length === 0) {
+      return null;
     }
+
+    // We get the first HTTP URL here on the assumption that group scopes must
+    // be domains (+paths)? and therefore we need to look up groups based on
+    // HTTP URLs (so eg. we cannot use a "file:" URL or PDF fingerprint).
+    return uris.find(uri => uri.startsWith('http'));
+  }
+
+  function getDocumentUriForGroupSearch() {
     return awaitStateChange(store, mainUri);
   }
 
@@ -158,6 +161,15 @@ function groups(
   // sidebar app changes.
   let documentUri;
 
+  let resolveGroupsLoaded;
+  let groupsLoaded = new Promise(resolve => {
+    resolveGroupsLoaded = resolve;
+  });
+
+  function waitForFirstLoad() {
+    return groupsLoaded;
+  }
+
   /**
    * Fetch the list of applicable groups from the API.
    *
@@ -247,6 +259,7 @@ function groups(
           store.focusGroup(prevFocusedGroup);
         }
 
+        resolveGroupsLoaded();
         return groups;
       });
   }
@@ -305,35 +318,43 @@ function groups(
   }
 
   // Persist the focused group to storage when it changes.
-  let prevFocusedId = store.focusedGroupId();
-  store.subscribe(() => {
-    const focusedId = store.focusedGroupId();
-    if (focusedId !== prevFocusedId) {
-      prevFocusedId = focusedId;
-
-      localStorage.setItem(STORAGE_KEY, focusedId);
+  reactToStoreChanges(
+    store,
+    { focusedGroupId: () => store.focusedGroupId() },
+    ({ focusedGroupId }) => {
+      localStorage.setItem(STORAGE_KEY, focusedGroupId);
 
       // Emit the `GROUP_FOCUSED` event for code that still relies on it.
-      $rootScope.$broadcast(events.GROUP_FOCUSED, focusedId);
+      // nb. Such code _should_ be changed to subscribe to `store.focusedGroupId()`
+      // changes instead.
+      $rootScope.$broadcast(events.GROUP_FOCUSED, focusedGroupId);
     }
-  });
+  );
 
-  // refetch the list of groups when user changes
-  $rootScope.$on(events.USER_CHANGED, () => {
-    // FIXME Makes a second api call on page load. better way?
-    // return for use in test
-    return load();
-  });
-
-  // refetch the list of groups when document url changes
-  $rootScope.$on(events.FRAME_CONNECTED, () => {
-    return getDocumentUriForGroupSearch().then(uri => {
-      if (documentUri !== uri) {
-        documentUri = uri;
-        load();
+  // Schedule an initial fetch of groups when the API access token has been
+  // resolved and the URI of the document is known.
+  //
+  // Trigger subsequent fetches whenever the access token changes (eg. after
+  // login/logout) or the main document URI changes (eg. when the user navigates
+  // to a different URL in a single page application).
+  //
+  // Group fetches are triggered by changes in access token rather than
+  // logged-in userid so that the initial fetch of groups can happen concurrently
+  // with the initial fetch of the profile on app startup.
+  reactToStoreChanges(
+    store,
+    {
+      accessToken: store.accessToken,
+      uri: mainUri,
+    },
+    ({ accessToken, uri }) => {
+      if (accessToken === DATA_NOT_FETCHED || !uri) {
+        return;
       }
-    });
-  });
+      load();
+    },
+    { initialRun: true }
+  );
 
   return {
     all: all,
@@ -344,6 +365,8 @@ function groups(
 
     focused: focused,
     focus: focus,
+
+    waitForFirstLoad,
   };
 }
 

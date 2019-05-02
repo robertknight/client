@@ -6,7 +6,7 @@ const propTypes = require('prop-types');
 
 const { isThirdPartyUser } = require('../util/account-id');
 const groupsByOrganization = require('../util/group-organizations');
-const { withPropsFromStore } = require('./util/connect-store');
+const { withPropsFromStore } = require('../store/connect-store');
 const { withServices } = require('../util/service-context');
 
 const MenuItem = require('./menu-item');

@@ -3,18 +3,21 @@
 /**
  * Utilities for connecting React/Preact components to the Redux store.
  *
- * `withStoreState` is a helper that wraps a component, passes it state from
+ * `withPropsFromStore` is a helper that wraps a component, passes it state from
  * the store and re-renders when the relevant state changes.
  *
  * `useStoreState` is a lower-level API that can be used within a function
  * component.
+ *
+ * `reactToStoreChanges` is a utility for running arbitrary functions when
+ * certain state in the store changes.
  */
 
 const shallowEqual = require('shallowequal');
 const { createElement } = require('preact');
 const { useContext, useEffect, useRef, useReducer } = require('preact/hooks');
 
-const { ServiceContext } = require('../../util/service-context');
+const { ServiceContext } = require('../util/service-context');
 
 function getState(store, storeProps) {
   const state = {};
@@ -54,6 +57,49 @@ function useStateFromStore(storeProps) {
   }, [storeProps, store]);
 
   return state.current;
+}
+
+/**
+ * Run a function whenever certain state in the store changes.
+ *
+ * @example
+ *   reactToChanges(
+ *     store,
+ *     { user: () => store.loggedInUser(), },
+ *     ({ user }) => {
+ *       fetchDataForUser(user)
+ *       .then(...)
+ *       .catch(...);
+ *   });
+ *
+ * @param {Store} store - Redux store
+ * @param {Object} storeProps -
+ *   Object that maps keys to functions that extract a value from the store
+ * @param {Function} handler
+ *   Function that is called when any of the extracted state changes.
+ * @return {() => void} Function that unsubscribes from changes
+ */
+function reactToStoreChanges(
+  store,
+  storeProps,
+  handler,
+  { initialRun = false } = {}
+) {
+  let prevState = getState(store, storeProps);
+  const checkForChange = () => {
+    const newState = getState(store, storeProps);
+    if (!shallowEqual(prevState, newState)) {
+      prevState = newState;
+      handler(newState);
+    }
+  };
+
+  if (initialRun) {
+    handler(prevState);
+  }
+
+  const unsubscribe = store.subscribe(checkForChange);
+  return unsubscribe;
 }
 
 /**
@@ -97,6 +143,7 @@ function withPropsFromStore(Component, storeProps) {
 }
 
 module.exports = {
+  reactToStoreChanges,
   useStateFromStore,
   withPropsFromStore,
 };

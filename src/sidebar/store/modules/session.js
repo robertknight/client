@@ -17,12 +17,15 @@ function init() {
        */
       userid: null,
     },
+
+    hasFetchedProfile: false,
   };
 }
 
 const update = {
   UPDATE_SESSION: function(state, action) {
     return {
+      hasFetchedProfile: true,
       session: action.session,
     };
   },
@@ -69,6 +72,10 @@ function profile(state) {
   return state.session;
 }
 
+function hasFetchedProfile(state) {
+  return state.hasFetchedProfile;
+}
+
 module.exports = {
   init,
   update,
@@ -78,6 +85,7 @@ module.exports = {
   },
 
   selectors: {
+    hasFetchedProfile,
     isFeatureEnabled,
     isLoggedIn,
     profile,
