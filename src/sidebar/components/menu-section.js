@@ -3,6 +3,8 @@
 const { Fragment, createElement } = require('preact');
 const propTypes = require('prop-types');
 
+const map = val => (Array.isArray(val) ? val : [val]);
+
 /**
  * Group a set of menu items together visually, with an optional header.
  */
@@ -11,7 +13,7 @@ function MenuSection({ heading, children }) {
     <Fragment>
       {heading && <h2 className="menu-section__heading">{heading}</h2>}
       <ul className="menu-section__content">
-        {children.map(child => (
+        {map(children, child => (
           <li key={child.key}>{child}</li>
         ))}
       </ul>
@@ -28,7 +30,10 @@ MenuSection.propTypes = {
   /**
    * Menu items to display in this section.
    */
-  children: propTypes.array.isRequired,
+  children: propTypes.oneOfType([
+    propTypes.object,
+    propTypes.arrayOf(propTypes.object),
+  ]).isRequired,
 };
 
 module.exports = MenuSection;

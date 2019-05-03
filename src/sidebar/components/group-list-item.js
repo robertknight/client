@@ -1,6 +1,7 @@
 'use strict';
 
-const copyTextToClipboard = require('copy-text-to-clipboard');
+// FIXME - This doesn't get transpiled.
+// const copyTextToClipboard = require('copy-text-to-clipboard');
 const propTypes = require('prop-types');
 const { Fragment, createElement } = require('preact');
 const { useState } = require('preact/hooks');

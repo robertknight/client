@@ -4,7 +4,7 @@ const { mount } = require('enzyme');
 const { createStore } = require('redux');
 const { createElement, options } = require('preact');
 
-const { withStoreState } = require('../connect-store');
+const { withPropsFromStore } = require('../connect-store');
 
 const initialState = { value: 10, otherValue: 20 };
 const reducer = (state = initialState, action) => {
@@ -19,12 +19,13 @@ const reducer = (state = initialState, action) => {
 
 const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
 
-describe('withStoreState', () => {
+describe('withPropsFromStore', () => {
   const TestComponent = sinon.stub().returns(null);
+  TestComponent.propTypes = {};
   TestComponent.displayName = 'TestComponent';
   TestComponent.injectedProps = ['someAngularService'];
 
-  const WrappedComponent = withStoreState(TestComponent, store => ({
+  const WrappedComponent = withPropsFromStore(TestComponent, store => ({
     fromStore: store.getState().value,
   }));
 

@@ -3,9 +3,9 @@
 const { shallow } = require('enzyme');
 const { createElement } = require('preact');
 
-const GroupListV2 = require('../group-list-v2');
+const GroupList = require('../group-list-v2');
 
-describe('GroupListV2', () => {
+describe('GroupList', () => {
   let fakeAnalytics;
   let fakeServiceUrl;
   let fakeSettings;
@@ -19,7 +19,7 @@ describe('GroupListV2', () => {
 
   function createGroupList() {
     return shallow(
-      <GroupListV2
+      <GroupList
         analytics={fakeAnalytics}
         serviceUrl={fakeServiceUrl}
         settings={fakeSettings}
@@ -43,7 +43,7 @@ describe('GroupListV2', () => {
   });
 
   afterEach(() => {
-    GroupListV2.$imports.$restore();
+    GroupList.$imports.$restore();
   });
 
   it('displays no sections if there are no groups', () => {
@@ -90,7 +90,7 @@ describe('GroupListV2', () => {
 
     const fakeGroupOrganizations = groups =>
       groups.sort((a, b) => a.id.localeCompare(b.id));
-    GroupListV2.$imports.$mock({
+    GroupList.$imports.$mock({
       '../util/group-organizations': fakeGroupOrganizations,
     });
 
@@ -140,5 +140,9 @@ describe('GroupListV2', () => {
       'GroupListItemBase[label="New private group"]'
     );
     assert.equal(newGroupButton.props().href, 'https://example.com/groups/new');
+  });
+
+  it('displays the group name and icon as static text if there is only one group and no actions available', () => {
+    // TODO
   });
 });

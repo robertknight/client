@@ -16,11 +16,12 @@ let ignoreNextClick = false;
 function Menu({
   align = 'left',
   children,
+  defaultOpen = false,
   label,
   menuIndicator = true,
   title,
 }) {
-  const [isOpen, setOpen] = useState(false);
+  const [isOpen, setOpen] = useState(defaultOpen);
 
   // Toggle menu when user presses toggle button. The menu is shown on mouse
   // press for a more responsive/native feel but also handles a click event for
@@ -125,7 +126,15 @@ Menu.propTypes = {
    * These are typically `MenuSection` and `MenuItem` components, but other
    * custom content is also allowed.
    */
-  children: propTypes.array.isRequired,
+  children: propTypes.oneOfType([
+    propTypes.object,
+    propTypes.arrayOf(propTypes.object),
+  ]),
+
+  /**
+   * Whether the menu is open or closed when initially rendered.
+   */
+  defaultOpen: propTypes.bool,
 
   /**
    * A title for the menu. This is important for accessibility if the menu's
