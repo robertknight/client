@@ -18,7 +18,7 @@ const DATA_NOT_FETCHED = Symbol.for('data-not-fetched');
  *
  * @param {string} type
  * @param {string} payloadKey
- * @return {(arg: any) => 
+ * @return {(arg: any) =>
  */
 function createSimpleAction(type, payloadKey) {
   return payload => ({ type, [payloadKey]: payload });

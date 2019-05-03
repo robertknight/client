@@ -32,7 +32,7 @@ function auth(
   flash,
   localStorage,
   settings,
-  store,
+  store
 ) {
   /**
    * Authorization code from auth popup window.
@@ -214,55 +214,57 @@ function auth(
 
     const origToken = tokenInfoPromise;
 
-    return tokenInfoPromise.then(token => {
-      if (!token) {
-        // No token available. User will need to log in.
-        return null;
-      }
-
-      if (origToken !== tokenInfoPromise) {
-        // A token refresh has been initiated via a call to `refreshAccessToken`
-        // below since `tokenGetter()` was called.
-        return tokenGetter();
-      }
-
-      if (Date.now() > token.expiresAt) {
-        let shouldPersist = true;
-
-        // If we are using automatic login via a grant token, do not persist the
-        // initial access token or refreshed tokens.
-        const cfg = serviceConfig(settings);
-        if (cfg && typeof cfg.grantToken !== 'undefined') {
-          shouldPersist = false;
+    return tokenInfoPromise
+      .then(token => {
+        if (!token) {
+          // No token available. User will need to log in.
+          return null;
         }
 
-        // Token expired. Attempt to refresh.
-        tokenInfoPromise = refreshAccessToken(token.refreshToken, {
-          persist: shouldPersist,
-        })
-          .then(token => {
-            // Sanity check that prevents an infinite loop. Mostly useful in
-            // tests.
-            if (Date.now() > token.expiresAt) {
-              throw new Error('Refreshed token expired in the past');
-            }
-            return token;
-          })
-          .catch(() => {
-            // If refreshing the token fails, the user is simply logged out.
-            return null;
-          });
+        if (origToken !== tokenInfoPromise) {
+          // A token refresh has been initiated via a call to `refreshAccessToken`
+          // below since `tokenGetter()` was called.
+          return tokenGetter();
+        }
 
-        return tokenGetter();
-      } else {
-        return token.accessToken;
-      }
-    }).then(token => {
-      if (token !== store.accessToken()) {
-        store.updateAccessToken(token);
-      }
-      return token;
-    });
+        if (Date.now() > token.expiresAt) {
+          let shouldPersist = true;
+
+          // If we are using automatic login via a grant token, do not persist the
+          // initial access token or refreshed tokens.
+          const cfg = serviceConfig(settings);
+          if (cfg && typeof cfg.grantToken !== 'undefined') {
+            shouldPersist = false;
+          }
+
+          // Token expired. Attempt to refresh.
+          tokenInfoPromise = refreshAccessToken(token.refreshToken, {
+            persist: shouldPersist,
+          })
+            .then(token => {
+              // Sanity check that prevents an infinite loop. Mostly useful in
+              // tests.
+              if (Date.now() > token.expiresAt) {
+                throw new Error('Refreshed token expired in the past');
+              }
+              return token;
+            })
+            .catch(() => {
+              // If refreshing the token fails, the user is simply logged out.
+              return null;
+            });
+
+          return tokenGetter();
+        } else {
+          return token.accessToken;
+        }
+      })
+      .then(token => {
+        if (token !== store.accessToken()) {
+          store.updateAccessToken(token);
+        }
+        return token;
+      });
   }
 
   /**

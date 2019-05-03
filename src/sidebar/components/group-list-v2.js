@@ -4,19 +4,31 @@ const { createElement } = require('preact');
 const { useMemo } = require('preact/hooks');
 const propTypes = require('prop-types');
 
+const isThirdPartyService = require('../util/is-third-party-service');
 const { isThirdPartyUser } = require('../util/account-id');
 const groupsByOrganization = require('../util/group-organizations');
 const { withPropsFromStore } = require('../store/connect-store');
 const { withServices } = require('../util/service-context');
+const serviceConfig = require('../service-config');
 
 const Menu = require('./menu');
 const MenuItem = require('./menu-item');
 const GroupListSection = require('./group-list-section');
 
 /**
- * The list of groups in the dropdown menu at the top of the client.
+ * Return the custom icon for the top bar configured by the publisher in
+ * the Hypothesis client configuration.
  */
-function GroupListV2({
+function publisherProvidedIcon(settings) {
+  const svc = serviceConfig(settings);
+  return svc && svc.icon ? svc.icon : null;
+}
+
+/**
+ * Menu allowing the user to select which group to show and also access
+ * additional actions related to groups.
+ */
+function GroupList({
   currentGroups,
   featuredGroups,
   focusedGroup,
@@ -49,12 +61,25 @@ function GroupListV2({
     const icon = focusedGroup.organization.logo;
     label = (
       <span>
-        <img className="group-list-label__icon group-list-label__icon--organization" src={icon} />
+        <img
+          className="group-list-label__icon group-list-label__icon--organization"
+          src={icon || publisherProvidedIcon(settings)}
+        />
         <span className="group-list-label__label">{focusedGroup.name}</span>
       </span>
     );
   } else {
     label = <span>…</span>;
+  }
+
+  // If there is only one group and no actions available for that group,
+  // just show the group name as a label.
+  const actionsAvailable = !isThirdPartyService(settings);
+  if (
+    !actionsAvailable &&
+    currentGroups.length + featuredGroups.length + myGroups.length < 2
+  ) {
+    return label;
   }
 
   return (
@@ -83,15 +108,11 @@ function GroupListV2({
           style="shaded"
         />
       )}
-
-      {
-        <span /> /* Work around https://github.com/developit/preact/issues/1567 */
-      }
     </Menu>
   );
 }
 
-GroupListV2.propTypes = {
+GroupList.propTypes = {
   currentGroups: propTypes.arrayOf(propTypes.object),
   myGroups: propTypes.arrayOf(propTypes.object),
   featuredGroups: propTypes.arrayOf(propTypes.object),
@@ -102,9 +123,9 @@ GroupListV2.propTypes = {
   settings: propTypes.object,
 };
 
-GroupListV2.injectedProps = ['serviceUrl', 'settings'];
+GroupList.injectedProps = ['serviceUrl', 'settings'];
 
-module.exports = withPropsFromStore(withServices(GroupListV2), {
+module.exports = withPropsFromStore(withServices(GroupList), {
   currentGroups: store => store.getCurrentlyViewingGroups(),
   featuredGroups: store => store.getFeaturedGroups(),
   focusedGroup: store => store.focusedGroup(),

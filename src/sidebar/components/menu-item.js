@@ -4,8 +4,9 @@ const classnames = require('classnames');
 const { createElement } = require('preact');
 const propTypes = require('prop-types');
 
-const SvgIcon = require('./svg-icon');
 const { onActivate } = require('../util/on-activate');
+
+const SvgIcon = require('./svg-icon');
 
 /**
  * An item in a dropdown menu.

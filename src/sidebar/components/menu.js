@@ -4,19 +4,9 @@ const { Fragment, createElement } = require('preact');
 const { useCallback, useEffect, useRef, useState } = require('preact/hooks');
 const propTypes = require('prop-types');
 
-const SvgIcon = require('./svg-icon');
+const { listen } = require('../util/dom');
 
-/**
- * Attach `handler` as an event listener for `events` on `element`.
- *
- * @return {function} Function which removes the event listeners.
- */
-function listen(element, events, handler) {
-  events.forEach(event => element.addEventListener(event, handler));
-  return () => {
-    events.forEach(event => element.removeEventListener(event, handler));
-  };
-}
+const SvgIcon = require('./svg-icon');
 
 let ignoreNextClick = false;
 
