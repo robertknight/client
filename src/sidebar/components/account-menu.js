@@ -34,13 +34,15 @@ function AccountMenu({ onLogout, onShowHelp, profile, serviceUrl }) {
     <Menu
       align="right"
       label={
-        loggedIn ? (
-          <i className="h-icon-account" />
-        ) : (
-          <i className="h-icon-arrow-drop-down top-bar__dropdown-arrow" />
-        )
+        <span className="top-bar__btn">
+          {loggedIn ? (
+            <i className="h-icon-account" />
+          ) : (
+            <i className="h-icon-arrow-drop-down top-bar__dropdown-arrow" />
+          )}
+        </span>
       }
-      title='Account'
+      title="Account"
     >
       <MenuSection>
         {loggedIn && <MenuItem href={profileUrl} label={displayName} />}

@@ -1,4 +1,9 @@
-<div class="pull-right" dropdown keyboard-nav>
+<div
+  class="pull-right"
+  dropdown
+  keyboard-nav
+  ng-if="!vm.isFeatureFlagEnabled('community_groups')"
+>
   <!-- Show a drop down menu if showGroupsMenu is true. -->
   <div
     class="dropdown-toggle"
@@ -132,13 +137,7 @@
       </div>
     </li>
   </ul>
-
-  <!-- Show new menu if community_groups feature flag is enabled. -->
-  <div
-    class="dropdown-menu"
-    role="menu"
-    ng-if="vm.showGroupsMenu() && vm.isFeatureFlagEnabled('community_groups')"
-  >
-    <group-list-v2></group-list-v2>
-  </div>
 </div>
+<group-list-v2
+  ng-if="vm.isFeatureFlagEnabled('community_groups')"
+></group-list-v2>

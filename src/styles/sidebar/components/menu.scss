@@ -7,8 +7,17 @@
   appearance: none;
   border: none;
   background: none;
+  padding: 0;
   color: inherit;
   display: flex;
+}
+
+// Triangular indicator next to the toggle button indicating that there is
+// an associated drop-down menu.
+.menu__toggle-arrow {
+  width: 10px;
+  height: 10px;
+  margin-left: 5px;
 }
 
 // Triangular indicator at the top of the menu that associates it with the
