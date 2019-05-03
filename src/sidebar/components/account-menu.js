@@ -52,9 +52,6 @@ function AccountMenu({ onLogout, onShowHelp, profile, serviceUrl }) {
         <MenuItem onClick={onShowHelp} label="Help" />
       </MenuSection>
       {loggedIn && <MenuItem onClick={onLogout} label="Log out" />}
-      {
-        <span /> /* work around https://github.com/developit/preact/issues/1567 */
-      }
     </Menu>
   );
 }

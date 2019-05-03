@@ -108,16 +108,8 @@ function GroupListItem({ analytics, focusedGroupId, group, groups, store }) {
               This group is restricted to specific URLs.
             </p>
           )}
-          {
-            // Work around https://github.com/developit/preact/issues/1567.
-            <span />
-          }
         </Fragment>
       )}
-      {
-        // Work around https://github.com/developit/preact/issues/1567.
-        <span />
-      }
     </Fragment>
   );
 }
