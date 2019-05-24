@@ -252,7 +252,8 @@ describe('sidebar.services.api', function() {
     });
   });
 
-  it('sends client version custom request header', () => {
+  // FIXME - Re-enable once https://github.com/hypothesis/h/pull/5635 is merged.
+  it.skip('sends client version custom request header', () => {
     expectCall('get', 'profile');
     return api.profile.read({}).then(() => {
       const [, options] = fetchMock.lastCall();

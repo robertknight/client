@@ -107,7 +107,10 @@ function createAPICall(
         const descriptor = get(links, route);
         const headers = {
           'Content-Type': 'application/json',
-          'Hypothesis-Client-Version': '__VERSION__', // replaced by versionify
+          // FIXME - Re-enable this once h has been fixed to permit this header
+          // in cross-site requests using Access-Control-Allow-Headers.
+          // See https://github.com/hypothesis/h/pull/5635
+          // 'Hypothesis-Client-Version': '__VERSION__', // replaced by versionify
         };
 
         accessToken = token;

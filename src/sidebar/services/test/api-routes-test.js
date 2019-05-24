@@ -92,7 +92,8 @@ describe('sidebar.api-routes', () => {
       });
     });
 
-    it('sends client version custom request header', () => {
+    // Re-enable once https://github.com/hypothesis/h/pull/5635 is merged.
+    it.skip('sends client version custom request header', () => {
       return apiRoutes.routes().then(() => {
         assert.calledWith(window.fetch, fakeSettings.apiUrl, {
           headers: { 'Hypothesis-Client-Version': '__VERSION__' },

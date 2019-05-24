@@ -16,7 +16,10 @@ function apiRoutes(settings) {
   function getJSON(url) {
     const config = {
       headers: {
-        'Hypothesis-Client-Version': '__VERSION__', // replaced by versionify
+        // FIXME - Re-enable once h has been fixed to permit this header in
+        // cross-site requests via Access-Control-Allow-Headers.
+        // See https://github.com/hypothesis/h/pull/5635
+        // 'Hypothesis-Client-Version': '__VERSION__', // replaced by versionify
       },
     };
     return fetch(url, config).then(response => {
