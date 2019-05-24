@@ -272,7 +272,7 @@ gulp.task('build-html', () => {
     oauthClientId: process.env.OAUTH_CLIENT_ID || clientIdRequiredMsg,
   };
   const htmlSafeJsonConfig = JSON.stringify(config).replace(/</g, '\\u003c');
-  gulp
+  return gulp
     .src('src/sidebar/app.html.mustache')
     .pipe(
       mustache({
