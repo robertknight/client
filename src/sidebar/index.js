@@ -158,28 +158,18 @@ function startAngularApp(config) {
     )
     .component('dropdownMenuBtn', require('./components/dropdown-menu-btn'))
     .component('excerpt', require('./components/excerpt'))
-    .component('groupList', require('./components/group-list'))
-    .component(
-      'groupListV2',
-      wrapReactComponent(require('./components/group-list-v2'))
-    )
     .component(
       'helpLink',
       wrapReactComponent(require('./components/help-link'))
     )
     .component('helpPanel', require('./components/help-panel'))
     .component('loggedoutMessage', require('./components/loggedout-message'))
-    .component('loginControl', require('./components/login-control'))
     .component('markdown', require('./components/markdown'))
     .component('moderationBanner', require('./components/moderation-banner'))
     .component('newNoteBtn', require('./components/new-note-btn'))
     .component(
       'publishAnnotationBtn',
       require('./components/publish-annotation-btn')
-    )
-    .component(
-      'searchInput',
-      wrapReactComponent(require('./components/search-input'))
     )
     .component('searchStatusBar', require('./components/search-status-bar'))
     .component('selectionTabs', require('./components/selection-tabs'))
@@ -190,11 +180,6 @@ function startAngularApp(config) {
     )
     .component('sidebarTutorial', require('./components/sidebar-tutorial'))
     .component('shareDialog', require('./components/share-dialog'))
-    .component(
-      'sortMenu',
-      wrapReactComponent(require('./components/sort-menu'))
-    )
-    .component('spinner', wrapReactComponent(require('./components/spinner')))
     .component('streamContent', require('./components/stream-content'))
     .component('svgIcon', wrapReactComponent(require('./components/svg-icon')))
     .component('tagEditor', require('./components/tag-editor'))
@@ -203,12 +188,7 @@ function startAngularApp(config) {
       'timestamp',
       wrapReactComponent(require('./components/timestamp'))
     )
-    .component('topBar', require('./components/top-bar'))
-    .component(
-      'userMenu',
-      wrapReactComponent(require('./components/user-menu'))
-    )
-
+    .component('topBar', wrapReactComponent(require('./components/top-bar')))
     .directive('hAutofocus', require('./directive/h-autofocus'))
     .directive('hBranding', require('./directive/h-branding'))
     .directive('hOnTouch', require('./directive/h-on-touch'))

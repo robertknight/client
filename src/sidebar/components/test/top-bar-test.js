@@ -1,112 +1,89 @@
 'use strict';
 
-const angular = require('angular');
+const { createElement } = require('preact');
+const { shallow } = require('enzyme');
 
-const topBar = require('../top-bar');
-const util = require('../../directive/test/util');
+const TopBar = require('../top-bar');
 
-describe('topBar', function() {
+describe('TopBar', () => {
   const fakeSettings = {};
   let fakeIsThirdPartyService;
 
-  before(function() {
-    angular
-      .module('app', [])
-      .component('topBar', topBar)
-      .component('loginControl', {
-        bindings: require('../login-control').bindings,
-      })
-      .component('searchInput', {
-        bindings: {
-          alwaysExpanded: '<',
-          query: '<',
-          onSearch: '&',
-        },
-      });
-  });
-
-  beforeEach(function() {
-    angular.mock.module('app', {
-      settings: fakeSettings,
-    });
-
+  beforeEach(() => {
     fakeIsThirdPartyService = sinon.stub().returns(false);
 
-    topBar.$imports.$mock({
+    TopBar.$imports.$mock({
       '../util/is-third-party-service': fakeIsThirdPartyService,
     });
   });
 
   afterEach(() => {
-    topBar.$imports.$restore();
+    TopBar.$imports.$restore();
   });
 
-  function applyUpdateBtn(el) {
-    return el.querySelector('.top-bar__apply-update-btn');
+  function applyUpdateBtn(wrapper) {
+    return wrapper.find('.top-bar__apply-update-btn');
   }
 
-  function helpBtn(el) {
-    return el.querySelector('.top-bar__help-btn');
+  function helpBtn(wrapper) {
+    return wrapper.find('.top-bar__help-btn');
   }
 
-  function createTopBar(inputs) {
-    const defaultInputs = {
-      isSidebar: true,
-    };
-    return util.createDirective(
-      document,
-      'topBar',
-      Object.assign(defaultInputs, inputs)
-    );
+  function createTopBar(props = {}) {
+    return shallow(
+      <TopBar isSidebar={true} settings={fakeSettings} {...props} />
+    ).dive(); // Dive through `withServices` wrapper.
   }
 
-  it('shows the pending update count', function() {
-    const el = createTopBar({
+  it('shows the pending update count', () => {
+    const wrapper = createTopBar({
       pendingUpdateCount: 1,
     });
-    const applyBtn = applyUpdateBtn(el[0]);
-    assert.ok(applyBtn);
+    const applyBtn = applyUpdateBtn(wrapper);
+    assert.isTrue(applyBtn.exists());
   });
 
-  it('does not show the pending update count when there are no updates', function() {
-    const el = createTopBar({
+  it('does not show the pending update count when there are no updates', () => {
+    const wrapper = createTopBar({
       pendingUpdateCount: 0,
     });
-    const applyBtn = applyUpdateBtn(el[0]);
-    assert.notOk(applyBtn);
+    const applyBtn = applyUpdateBtn(wrapper[0]);
+    assert.isFalse(applyBtn.exists());
   });
 
-  it('applies updates when clicked', function() {
+  it('applies updates when clicked', () => {
     const onApplyPendingUpdates = sinon.stub();
-    const el = createTopBar({
+    const wrapper = createTopBar({
       pendingUpdateCount: 1,
-      onApplyPendingUpdates: onApplyPendingUpdates,
+      onApplyPendingUpdates,
     });
-    const applyBtn = applyUpdateBtn(el[0]);
-    applyBtn.click();
+    const applyBtn = applyUpdateBtn(wrapper);
+    applyBtn.simulate('click');
     assert.called(onApplyPendingUpdates);
   });
 
-  it('shows help when help icon clicked', function() {
+  it('shows help when help icon clicked', () => {
     const onShowHelpPanel = sinon.stub();
-    const el = createTopBar({
+    const wrapper = createTopBar({
       onShowHelpPanel: onShowHelpPanel,
     });
-    const help = helpBtn(el[0]);
-    help.click();
+    const help = helpBtn(wrapper);
+    help.simulate('click');
     assert.called(onShowHelpPanel);
   });
 
-  it('displays the login control and propagates callbacks', function() {
+  it('displays the login control and propagates callbacks', () => {
     const onShowHelpPanel = sinon.stub();
     const onLogin = sinon.stub();
     const onLogout = sinon.stub();
-    const el = createTopBar({
+    const wrapper = createTopBar({
       onShowHelpPanel: onShowHelpPanel,
       onLogin: onLogin,
       onLogout: onLogout,
     });
-    const loginControl = el.find('login-control').controller('loginControl');
+    const loginControl = wrapper
+      .find('login-control')
+      .controller('loginControl');
 
     loginControl.onLogin();
     assert.called(onLogin);
@@ -115,69 +92,55 @@ describe('topBar', function() {
     assert.called(onLogout);
   });
 
-  it("checks whether we're using a third-party service", function() {
+  it("checks whether we're using a third-party service", () => {
     createTopBar();
 
     assert.called(fakeIsThirdPartyService);
     assert.alwaysCalledWithExactly(fakeIsThirdPartyService, fakeSettings);
   });
 
-  context('when using a first-party service', function() {
-    it('shows the share page button', function() {
-      let el = createTopBar();
-      // I want the DOM element, not AngularJS's annoying angular.element
-      // wrapper object.
-      el = el[0];
-
-      assert.isNotNull(el.querySelector('[title="Share this page"]'));
+  context('when using a first-party service', () => {
+    it('shows the share page button', () => {
+      const wrapper = createTopBar();
+      assert.isTrue(wrapper.exists('[title="Share this page"]'));
     });
   });
 
-  context('when using a third-party service', function() {
-    beforeEach(function() {
+  context('when using a third-party service', () => {
+    beforeEach(() => {
       fakeIsThirdPartyService.returns(true);
     });
 
-    it("doesn't show the share page button", function() {
-      let el = createTopBar();
-      // I want the DOM element, not AngularJS's annoying angular.element
-      // wrapper object.
-      el = el[0];
-
-      assert.isNull(el.querySelector('[title="Share this page"]'));
+    it("doesn't show the share page button", () => {
+      const wrapper = createTopBar();
+      assert.isFalse(wrapper.exists('[title="Share this page"]'));
     });
   });
 
-  it('displays the share page when "Share this page" is clicked', function() {
+  it('displays the share page when "Share this page" is clicked', () => {
     const onSharePage = sinon.stub();
-    const el = createTopBar({ onSharePage: onSharePage });
-    el.find('[title="Share this page"]').click();
-
+    const wrapper = createTopBar({ onSharePage });
+    wrapper.find('[title="Share this page"]').simulate('click');
     assert.called(onSharePage);
   });
 
-  it('displays the search input and propagates query changes', function() {
+  it('displays the search input and propagates query changes', () => {
     const onSearch = sinon.stub();
-    const el = createTopBar({
+    const wrapper = createTopBar({
       searchController: {
         query: sinon.stub().returns('query'),
         update: onSearch,
       },
     });
-    const searchInput = el.find('search-input').controller('searchInput');
+    const searchInput = wrapper.find('SearchInput');
 
-    assert.equal(searchInput.query, 'query');
-
-    searchInput.onSearch({ $query: 'new-query' });
+    assert.equal(searchInput.prop('query'), 'query');
+    searchInput.props().onSearch({ $query: 'new-query' });
     assert.calledWith(onSearch, 'new-query');
   });
 
-  it('shows the clean theme when settings contains the clean theme option', function() {
-    angular.mock.module('app', {
-      settings: { theme: 'clean' },
-    });
-
-    const el = createTopBar();
-    assert.ok(el[0].querySelector('.top-bar--theme-clean'));
+  it('shows the clean theme when settings contains the clean theme option', () => {
+    const wrapper = createTopBar();
+    assert.isTrue(wrapper.exists('.top-bar--theme-clean'));
   });
 });
