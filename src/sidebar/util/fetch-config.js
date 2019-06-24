@@ -35,6 +35,7 @@ function fetchConfigFromAncestorFrame(origin, window_ = window) {
       ancestor,
       origin,
       'requestConfig',
+      [],
       timeout
     );
     configResponses.push(result);
