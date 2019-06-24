@@ -106,6 +106,7 @@
     "stringify": "^5.1.0",
     "through2": "^3.0.0",
     "tiny-emitter": "^2.0.2",
+    "typescript": "^3.5.2",
     "uglifyify": "^5.0.1",
     "unorm": "^1.3.3",
     "vinyl": "^2.2.0",
@@ -153,6 +154,7 @@
     "checkformatting": "prettier --check '**/*.{js,scss}'",
     "format": "prettier --list-different --write '**/*.{js,scss}'",
     "test": "gulp test",
+    "typecheck": "tsc --build src/tsconfig.json",
     "report-coverage": "codecov -f coverage/coverage-final.json",
     "version": "make clean build/manifest.json",
     "prepublishOnly": "make clean build/manifest.json"
