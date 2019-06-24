@@ -1,5 +1,7 @@
 'use strict';
 
+/** @typedef {import('../../types/api').Group} Group */
+
 const escapeStringRegexp = require('escape-string-regexp');
 
 /**

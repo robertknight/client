@@ -5,13 +5,17 @@ function toPx(val) {
 }
 
 /**
+ * @typedef {Object} ExcerptState
+ */
+
+/**
  * Interface used by ExcerptOverflowMonitor to retrieve the state of the
  * <excerpt> and report when the state changes.
  *
- * interface Excerpt {
- *   getState(): State;
- *   contentHeight(): number | undefined;
- *   onOverflowChanged(): void;
+ * @typedef {Object} Excerpt
+ * @prop {() => ExcerptState} getState
+ * @prop {() => number|undefined} contentHeight
+ * @prop {(overflowing: boolean) => any} onOverflowChanged
  * }
  */
 

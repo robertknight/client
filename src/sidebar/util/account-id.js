@@ -21,6 +21,9 @@ function parseAccountID(user) {
 
 /**
  * Returns the username part of an account ID or an empty string.
+ *
+ * @param {string} user
+ * @return {string}
  */
 function username(user) {
   const account = parseAccountID(user);
@@ -32,6 +35,9 @@ function username(user) {
 
 /**
  * Returns true if the authority is of a 3rd party user.
+ *
+ * @param {string} user
+ * @param {string} authDomain
  */
 function isThirdPartyUser(user, authDomain) {
   const account = parseAccountID(user);

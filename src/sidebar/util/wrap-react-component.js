@@ -1,5 +1,11 @@
 'use strict';
 
+/**
+ * @typedef {Object} ComponentFunction
+ * @prop {string} name
+ * @prop {Object} propTypes
+ */
+
 const { createElement, render } = require('preact');
 const { ServiceContext } = require('./service-context');
 
@@ -77,7 +83,7 @@ class ReactController {
     // Unmount the rendered React component. Although Angular will remove the
     // element itself, this is necessary to run any cleanup/unmount lifecycle
     // hooks in the React component tree.
-    render(createElement(null), this.domElement);
+    render(createElement(null, {}), this.domElement);
   }
 
   updateReactComponent() {
@@ -85,6 +91,7 @@ class ReactController {
     // provides access to Angular services via `withServices` or `useContext`
     // in child components.
     render(
+      // @ts-ignore
       <ServiceContext.Provider value={this.$injector}>
         <this.type {...this.props} />
       </ServiceContext.Provider>,
@@ -105,7 +112,7 @@ class ReactController {
  * If the React component needs access to an Angular service, it can get at
  * them using the `withServices` wrapper from service-context.js.
  *
- * @param {Function} type - The React component class or function
+ * @param {ComponentFunction} type - The React component class or function
  * @return {Object} -
  *   An AngularJS component spec for use with `angular.component(...)`
  */

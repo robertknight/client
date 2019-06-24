@@ -28,7 +28,7 @@ function delta(date, now) {
 }
 
 function nSec(date, now) {
-  return '{} secs'.replace('{}', Math.floor(delta(date, now)));
+  return '{} secs'.replace('{}', Math.floor(delta(date, now)).toString());
 }
 
 function nMin(date, now) {
@@ -39,7 +39,7 @@ function nMin(date, now) {
     template = template + 's';
   }
 
-  return template.replace('{}', n);
+  return template.replace('{}', n.toString());
 }
 
 function nHr(date, now) {
@@ -50,7 +50,7 @@ function nHr(date, now) {
     template = template + 's';
   }
 
-  return template.replace('{}', n);
+  return template.replace('{}', n.toString());
 }
 
 // Cached DateTimeFormat instances,
@@ -78,6 +78,7 @@ function format(date, options, Intl) {
   // If the tests have passed in a mock Intl then use it, otherwise use the
   // real one.
   if (typeof Intl === 'undefined') {
+    // @ts-ignore
     Intl = window.Intl;
   }
 
@@ -151,7 +152,7 @@ const BREAKPOINTS = [
  *
  * @param {Date} date - The date to consider as the timestamp to format.
  * @param {Date} now - The date to consider as the current time.
- * @return {breakpoint} A dict that describes how to format the date.
+ * @return {Object} A dict that describes how to format the date.
  */
 function getBreakpoint(date, now) {
   let breakpoint;
@@ -195,7 +196,7 @@ function nextFuzzyUpdate(date, now) {
  * update frequency depends on the age of a timestamp.
  *
  * @param {String} date - An ISO 8601 date string timestamp to format.
- * @param {Date} callback - A callback function to call when the timestamp changes.
+ * @param {(date: string) => any} callback - A callback function to call when the timestamp changes.
  * @return {Function} A function that cancels the automatic refresh.
  */
 function decayingInterval(date, callback) {

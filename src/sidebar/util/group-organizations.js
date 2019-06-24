@@ -1,5 +1,9 @@
 'use strict';
 
+/**
+ * @typedef {import('../../types/api').Group} Group
+ */
+
 const immutable = require('seamless-immutable');
 
 // TODO: Update when this is a property available on the API response

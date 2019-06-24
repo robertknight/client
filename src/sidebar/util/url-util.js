@@ -8,6 +8,10 @@
  *
  *   replaceURLParams('/things/:id', {id: 'foo', q: 'bar'}) =>
  *     {url: '/things/foo', params: {q: 'bar'}}
+ *
+ * @param {string} url
+ * @param {Object} params
+ * @return {{ url: string, params: Object }}
  */
 function replaceURLParams(url, params) {
   const unusedParams = {};

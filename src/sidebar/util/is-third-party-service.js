@@ -11,7 +11,7 @@ const serviceConfig = require('../service-config');
  * If no custom annotation services are configured then return `false`.
  *
  * @param {Object} settings - the sidebar settings object
- *
+ * @return {boolean}
  */
 function isThirdPartyService(settings) {
   const service = serviceConfig(settings);

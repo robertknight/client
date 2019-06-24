@@ -9,7 +9,7 @@
  * The callback is not invoked within a $scope.$apply() context. It is up
  * to the caller to do that if necessary.
  *
- * @param {Scope} $scope - An Angular scope
+ * @param {Object} $scope - An Angular scope
  * @param {Function} fn - Callback to invoke with setTimeout
  * @param {number} delay - Delay argument to pass to setTimeout
  */

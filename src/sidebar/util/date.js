@@ -7,6 +7,9 @@ let formatter;
 /**
  * Returns a standard human-readable representation
  * of a date and time.
+ *
+ * @param {Date} date
+ * @return {string}
  */
 function format(date) {
   if (typeof Intl !== 'undefined' && Intl.DateTimeFormat) {
