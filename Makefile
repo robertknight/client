@@ -34,6 +34,7 @@ servetests: node_modules/.uptodate
 .PHONY: lint
 lint: node_modules/.uptodate
 	yarn run lint
+	yarn run typecheck
 
 .PHONY: docs
 docs:
