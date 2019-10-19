@@ -5,13 +5,15 @@ const propTypes = require('prop-types');
 const { createElement } = require('preact');
 const { useCallback, useEffect, useRef, useState } = require('preact/hooks');
 
+const { applyTheme } = require('../util/theme');
+const { withServices } = require('../util/service-context');
 const observeElementSize = require('../util/observe-element-size');
 
 /**
  * A toggle link at the bottom of an excerpt which controls whether it is
  * expanded or collapsed.
  */
-function InlineControls({ isCollapsed, setCollapsed }) {
+function InlineControls({ isCollapsed, setCollapsed, linkStyle = {} }) {
   const toggleTitle = isCollapsed
     ? 'Show the full excerpt'
     : 'Show the first few lines only';
@@ -20,11 +22,11 @@ function InlineControls({ isCollapsed, setCollapsed }) {
   return (
     <div className="excerpt__inline-controls">
       <span className="excerpt__toggle-link">
-        {/* TODO - Apply branding. */}
         <a
           href="#"
           onClick={() => setCollapsed(!isCollapsed)}
           title={toggleTitle}
+          style={linkStyle}
         >
           {toggleLabel}
         </a>
@@ -36,6 +38,7 @@ function InlineControls({ isCollapsed, setCollapsed }) {
 InlineControls.propTypes = {
   isCollapsed: propTypes.bool,
   setCollapsed: propTypes.func,
+  linkStyle: propTypes.object,
 };
 
 const noop = () => {};
@@ -55,6 +58,7 @@ function Excerpt({
   onCollapsibleChanged = noop,
   onToggleCollapsed = noop,
   overflowHysteresis = 0,
+  settings = {},
 }) {
   const [collapsedByInlineControls, setCollapsedByInlineControls] = useState(
     true
@@ -120,6 +124,7 @@ function Excerpt({
         <InlineControls
           isCollapsed={collapsedByInlineControls}
           setCollapsed={setCollapsed}
+          linkStyle={applyTheme(['selectionFontFamily'], settings)}
         />
       )}
     </div>
@@ -169,6 +174,10 @@ Excerpt.propTypes = {
    * container.
    */
   onToggleCollapsed: propTypes.func,
+
+  settings: propTypes.object,
 };
 
-module.exports = Excerpt;
+Excerpt.injectedProps = ['settings'];
+
+module.exports = withServices(Excerpt);

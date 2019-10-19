@@ -4,12 +4,14 @@ const classnames = require('classnames');
 const { createElement } = require('preact');
 const propTypes = require('prop-types');
 
+const { withServices } = require('../util/service-context');
+const { applyTheme } = require('../util/theme');
 const Excerpt = require('./excerpt');
 
 /**
  * Display the selected text from the document associated with an annotation.
  */
-function AnnotationQuote({ isOrphan, quote }) {
+function AnnotationQuote({ isOrphan, quote, settings = {} }) {
   return (
     <section
       className={classnames('annotation-quote-list', isOrphan && 'is-orphan')}
@@ -21,7 +23,7 @@ function AnnotationQuote({ isOrphan, quote }) {
       >
         <blockquote
           className="annotation-quote"
-          h-branding="selectionFontFamily"
+          style={applyTheme(['selectionFontFamily'], settings)}
         >
           {quote}
         </blockquote>
@@ -33,6 +35,9 @@ function AnnotationQuote({ isOrphan, quote }) {
 AnnotationQuote.propTypes = {
   isOrphan: propTypes.bool,
   quote: propTypes.string,
+  settings: propTypes.object,
 };
 
-module.exports = AnnotationQuote;
+AnnotationQuote.injectedProps = ['settings'];
+
+module.exports = withServices(AnnotationQuote);
