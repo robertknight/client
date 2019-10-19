@@ -45,9 +45,19 @@ class ReactController {
               `Was passed "${arg}"`
           );
         }
-        $scope.$apply(() => {
+
+        // `$$phase` is a hack to test whether a digest cycle is already in
+        // progress, in which case there is no need to trigger one with `$apply`.
+        //
+        // In the vast majority of cases there will not be a digest in progress
+        // when a callback is invoked.
+        if ($scope.$root.$$phase) {
           this[propName](arg);
-        });
+        } else {
+          $scope.$apply(() => {
+            this[propName](arg);
+          });
+        }
       };
     });
   }
