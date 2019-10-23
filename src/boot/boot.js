@@ -115,7 +115,7 @@ function bootSidebarApp(doc, config) {
     'scripts/sentry.bundle.js',
     'scripts/angular.bundle.js',
     'scripts/katex.bundle.js',
-    'scripts/showdown.bundle.js',
+    'scripts/marked.bundle.js',
 
     // The sidebar app
     'scripts/sidebar.bundle.js',

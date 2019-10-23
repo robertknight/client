@@ -43,8 +43,8 @@ describe('bootstrap', function() {
       // Sidebar app
       'scripts/sentry.bundle.js',
       'scripts/angular.bundle.js',
+      'scripts/marked.bundle.js',
       'scripts/katex.bundle.js',
-      'scripts/showdown.bundle.js',
       'scripts/sidebar.bundle.js',
 
       'styles/angular-csp.css',
@@ -151,8 +151,8 @@ describe('bootstrap', function() {
       const expectedAssets = [
         'scripts/angular.bundle.1234.js',
         'scripts/katex.bundle.1234.js',
+        'scripts/marked.bundle.1234.js',
         'scripts/sentry.bundle.1234.js',
-        'scripts/showdown.bundle.1234.js',
         'scripts/sidebar.bundle.1234.js',
         'styles/angular-csp.1234.css',
         'styles/angular-toastr.1234.css',

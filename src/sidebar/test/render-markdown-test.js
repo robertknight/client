@@ -83,7 +83,7 @@ describe('render-markdown', function() {
       assert.equal(
         render('one $$x*2$$ two $$x*3$$ three'),
         '<p>one </p>\n<p>math+display:x*2</p>\n' +
-          '<p>two </p>\n<p>math+display:x*3</p>\n<p>three</p>'
+          '<p> two </p>\n<p>math+display:x*3</p>\n<p> three</p>'
       );
     });
 

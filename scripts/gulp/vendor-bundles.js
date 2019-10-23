@@ -10,9 +10,9 @@ module.exports = {
   bundles: {
     jquery: ['jquery'],
     angular: ['angular', 'angular-route', 'ng-tags-input', 'angular-toastr'],
+    marked: ['marked'],
     katex: ['katex'],
     sentry: ['@sentry/browser'],
-    showdown: ['showdown'],
   },
 
   // List of modules to exclude from parsing for require() statements.

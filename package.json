@@ -81,6 +81,7 @@
     "lodash.debounce": "^4.0.3",
     "lodash.get": "^4.3.0",
     "loose-envify": "^1.4.0",
+    "marked": "^0.7.0",
     "mkdirp": "^0.5.1",
     "mocha": "^6.0.0",
     "ng-tags-input": "^3.1.1",
@@ -102,7 +103,6 @@
     "scroll-into-view": "^1.8.2",
     "seamless-immutable": "^7.1.4",
     "shallowequal": "^1.1.0",
-    "showdown": "^1.6.4",
     "sinon": "^7.2.3",
     "stringify": "^5.1.0",
     "through2": "^3.0.0",
@@ -156,5 +156,6 @@
     "test": "gulp test",
     "report-coverage": "codecov -f coverage/coverage-final.json",
     "version": "make clean build/manifest.json"
-  }
+  },
+  "dependencies": {}
 }

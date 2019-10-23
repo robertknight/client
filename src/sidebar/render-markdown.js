@@ -2,8 +2,8 @@
 
 const createDOMPurify = require('dompurify');
 const escapeHtml = require('escape-html');
+const marked = require('marked');
 const katex = require('katex');
-const showdown = require('showdown');
 
 const DOMPurify = createDOMPurify(window);
 
@@ -15,29 +15,8 @@ DOMPurify.addHook('afterSanitizeAttributes', node => {
   }
 });
 
-function targetBlank() {
-  function filter(text) {
-    return text.replace(/<a href=/g, '<a target="_blank" href=');
-  }
-  return [{ type: 'output', filter: filter }];
-}
-
-let converter;
-
 function renderMarkdown(markdown) {
-  if (!converter) {
-    // see https://github.com/showdownjs/showdown#valid-options
-    converter = new showdown.Converter({
-      extensions: [targetBlank],
-      simplifiedAutoLink: true,
-      // Since we're using simplifiedAutoLink we also use
-      // literalMidWordUnderscores because otherwise _'s in URLs get
-      // transformed into <em>'s.
-      // See https://github.com/showdownjs/showdown/issues/211
-      literalMidWordUnderscores: true,
-    });
-  }
-  return converter.makeHtml(markdown);
+  return marked(markdown, { silent: true }).trim();
 }
 
 function mathPlaceholder(id) {
