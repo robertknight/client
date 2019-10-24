@@ -122,6 +122,23 @@ class FakePDFViewer {
     this._container = options.container;
     this._content = options.content;
 
+    // Create UI elements for the header, pages and footer of our fake PDF
+    // viewer. The header and footer are used when testing selections that go
+    // outside of the page content.
+    this._header = document.createElement('div');
+    this._header.className = 'fake-pdf-viewer-header';
+    this._header.textContent = 'UI of the PDF viewer (header)';
+    this._container.appendChild(this._header);
+
+    this._pageContainer = document.createElement('div');
+    this._pageContainer.className = 'fake-pdf-viewer-pages';
+    this._container.appendChild(this._pageContainer);
+
+    this._footer = document.createElement('div');
+    this._footer.className = 'fake-pdf-viewer-footer';
+    this._footer.textContent = 'UI of the PDF viewer (footer)';
+    this._container.appendChild(this._footer);
+
     /** @type {FakePDFPageView} */
     this._pages = [];
   }
@@ -160,9 +177,9 @@ class FakePDFViewer {
         })
     );
 
-    this._container.innerHTML = '';
+    this._pageContainer.innerHTML = '';
     this._pages = pages;
-    this._pages.forEach(page => this._container.appendChild(page.div));
+    this._pages.forEach(page => this._pageContainer.appendChild(page.div));
   }
 
   dispose() {
