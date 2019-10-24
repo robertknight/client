@@ -121,14 +121,9 @@ describe('annotator/anchoring/pdf', function() {
         .firstChild;
       const staticRange = findText(container, quote);
 
-      const range = {
-        // put the selection at the very end of the node
-        startOffset: textNodeSelected.length,
-        startContainer: textNodeSelected,
-        endOffset: staticRange.endOffset,
-        endContainer: staticRange.endContainer,
-        commonAncestorContainer: staticRange.commonAncestorContainer,
-      };
+      const range = document.createRange();
+      range.setStart(textNodeSelected, textNodeSelected.length);
+      range.setEnd(staticRange.endContainer, staticRange.endOffset);
 
       const contentStr = fixtures.pdfPages.join('');
       const expectedPos = contentStr.replace(/\n/g, '').lastIndexOf(quote);
@@ -150,6 +145,27 @@ describe('annotator/anchoring/pdf', function() {
           'selecting across page breaks is not supported'
         );
       });
+    });
+
+    it('returns expected selectors when range extends beyond text of page', async () => {
+      // Create a range that spans all of the text in the visible pages, plus
+      // UI elements of the PDF viewer. There are various ways that the user
+      // might create a selection that extends beyond the end of the page,
+      // depending on the browser.
+      viewer.pdfViewer.setCurrentPage(1);
+      const range = document.createRange();
+      range.selectNodeContents(container);
+
+      const [position, quote] = await pdfAnchoring.describe(container, range);
+      const pdfPages = fixtures.pdfPages.map(text =>
+        // New lines in the fixture are not present in the extracted text.
+        text.replace(/\n/gm, '')
+      );
+
+      // Check that only the text of the PDF pages was included in the selection.
+      assert.equal(quote.exact, pdfPages[1]);
+      assert.equal(position.start, pdfPages[0].length);
+      assert.equal(position.end, pdfPages[0].length + pdfPages[1].length);
     });
   });
 

@@ -2,16 +2,20 @@
 
 /* global PDFViewerApplication */
 
-const seek = require('dom-seek');
-
-// `dom-node-iterator` polyfills optional arguments of `createNodeIterator`
-// and properties of the returned `NodeIterator` for IE 11 compatibility.
-const createNodeIterator = require('dom-node-iterator/polyfill')();
-
-const xpathRange = require('./range');
 const RenderingStates = require('../pdfjs-rendering-states');
-const { TextPositionAnchor, TextQuoteAnchor } = require('./types');
-const { toRange: textPositionToRange } = require('./text-position');
+const { TextQuoteAnchor } = require('./types');
+const {
+  fromRange: textPositionFromRange,
+  toRange: textPositionToRange,
+  textNodeIterator,
+} = require('./text-position');
+const { isNodeInRange } = require('../range-util');
+
+/**
+ * @typedef {TextRange}
+ * @prop {number} start
+ * @prop {number} end
+ */
 
 // Caches for performance.
 
@@ -29,13 +33,6 @@ let quotePositionCache = {};
 
 function getSiblingIndex(node) {
   return Array.from(node.parentNode.childNodes).indexOf(node);
-}
-
-function getNodeTextLayer(node) {
-  while (!node.classList || !node.classList.contains('page')) {
-    node = node.parentNode;
-  }
-  return node.getElementsByClassName('textLayer')[0];
 }
 
 /**
@@ -209,7 +206,7 @@ function findPage(offset) {
  * scrolled into view.
  *
  * @param {number} pageIndex - The PDF page index
- * @param {TextPositionAnchor} anchor - Anchor to locate in page
+ * @param {TextRange} anchor - Anchor to locate in page
  * @return {Promise<Range>}
  */
 async function anchorByPosition(pageIndex, anchor) {
@@ -305,7 +302,7 @@ function findInPages(pageIndexes, quoteSelector, positionHint) {
  * When a position anchor is available, quote search can be optimized by
  * searching pages nearest the expected position first.
  *
- * @param [TextPositionAnchor] position
+ * @param {TextRange} position
  * @return {number[]}
  */
 function prioritizePages(position) {
@@ -366,8 +363,7 @@ function anchor(root, selectors) {
 
         checkQuote(textContent.substr(start, length));
 
-        const anchor = new TextPositionAnchor(root, start, end);
-        return anchorByPosition(index, anchor);
+        return anchorByPosition(index, { start, end });
       });
     });
   }
@@ -395,6 +391,44 @@ function anchor(root, selectors) {
 }
 
 /**
+ * Return a list of DOM nodes representing the PDF page text layers spanned
+ * by `range`.
+ *
+ * There will be one DOM node for each PDF page whose text is partly or wholly
+ * included in `range`.
+ *
+ * @param {Range}
+ * @return {HTMLElement[]}
+ */
+function getTextLayers(range) {
+  const textLayers = [];
+  const nodeIter = textNodeIterator(range.commonAncestorContainer);
+
+  let node;
+  while ((node = nodeIter.nextNode())) {
+    if (!isNodeInRange(range, node)) {
+      continue;
+    }
+
+    // We know that `node` is a text node here and therefore its parent is an
+    // element.
+    let ancestor = node.parentNode;
+    while (ancestor && !ancestor.classList.contains('textLayer')) {
+      // Parent may be an element or document, we are only interested in
+      // elements.
+      ancestor = ancestor.parentElement;
+    }
+
+    const textLayer = ancestor;
+    if (textLayer && textLayers.indexOf(textLayer) === -1) {
+      textLayers.push(textLayer);
+    }
+  }
+
+  return textLayers;
+}
+
+/**
  * Convert a DOM Range object into a set of selectors.
  *
  * Converts a DOM `Range` object into a `[position, quote]` tuple of selectors
@@ -404,58 +438,50 @@ function anchor(root, selectors) {
  * @param {HTMLElement} root - The root element
  * @param {Range} range
  * @param {Object} options -
- *   Options passed to `TextQuoteAnchor` and `TextPositionAnchor`'s
- *   `toSelector` methods.
+ *   Options passed to `TextQuoteAnchor`'s `toSelector` method.
  * @return {Promise<[TextPositionSelector, TextQuoteSelector]>}
  */
-function describe(root, range, options = {}) {
-  const normalizedRange = new xpathRange.BrowserRange(range).normalize();
+async function describe(root, range, options = {}) {
+  const textLayers = getTextLayers(range);
 
-  const startTextLayer = getNodeTextLayer(normalizedRange.start);
-  const endTextLayer = getNodeTextLayer(normalizedRange.end);
-
-  if (startTextLayer !== endTextLayer) {
-    return Promise.reject(
-      new Error('selecting across page breaks is not supported')
-    );
+  if (textLayers.length === 0) {
+    throw new Error('no text is selected');
   }
 
-  const startRange = normalizedRange.limit(startTextLayer);
-  const endRange = normalizedRange.limit(endTextLayer);
+  if (textLayers.length > 1) {
+    throw new Error('selecting across page breaks is not supported');
+  }
 
+  const startTextLayer = textLayers[0];
   const startPageIndex = getSiblingIndex(startTextLayer.parentNode);
 
-  const iter = createNodeIterator.call(
-    document,
+  const pageOffset = await getPageOffset(startPageIndex);
+
+  // Get the offset within the text layer where the selection occurs.
+  let [startPos, endPos] = textPositionFromRange(startTextLayer, range);
+
+  // Get a range which is cropped to the text layer, i.e. it excludes any text
+  // outside of it that the user may have selected.
+  const quoteRange = textPositionToRange(startTextLayer, startPos, endPos);
+
+  // Adjust the start and end offsets to refer to the whole document,
+  // not just the current page.
+  startPos += pageOffset;
+  endPos += pageOffset;
+
+  const position = {
+    type: 'TextPositionSelector',
+    start: startPos,
+    end: endPos,
+  };
+
+  const quote = TextQuoteAnchor.fromRange(
     startTextLayer,
-    NodeFilter.SHOW_TEXT
-  );
-  let startPos = seek(iter, normalizedRange.start);
-  let endPos =
-    seek(iter, normalizedRange.end) +
-    startPos +
-    normalizedRange.end.textContent.length;
+    quoteRange,
+    options
+  ).toSelector(options);
 
-  return getPageOffset(startPageIndex).then(pageOffset => {
-    startPos += pageOffset;
-    endPos += pageOffset;
-
-    const position = new TextPositionAnchor(root, startPos, endPos).toSelector(
-      options
-    );
-
-    const quoteRange = document.createRange();
-    quoteRange.setStartBefore(startRange.start);
-    quoteRange.setEndAfter(endRange.end);
-
-    const quote = TextQuoteAnchor.fromRange(
-      root,
-      quoteRange,
-      options
-    ).toSelector(options);
-
-    return Promise.all([position, quote]);
-  });
+  return [position, quote];
 }
 
 /**
