@@ -6,9 +6,9 @@
 #  2. Insulating the rest of the code from API changes in the underyling anchoring
 #     libraries.
 
-domAnchorTextPosition = require('dom-anchor-text-position')
 domAnchorTextQuote = require('dom-anchor-text-quote')
 
+textPosition = require('./text-position')
 xpathRange = require('./range')
 
 # Helper function for throwing common errors
@@ -67,7 +67,8 @@ class TextPositionAnchor
     @end = end
 
   @fromRange: (root, range) ->
-    selector = domAnchorTextPosition.fromRange(root, range)
+    [start, end] = textPosition.fromRange(root, range)
+    selector = { type: 'TextPositionSelector', start, end }
     TextPositionAnchor.fromSelector(root, selector)
 
   @fromSelector: (root, selector) ->
@@ -81,7 +82,7 @@ class TextPositionAnchor
     }
 
   toRange: () ->
-    domAnchorTextPosition.toRange(@root, {start: @start, end: @end})
+    textPosition.toRange(@root, @start, @end)
 
 ###*
 # Converts between TextQuoteSelector selectors and Range objects.
