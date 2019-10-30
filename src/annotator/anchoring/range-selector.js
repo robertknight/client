@@ -75,6 +75,16 @@ function xpath(root, node) {
   return '/' + path.join('/');
 }
 
+function textOffsetToRange(root, textOffset) {
+  if (textOffset === 0) {
+    // Special case offset 0, in case the `root` element has no text nodes.
+    const range = root.ownerDocument.createRange();
+    range.setStart(root, 0);
+    return range;
+  }
+  return textPosition.toRange(root, textOffset, textOffset);
+}
+
 /**
  * Convert a range selector to a DOM range.
  *
@@ -94,8 +104,8 @@ function toRange(root, selector) {
   try {
     // Resolve the character offsets within the start and end nodes.
     const { startOffset, endOffset } = selector;
-    const range = textPosition.toRange(startNode, startOffset, startOffset);
-    const endRange = textPosition.toRange(endNode, endOffset, endOffset);
+    const range = textOffsetToRange(startNode, startOffset);
+    const endRange = textOffsetToRange(endNode, endOffset);
     range.setEnd(endRange.endContainer, endRange.endOffset);
     return range;
   } catch (err) {
