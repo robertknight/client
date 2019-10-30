@@ -168,5 +168,26 @@ describe('text-position', () => {
         }
       });
     });
+
+    it('uses expected start and end containers when position occurs at text node boundary', () => {
+      const content = document.createElement('div');
+      content.textContent = 'one-two-three';
+
+      // Split text after 'one-'.
+      content.childNodes[0].splitText(4);
+
+      // Split text after 'two'.
+      content.childNodes[1].splitText(3);
+
+      const range = toRange(content, 4, 7);
+
+      // The given position pair can be represented as a range in different
+      // ways using (container, offset)s. Check that the last possible start
+      // point was used and the earliest possible end point.
+      assert.equal(range.startContainer, content.childNodes[1]);
+      assert.equal(range.startOffset, 0);
+      assert.equal(range.endContainer, content.childNodes[1]);
+      assert.equal(range.endOffset, 3);
+    });
   });
 });

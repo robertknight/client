@@ -113,15 +113,16 @@ function toRange(root, start, end) {
 
   let textLength = 0;
 
+  // Find start and end positions for the range. If a position occurs at a node
+  // boundary then we could pick either the end of the first node or the start
+  // of the next node as the container for the boundary point. Where there is
+  // a choice, we make the range start at the beginning of a node and end at
+  // the end of a node.
   let node;
   while ((node = nodeIter.nextNode()) && (!startContainer || !endContainer)) {
     const nodeText = node.nodeValue;
 
-    if (
-      !startContainer &&
-      start >= textLength &&
-      start <= textLength + nodeText.length
-    ) {
+    if (start >= textLength && start <= textLength + nodeText.length) {
       startContainer = node;
       startOffset = start - textLength;
     }
