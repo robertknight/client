@@ -8,7 +8,7 @@
 
 textQuote = require('./text-quote')
 textPosition = require('./text-position')
-xpathRange = require('./range')
+rangeSelector = require('./range-selector')
 
 # Helper function for throwing common errors
 missingParameter = (name) ->
@@ -27,34 +27,25 @@ class RangeAnchor
     unless root? then missingParameter('root')
     unless range? then missingParameter('range')
     @root = root
-    @range = xpathRange.sniff(range).normalize(@root)
+    @range = range
 
   @fromRange: (root, range) ->
     return new RangeAnchor(root, range)
 
   # Create and anchor using the saved Range selector.
   @fromSelector: (root, selector) ->
-    data = {
-      start: selector.startContainer
-      startOffset: selector.startOffset
-      end: selector.endContainer
-      endOffset: selector.endOffset
-    }
-    range = new xpathRange.SerializedRange(data)
+    range = rangeSelector.toRange(root, selector)
+    if !range
+      console.log('Failed to deserialize selector', selector)
     return new RangeAnchor(root, range)
 
   toRange: () ->
-    return @range.toRange()
+    return @range
 
   toSelector: (options = {}) ->
-    range = @range.serialize(@root, options.ignoreSelector)
-    return {
-      type: 'RangeSelector'
-      startContainer: range.start
-      startOffset: range.startOffset
-      endContainer: range.end
-      endOffset: range.endOffset
-    }
+    selector = rangeSelector.fromRange(@root, @range)
+    selector.type = 'RangeSelector'
+    return selector
 
 ###*
 # Converts between TextPositionSelector selectors and Range objects.
