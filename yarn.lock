@@ -1064,6 +1064,11 @@ append-transform@^1.0.0:
   dependencies:
     default-require-extensions "^2.0.0"
 
+approx-string-match@^1.1.0:
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/approx-string-match/-/approx-string-match-1.1.0.tgz#2fb8e1d6dcb640acc1c0d1ae9f0895348d06f4c0"
+  integrity sha512-j1yQB9XhfGWsvTfHEuNsR/SrUT4XQDkAc0PEjMifyi97931LmNQyLsO6HbuvZ3HeMx+3Dvk8m8XGkUF+8lCeqw==
+
 aproba@^1.0.3:
   version "1.2.0"
   resolved "https://registry.yarnpkg.com/aproba/-/aproba-1.2.0.tgz#6802e6264efd18c790a1b0d517f0f2627bf2c94a"
