@@ -6,8 +6,7 @@
 #  2. Insulating the rest of the code from API changes in the underyling anchoring
 #     libraries.
 
-domAnchorTextQuote = require('dom-anchor-text-quote')
-
+textQuote = require('./text-quote')
 textPosition = require('./text-position')
 xpathRange = require('./range')
 
@@ -94,7 +93,9 @@ class TextQuoteAnchor
     @context = context
 
   @fromRange: (root, range, options) ->
-    selector = domAnchorTextQuote.fromRange(root, range, options)
+    [start, end] = textPosition.fromRange(root, range)
+    { prefix, exact, suffix } = textQuote.fromTextPosition(root.textContent, start, end)
+    selector = { type: 'TextQuoteSelector', exact, prefix, suffix }
     TextQuoteAnchor.fromSelector(root, selector)
 
   @fromSelector: (root, selector) ->
@@ -110,16 +111,13 @@ class TextQuoteAnchor
     }
 
   toRange: (options = {}) ->
-    range = domAnchorTextQuote.toRange(@root, this.toSelector(), options)
-    if range == null
-      throw new Error('Quote not found')
-    range
+    anchor = @toPositionAnchor()
+    textPosition.toRange(@root, anchor.start, anchor.end)
 
   toPositionAnchor: (options = {}) ->
-    anchor = domAnchorTextQuote.toTextPosition(@root, this.toSelector(), options)
-    if anchor == null
-      throw new Error('Quote not found')
-    new TextPositionAnchor(@root, anchor.start, anchor.end)
+    { exact, prefix, suffix } = this.toSelector()
+    [start, end] = textQuote.toTextPosition(@root.textContent, exact, prefix, suffix)
+    new TextPositionAnchor(@root, start, end)
 
 
 exports.RangeAnchor = RangeAnchor

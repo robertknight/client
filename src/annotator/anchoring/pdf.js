@@ -3,7 +3,7 @@
 /* global PDFViewerApplication */
 
 const RenderingStates = require('../pdfjs-rendering-states');
-const { TextQuoteAnchor } = require('./types');
+const { toTextPosition, fromTextPosition } = require('./text-quote');
 const {
   fromRange: textPositionFromRange,
   toRange: textPositionToRange,
@@ -243,7 +243,7 @@ async function anchorByPosition(pageIndex, anchor) {
  *
  * @param {number[]} pageIndexes - Pages to search in priority order
  * @param {TextQuoteSelector} quoteSelector
- * @param {Object} positionHint - Options to pass to `TextQuoteAnchor#toPositionAnchor`
+ * @param {TextRange} positionHint - Expected location of quote within document
  * @return {Promise<Range>} Location of quote
  */
 function findInPages(pageIndexes, quoteSelector, positionHint) {
@@ -258,15 +258,15 @@ function findInPages(pageIndexes, quoteSelector, positionHint) {
   const offset = getPageOffset(pageIndex);
 
   const attempt = ([content, offset]) => {
-    const root = { textContent: content };
-    const anchor = TextQuoteAnchor.fromSelector(root, quoteSelector);
-    if (positionHint) {
-      let hint = positionHint.start - offset;
-      hint = Math.max(0, hint);
-      hint = Math.min(hint, content.length);
-      return anchor.toPositionAnchor({ hint });
-    }
-    return anchor.toPositionAnchor();
+    const { exact, prefix, suffix } = quoteSelector;
+
+    // Try to locate the quote in the page's text.
+    //
+    // This does not currently use `positionHint` to disambiguate matches,
+    // but it could do.
+    const [start, end] = toTextPosition(content, exact, prefix, suffix);
+
+    return { start, end };
   };
 
   const next = () => findInPages(rest, quoteSelector, positionHint);
@@ -437,11 +437,9 @@ function getTextLayers(range) {
  *
  * @param {HTMLElement} root - The root element
  * @param {Range} range
- * @param {Object} options -
- *   Options passed to `TextQuoteAnchor`'s `toSelector` method.
  * @return {Promise<[TextPositionSelector, TextQuoteSelector]>}
  */
-async function describe(root, range, options = {}) {
+async function describe(root, range) {
   const textLayers = getTextLayers(range);
 
   if (textLayers.length === 0) {
@@ -458,28 +456,30 @@ async function describe(root, range, options = {}) {
   const pageOffset = await getPageOffset(startPageIndex);
 
   // Get the offset within the text layer where the selection occurs.
-  let [startPos, endPos] = textPositionFromRange(startTextLayer, range);
-
-  // Get a range which is cropped to the text layer, i.e. it excludes any text
-  // outside of it that the user may have selected.
-  const quoteRange = textPositionToRange(startTextLayer, startPos, endPos);
+  let [startPosInPage, endPosInPage] = textPositionFromRange(
+    startTextLayer,
+    range
+  );
 
   // Adjust the start and end offsets to refer to the whole document,
   // not just the current page.
-  startPos += pageOffset;
-  endPos += pageOffset;
+  const startPosInDocument = startPosInPage + pageOffset;
+  const endPosInDocument = endPosInPage + pageOffset;
 
   const position = {
     type: 'TextPositionSelector',
-    start: startPos,
-    end: endPos,
+    start: startPosInDocument,
+    end: endPosInDocument,
   };
 
-  const quote = TextQuoteAnchor.fromRange(
-    startTextLayer,
-    quoteRange,
-    options
-  ).toSelector(options);
+  const quote = {
+    type: 'TextQuoteSelector',
+    ...fromTextPosition(
+      startTextLayer.textContent,
+      startPosInPage,
+      endPosInPage
+    ),
+  };
 
   return [position, quote];
 }

@@ -1,6 +1,7 @@
 'use strict';
 
-const domAnchorTextQuote = require('dom-anchor-text-quote');
+const { toRange } = require('../text-position');
+const { toTextPosition } = require('../text-quote');
 
 const FakePDFViewerApplication = require('./fake-pdf-viewer-application');
 const pdfAnchoring = require('../pdf');
@@ -13,7 +14,8 @@ const pdfAnchoring = require('../pdf');
  * @return {Range}
  */
 function findText(container, text) {
-  return domAnchorTextQuote.toRange(container, { exact: text });
+  const [start, end] = toTextPosition(container.textContent, text);
+  return toRange(container, start, end);
 }
 
 function delay(ms) {
