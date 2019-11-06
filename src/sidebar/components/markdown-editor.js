@@ -5,7 +5,9 @@ const { createElement } = require('preact');
 const { useEffect, useRef, useState } = require('preact/hooks');
 const propTypes = require('prop-types');
 
+const AutocompleteInput = require('./autocomplete-input');
 const MarkdownView = require('./markdown-view');
+
 const {
   LinkType,
   convertSelectionToLink,
@@ -212,6 +214,14 @@ Toolbar.propTypes = {
   onTogglePreview: propTypes.func,
 };
 
+// Fixed list of tags for our autocomplete demo.
+const tags = [
+  'read-later',
+  'accepted',
+  'rejected',
+  'flagged',
+];
+
 /**
  * Viewer/editor for the body of an annotation in markdown format.
  */
@@ -271,6 +281,8 @@ function MarkdownEditor({ onEditText = () => {}, text = '' }) {
           value={text}
         />
       )}
+      {/* Autocomplete demo using react-autosuggest */}
+      <AutocompleteInput candidates={tags}/>
     </div>
   );
 }

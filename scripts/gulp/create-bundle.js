@@ -6,6 +6,7 @@
 const fs = require('fs');
 const path = require('path');
 
+const aliasify = require('aliasify');
 const babelify = require('babelify');
 const browserify = require('browserify');
 const coffeeify = require('coffeeify');
@@ -239,6 +240,15 @@ module.exports = function createBundle(config, buildOpts) {
       global: true,
     }
   );
+
+  // Setup global module replacements. Module replacements that only apply to
+  // our code can be configured in the "browser" field in `package.json`.
+  bundle.transform(aliasify, {
+    aliases: {
+      react: 'preact/compat',
+    },
+    global: true,
+  });
 
   function build() {
     const output = fs.createWriteStream(bundlePath);
