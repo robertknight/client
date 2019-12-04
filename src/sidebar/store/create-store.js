@@ -1,6 +1,7 @@
 'use strict';
 
 const redux = require('redux');
+const shallowEqual = require('shallowequal');
 // `.default` is needed because 'redux-thunk' is built as an ES2015 module
 const thunk = require('redux-thunk').default;
 
@@ -74,6 +75,35 @@ function createStore(modules, initArgs = [], middleware = []) {
   const boundSelectors = bindSelectors(allSelectors, store.getState);
 
   Object.assign(store, boundActions, boundSelectors);
+
+  /**
+   * Watch for changes to state in the store and run a callback when it changes.
+   *
+   * The `callback` function is run immediately with the initial results of
+   * `selector` as soon as `watch` is called.
+   *
+   * @param {() => any} selector -
+   *   Function that selects state from the store. The resulting value is
+   *   shallow-compared with the previous result and it is passed to the callback
+   *   if it changed.
+   * @param ((current: any, previous: any) => any} -
+   *   Callback that receives the current and previous values of `selector`.
+   * @return {() => void} - Function that unsubscribes from updates
+   */
+  store.watch = (selector, callback) => {
+    let prevResult = selector();
+    callback(prevResult, undefined);
+    const unsubscribe = store.subscribe(() => {
+      const newResult = selector();
+      if (shallowEqual(prevResult, newResult)) {
+        return;
+      }
+      const savedPrevResult = prevResult;
+      prevResult = newResult;
+      callback(newResult, savedPrevResult);
+    });
+    return unsubscribe;
+  };
 
   return store;
 }
