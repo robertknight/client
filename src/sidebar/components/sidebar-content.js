@@ -101,32 +101,6 @@ function SidebarContentController(
     store.selectTab(tabs.tabForAnnotation(selectedAnnot));
   });
 
-  // Re-fetch annotations when focused group, logged-in user or connected frames
-  // change.
-  $scope.$watch(
-    () => [
-      store.focusedGroupId(),
-      store.profile().userid,
-      ...store.searchUris(),
-    ],
-    ([currentGroupId], [prevGroupId]) => {
-      if (!currentGroupId) {
-        // When switching accounts, groups are cleared and so the focused group id
-        // will be null for a brief period of time.
-        store.clearSelectedAnnotations();
-        return;
-      }
-
-      if (!prevGroupId || currentGroupId !== prevGroupId) {
-        store.clearSelectedAnnotations();
-      }
-
-      const searchUris = store.searchUris();
-      annotations.load(searchUris, currentGroupId);
-    },
-    true
-  );
-
   this.showFocusedHeader = () => {
     return store.focusModeEnabled();
   };

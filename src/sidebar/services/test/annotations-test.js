@@ -29,7 +29,7 @@ class FakeSearchClient extends EventEmitter {
   }
 }
 
-describe('annotations', () => {
+describe('sidebar/services/annotations', () => {
   let fakeStore;
   let fakeApi;
   let fakeAnnotationMapper;
@@ -263,6 +263,18 @@ describe('annotations', () => {
       searchClients[0].emit('error', error);
 
       assert.calledWith(console.error, error);
+    });
+  });
+
+  // TODO
+  describe.skip('init', () => {
+    it('fetches annotations when app initially loads', () => {
+    });
+
+    it('re-fetches annotations when focused group changes', () => {
+    });
+
+    it('re-fetches annotations when document URIs change', () => {
     });
   });
 });

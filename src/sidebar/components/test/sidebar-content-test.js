@@ -180,54 +180,6 @@ describe('sidebar.components.sidebar-content', function() {
     assert.equal(ctrl.rootThread(), thread);
   });
 
-  context('when the search URIs of connected frames change', () => {
-    beforeEach(connectFrameAndPerformInitialFetch);
-
-    it('reloads annotations', () => {
-      setFrames([{ uri: 'https://new-frame.com' }]);
-
-      $scope.$digest();
-
-      assert.calledWith(
-        fakeAnnotations.load,
-        ['https://a-page.com', 'https://new-frame.com'],
-        'group-id'
-      );
-    });
-  });
-
-  context('when the profile changes', () => {
-    beforeEach(connectFrameAndPerformInitialFetch);
-
-    it('reloads annotations if the user ID changed', () => {
-      const newProfile = Object.assign({}, store.profile(), {
-        userid: 'different-user@hypothes.is',
-      });
-
-      store.updateSession(newProfile);
-      $scope.$digest();
-
-      assert.calledWith(
-        fakeAnnotations.load,
-        ['https://a-page.com'],
-        'group-id'
-      );
-    });
-
-    it('does not reload annotations if the user ID is the same', () => {
-      const newProfile = Object.assign({}, store.profile(), {
-        user_info: {
-          display_name: 'New display name',
-        },
-      });
-
-      store.updateSession(newProfile);
-      $scope.$digest();
-
-      assert.notCalled(fakeAnnotations.load);
-    });
-  });
-
   describe('when an annotation is anchored', function() {
     it('focuses and scrolls to the annotation if already selected', function() {
       const uri = 'http://example.com';
@@ -242,43 +194,6 @@ describe('sidebar.components.sidebar-content', function() {
       $rootScope.$broadcast(events.ANNOTATIONS_SYNCED, ['atag']);
       assert.calledWith(fakeFrameSync.focusAnnotations, ['atag']);
       assert.calledWith(fakeFrameSync.scrollToAnnotation, 'atag');
-    });
-  });
-
-  describe('when the focused group changes', () => {
-    const uri = 'http://example.com';
-
-    beforeEach(() => {
-      // Setup an initial state with frames connected, a group focused and some
-      // annotations loaded.
-      store.addAnnotations([{ id: '123' }]);
-      store.addAnnotations = sinon.stub();
-      setFrames([{ uri: uri }]);
-      $scope.$digest();
-      fakeAnnotations.load = sinon.stub();
-    });
-
-    it('should load annotations for the new group', () => {
-      store.loadGroups([{ id: 'different-group' }]);
-      store.focusGroup('different-group');
-
-      $scope.$digest();
-
-      assert.calledWith(
-        fakeAnnotations.load,
-        ['http://example.com'],
-        'different-group'
-      );
-    });
-
-    it('should clear the selection', () => {
-      store.selectAnnotations(['123']);
-      store.loadGroups([{ id: 'different-group' }]);
-      store.focusGroup('different-group');
-
-      $scope.$digest();
-
-      assert.isFalse(store.hasSelectedAnnotations());
     });
   });
 

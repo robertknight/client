@@ -97,8 +97,13 @@ function configureToastr(toastrConfig) {
 }
 
 // @ngInject
-function setupApi(api, streamer) {
+function initServices(api, annotations, streamer) {
+  // Configure the temporary ID used to associate API requests from a client
+  // with its WebSocket connection.
   api.setClientId(streamer.clientId);
+
+  // Fetch annotations once groups and profile information are available.
+  annotations.init();
 }
 
 /**
@@ -246,7 +251,7 @@ function startAngularApp(config) {
     .config(configureToastr)
 
     .run(sendPageView)
-    .run(setupApi)
+    .run(initServices)
     .run(crossOriginRPC.server.start);
 
   if (config.liveReloadServer) {
