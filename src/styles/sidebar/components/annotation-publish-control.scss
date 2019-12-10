@@ -1,3 +1,4 @@
+@use "../../mixins/buttons";
 @use "../../mixins/forms";
 @use "../../variables" as var;
 
@@ -5,20 +6,20 @@
   display: flex;
 
   &__cancel-btn {
-    margin-left: 5px;
-    font-weight: normal;
-    color: var.$grey-4;
+    @include buttons.action-button(0px);
+    margin-left: 1em;
+    background-color: transparent;
 
     &:hover {
-      color: var.$grey-5;
-    }
-
-    &__icon {
-      margin-right: 3px;
-      transform: translateY(10%);
+      background-color: transparent;
     }
   }
 
+  &__cancel-icon {
+    margin-right: 5px;
+    border: 1px solid var.$grey-4;
+    border-radius: 50%;
+  }
   // A split button with a primary submit on the left and a drop-down menu
   // of related options to the right
   .annotation-publish-control__btn {
