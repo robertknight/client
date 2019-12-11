@@ -6,6 +6,7 @@ const { createElement } = require('preact');
 const { applyTheme } = require('../util/theme');
 const { withServices } = require('../util/service-context');
 
+const CancelButton = require('./cancel-button');
 const Menu = require('./menu');
 const MenuItem = require('./menu-item');
 const SvgIcon = require('./svg-icon');
@@ -75,17 +76,11 @@ function AnnotationPublishControl({
           />
         </Menu>
       </div>
-      <button
+      <CancelButton
         className="annotation-publish-control__cancel-btn"
         onClick={onCancel}
-        title="Cancel changes to this annotation"
-      >
-        <SvgIcon
-          name="cancel"
-          className="action-button__icon--compact annotation-publish-control__cancel-icon"
-        />
-        Cancel
-      </button>
+        ariaLabel="Cancel changes to this annotation"
+      />
     </div>
   );
 }
