@@ -44,6 +44,7 @@ import selection from './modules/selection';
 import session from './modules/session';
 import sidebarPanels from './modules/sidebar-panels';
 import viewer from './modules/viewer';
+import createAnnotation from './transactions/create-annotation';
 
 /**
  * Redux middleware which triggers an Angular change-detection cycle
@@ -100,5 +101,10 @@ export default function store($rootScope, settings) {
     sidebarPanels,
     viewer,
   ];
-  return createStore(modules, [settings], middleware);
+  const store = createStore(modules, [settings], middleware);
+
+  const transactions = [createAnnotation];
+  transactions.forEach(tx => store.addTransaction(tx));
+
+  return store;
 }
