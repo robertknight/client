@@ -69,8 +69,10 @@ export function enableTransactions(createStore) {
       return originalSubscribe.call(store, listenerWrapper);
     };
 
-    store.addTransaction = transaction => {
-      store[transaction.name] = transaction.bind(store);
+    store.addTransaction = function(transaction) {
+      // Attach method to `this` rather than `store` in case the store gets
+      // wrapped (eg. by `applyMiddleware`).
+      this[transaction.name] = transaction.bind(this);
     };
 
     return store;
