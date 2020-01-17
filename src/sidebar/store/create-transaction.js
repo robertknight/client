@@ -1,3 +1,5 @@
+const debugModeEnabled = () => !!window.debug;
+
 /**
  * A Redux "store enhancer" [1] that adds support for _transactions_ to a store.
  *
@@ -42,11 +44,20 @@ export function enableTransactions(createStore) {
     const store = createStore(reducer, initialState);
 
     store._beginTransaction = name => {
+      if (debugModeEnabled()) {
+        // eslint-disable-next-line no-console
+        console.group(`Transaction ${name}`);
+      }
       activeTransactions.push(name);
     };
 
     store._endTransaction = () => {
       activeTransactions.pop();
+      if (debugModeEnabled()) {
+        // eslint-disable-next-line no-console
+        console.groupEnd();
+      }
+
       if (activeTransactions.length === 0 && pendingNotify) {
         pendingNotify = false;
 
