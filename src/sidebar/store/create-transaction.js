@@ -118,7 +118,7 @@ export function enableTransactions(createStore) {
  * @return {Transaction}
  */
 export function createTransaction(name, callback) {
-  function runTransaction(store, ...args) {
+  function run(store, ...args) {
     try {
       store._beginTransaction(name);
       callback(store, ...args);
@@ -131,8 +131,7 @@ export function createTransaction(name, callback) {
 
   return {
     name,
-    bind(store) {
-      return (...args) => runTransaction(store, ...args);
-    },
+    bind: store => run.bind(null, store),
+    run,
   };
 }
