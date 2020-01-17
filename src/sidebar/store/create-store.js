@@ -1,6 +1,7 @@
 import * as redux from 'redux';
 import thunk from 'redux-thunk';
 
+import { enableTransactions } from './create-transaction';
 import { createReducer, bindSelectors } from './util';
 
 /**
@@ -56,7 +57,10 @@ export default function createStore(modules, initArgs = [], middleware = []) {
     // asynchronous (see https://github.com/gaearon/redux-thunk#motivation)
     thunk,
   ];
-  const enhancer = redux.applyMiddleware(...defaultMiddleware, ...middleware);
+  const enhancer = redux.compose(
+    redux.applyMiddleware(...defaultMiddleware, ...middleware),
+    enableTransactions
+  );
 
   // Create the store.
   const store = redux.createStore(
