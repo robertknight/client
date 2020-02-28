@@ -1,3 +1,4 @@
+import EventEmitter from 'tiny-emitter';
 import { parse as parseQuery, stringify } from 'query-string';
 
 /**
@@ -122,5 +123,64 @@ export class Routes {
       url = url + '?' + query;
     }
     return url;
+  }
+}
+
+/**
+ * A basic router which integrates with the browser's URL.
+ */
+export class Router extends EventEmitter {
+  /**
+   * @param {Routes|Route[]} routes -
+   *   Array of routes to use or an existing route dictionary.
+   *   This must include a fallback route (with no path).
+   * @param {Window} [window_] -
+   *   The window to read the URL from and manipulate the history of.
+   */
+  constructor(routes, window_ = window) {
+    super();
+
+    if (Array.isArray(routes)) {
+      routes = new Routes(routes);
+    }
+    this.routes = routes;
+
+    const fallback = routes.routes.find(r => !r.path);
+    if (!fallback) {
+      throw new Error('No fallback route defined');
+    }
+
+    this._window = window_;
+    window_.addEventListener('popstate', () => {
+      this._notifyRouteChange();
+    });
+  }
+
+  /**
+   * Return the currently active route.
+   *
+   * @return {Route}
+   */
+  current() {
+    return this.routes.match(this._window.location.href);
+  }
+
+  /**
+   * Change the current route.
+   *
+   * This will update the URL and notify listeners.
+   *
+   * @param {string} name
+   * @param {Object} params
+   */
+  navigateTo(name, params = {}) {
+    const url = this.routes.url(name, params);
+    this._window.history.pushState({ name, params }, '', url);
+    this._notifyRouteChange();
+  }
+
+  _notifyRouteChange() {
+    const { route, params } = this.current();
+    this.emit('routechange', route, params);
   }
 }

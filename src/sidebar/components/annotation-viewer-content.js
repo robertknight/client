@@ -34,6 +34,7 @@ function AnnotationViewerContentController(
   annotationMapper
 ) {
   store.setAppIsSidebar(false);
+  store.clearAnnotations();
 
   const id = store.routeParams().id;
 

@@ -1,4 +1,4 @@
-import { Routes } from '../util/routes';
+import { Router } from '../util/router';
 
 /**
  * A service that manages the association between the route and route parameters
@@ -6,7 +6,7 @@ import { Routes } from '../util/routes';
  */
 // @ngInject
 export default function router(store) {
-  const routes = new Routes([
+  const routes = [
     {
       name: 'annotation',
       path: '/a/:id',
@@ -18,22 +18,16 @@ export default function router(store) {
     {
       name: 'sidebar',
     },
-  ]);
+  ];
+  const router = new Router(routes);
 
   function init() {
-    // Listen for user navigating back and forwards.
-    window.addEventListener('popstate', event => {
-      if (!event.state) {
-        return;
-      }
-      const { name, params } = event.state;
-      store.changeRoute(name, params);
+    router.on('routechange', (route, params) => {
+      console.log('route changed to', route, params);
+      store.changeRoute(route, params);
     });
-
-    // Set the initial route. There will always be a match because of the
-    // default "sidebar" route.
-    const match = routes.match(window.location.href);
-    store.changeRoute(match.route, match.params);
+    const { route, params } = router.current();
+    store.changeRoute(route, params);
   }
 
   /**
@@ -43,11 +37,7 @@ export default function router(store) {
    * @param {Object} params
    */
   function navigate(name, params) {
-    const url = routes.url(name, params);
-    if (url) {
-      window.history.pushState({ name, params }, '', url);
-      store.changeRoute(name, params);
-    }
+    router.navigateTo(name, params);
   }
 
   return { init, navigate };
