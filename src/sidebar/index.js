@@ -30,7 +30,6 @@ import angular from 'angular';
 
 // Angular addons which export the Angular module name via `module.exports`.
 
-import angularRoute from 'angular-route';
 import angularToastr from 'angular-toastr';
 
 // Load polyfill for :focus-visible pseudo-class.
@@ -45,15 +44,6 @@ if (appConfig.googleAnalytics) {
   addAnalytics(appConfig.googleAnalytics);
 }
 
-// Fetch external state that the app needs before it can run. This includes the
-// user's profile and list of groups.
-const resolve = {
-  // @ngInject
-  state: function(groups, session) {
-    return Promise.all([groups.load(), session.load()]);
-  },
-};
-
 const isSidebar = !(
   window.location.pathname.startsWith('/stream') ||
   window.location.pathname.startsWith('/a/')
@@ -63,28 +53,6 @@ const isSidebar = !(
 function configureLocation($locationProvider) {
   // Use HTML5 history
   return $locationProvider.html5Mode(true);
-}
-
-// @ngInject
-function configureRoutes($routeProvider) {
-  // The `vm.{auth,search}` properties used in these templates come from the
-  // `<hypothesis-app>` component which hosts the router's container element.
-  $routeProvider.when('/a/:id', {
-    template: '<annotation-viewer-content></annotation-viewer-content>',
-    reloadOnSearch: false,
-    resolve: resolve,
-  });
-  $routeProvider.when('/stream', {
-    template: '<stream-content></stream-content>',
-    reloadOnSearch: false,
-    resolve: resolve,
-  });
-  $routeProvider.otherwise({
-    template:
-      '<sidebar-content auth="vm.auth" on-login="vm.login()" on-sign-up="vm.signUp()"></sidebar-content>',
-    reloadOnSearch: false,
-    resolve: resolve,
-  });
 }
 
 // @ngInject
@@ -125,6 +93,11 @@ function persistDefaults(persistedDefaults) {
 // @ngInject
 function autosave(autosaveService) {
   autosaveService.init();
+}
+
+// @ngInject
+function router(router) {
+  router.init();
 }
 
 // Preact UI components that are wrapped for use within Angular templates.
@@ -179,6 +152,7 @@ import localStorageService from './services/local-storage';
 import permissionsService from './services/permissions';
 import persistedDefaultsService from './services/persisted-defaults';
 import rootThreadService from './services/root-thread';
+import routerService from './services/router';
 import searchFilterService from './services/search-filter';
 import serviceUrlService from './services/service-url';
 import sessionService from './services/session';
@@ -221,6 +195,7 @@ function startAngularApp(config) {
     .register('permissions', permissionsService)
     .register('persistedDefaults', persistedDefaultsService)
     .register('rootThread', rootThreadService)
+    .register('router', routerService)
     .register('searchFilter', searchFilterService)
     .register('serviceUrl', serviceUrlService)
     .register('session', sessionService)
@@ -254,7 +229,7 @@ function startAngularApp(config) {
   const wrapComponent = component => wrapReactComponent(component, container);
 
   angular
-    .module('h', [angularRoute, angularToastr])
+    .module('h', [angularToastr])
 
     // The root component for the application
     .component('hypothesisApp', hypothesisApp)
@@ -306,6 +281,7 @@ function startAngularApp(config) {
     .service('permissions', () => container.get('permissions'))
     .service('persistedDefaults', () => container.get('persistedDefaults'))
     .service('rootThread', () => container.get('rootThread'))
+    .service('router', () => container.get('router'))
     .service('searchFilter', () => container.get('searchFilter'))
     .service('serviceUrl', () => container.get('serviceUrl'))
     .service('session', () => container.get('session'))
@@ -320,7 +296,6 @@ function startAngularApp(config) {
     .value('settings', container.get('settings'))
 
     .config(configureLocation)
-    .config(configureRoutes)
     .config(configureToastr)
 
     // Make Angular built-ins available to services constructed by `container`.
@@ -328,6 +303,7 @@ function startAngularApp(config) {
 
     .run(persistDefaults)
     .run(autosave)
+    .run(router)
     .run(sendPageView)
     .run(setupApi)
     .run(crossOriginRPC.server.start);

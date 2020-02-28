@@ -13,8 +13,6 @@ class FakeRootThread extends EventEmitter {
 describe('StreamContentController', function() {
   let $componentController;
   let $rootScope;
-  let fakeRoute;
-  let fakeRouteParams;
   let fakeAnnotationMapper;
   let fakeStore;
   let fakeRootThread;
@@ -39,12 +37,6 @@ describe('StreamContentController', function() {
       setForceVisible: sinon.spy(),
       setSortKey: sinon.spy(),
       subscribe: sinon.spy(),
-    };
-
-    fakeRouteParams = { id: 'test' };
-
-    fakeRoute = {
-      reload: sinon.spy(),
     };
 
     fakeSearchFilter = {
@@ -74,8 +66,6 @@ describe('StreamContentController', function() {
     fakeRootThread = new FakeRootThread();
 
     angular.mock.module('h', {
-      $route: fakeRoute,
-      $routeParams: fakeRouteParams,
       annotationMapper: fakeAnnotationMapper,
       store: fakeStore,
       api: fakeApi,
@@ -125,6 +115,7 @@ describe('StreamContentController', function() {
     });
   });
 
+  // FIXME - Make this work
   context('when a $routeUpdate event occurs', function() {
     it('reloads the route if the query changed', function() {
       fakeRouteParams.q = 'test query';

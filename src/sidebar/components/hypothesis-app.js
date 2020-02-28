@@ -35,7 +35,6 @@ function authStateFromProfile(profile) {
 function HypothesisAppController(
   $document,
   $rootScope,
-  $route,
   $scope,
   $window,
   analytics,
@@ -81,6 +80,17 @@ function HypothesisAppController(
       store.openSidebarPanel(uiConstants.PANEL_HELP);
     }
   };
+
+  // Fetch groups and profile information before showing the main content of
+  // the app.
+  this.ready = false;
+  Promise.all([groups.load(), session.load()]).finally(() => {
+    $scope.$apply(() => {
+      this.ready = true;
+    });
+  });
+
+  this.route = () => store.route();
 
   $scope.$on(events.USER_CHANGED, function(event, data) {
     self.onUserChange(data.profile);

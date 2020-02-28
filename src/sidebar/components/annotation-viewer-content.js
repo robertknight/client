@@ -26,7 +26,6 @@ function fetchThread(api, id) {
 
 // @ngInject
 function AnnotationViewerContentController(
-  $routeParams,
   store,
   api,
   rootThread,
@@ -36,7 +35,7 @@ function AnnotationViewerContentController(
 ) {
   store.setAppIsSidebar(false);
 
-  const id = $routeParams.id;
+  const id = store.routeParams().id;
 
   this.rootThread = () => rootThread.thread(store.getState());
 
