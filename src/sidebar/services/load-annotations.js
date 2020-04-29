@@ -8,7 +8,8 @@ export default function loadAnnotationsService(
   api,
   store,
   streamer,
-  streamFilter
+  streamFilter,
+  tasks
 ) {
   let searchClient = null;
 
@@ -19,46 +20,53 @@ export default function loadAnnotationsService(
    * @param {string} groupId
    */
   function load(uris, groupId) {
-    store.removeAnnotations(store.savedAnnotations());
+    const doLoad = async () => {
+      store.removeAnnotations(store.savedAnnotations());
 
-    // Cancel previously running search client.
-    if (searchClient) {
-      searchClient.cancel();
-    }
+      // Cancel previously running search client.
+      if (searchClient) {
+        searchClient.cancel();
+      }
 
-    if (uris.length > 0) {
-      searchAndLoad(uris, groupId);
+      if (uris.length > 0) {
+        await searchAndLoad(uris, groupId);
 
-      streamFilter.resetFilter().addClause('/uri', 'one_of', uris);
-      streamer.setConfig('filter', { filter: streamFilter.getFilter() });
-    }
+        streamFilter.resetFilter().addClause('/uri', 'one_of', uris);
+        streamer.setConfig('filter', { filter: streamFilter.getFilter() });
+      }
+    };
+
+    return tasks.try(doLoad).result;
   }
 
   function searchAndLoad(uris, groupId) {
-    searchClient = new SearchClient(api.search, {
-      incremental: true,
-    });
-    searchClient.on('results', results => {
-      if (results.length) {
-        store.addAnnotations(results);
-      }
-    });
-    searchClient.on('error', error => {
-      console.error(error);
-    });
-    searchClient.on('end', () => {
-      // Remove client as it's no longer active.
-      searchClient = null;
-
-      store.frames().forEach(function (frame) {
-        if (0 <= uris.indexOf(frame.uri)) {
-          store.updateFrameAnnotationFetchStatus(frame.uri, true);
+    return new Promise((resolve, reject) => {
+      searchClient = new SearchClient(api.search, {
+        incremental: true,
+      });
+      searchClient.on('results', results => {
+        if (results.length) {
+          store.addAnnotations(results);
         }
       });
-      store.annotationFetchFinished();
+      searchClient.on('error', error => {
+        reject(error);
+      });
+      searchClient.on('end', () => {
+        // Remove client as it's no longer active.
+        searchClient = null;
+
+        store.frames().forEach(function (frame) {
+          if (0 <= uris.indexOf(frame.uri)) {
+            store.updateFrameAnnotationFetchStatus(frame.uri, true);
+          }
+        });
+        store.annotationFetchFinished();
+        resolve();
+      });
+      store.annotationFetchStarted();
+      searchClient.get({ uri: uris, group: groupId });
     });
-    store.annotationFetchStarted();
-    searchClient.get({ uri: uris, group: groupId });
   }
 
   return {
