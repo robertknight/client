@@ -50,7 +50,7 @@ export default function toastMessenger(store) {
   const addMessage = (type, message, { autoDismiss = true } = {}) => {
     // Do not add duplicate messages (messages with the same type and text)
     if (store.hasToastMessage(type, message)) {
-      return;
+      return null;
     }
 
     const id = generateHexString(10);
@@ -65,6 +65,8 @@ export default function toastMessenger(store) {
         dismiss(id);
       }, MESSAGE_DISPLAY_TIME);
     }
+
+    return id;
   };
 
   /**
@@ -74,7 +76,7 @@ export default function toastMessenger(store) {
    * @param {MessageOptions} options
    */
   const error = (messageText, options) => {
-    addMessage('error', messageText, options);
+    return addMessage('error', messageText, options);
   };
 
   /**
@@ -84,7 +86,7 @@ export default function toastMessenger(store) {
    * @param {MessageOptions} options
    */
   const success = (messageText, options) => {
-    addMessage('success', messageText, options);
+    return addMessage('success', messageText, options);
   };
 
   return {

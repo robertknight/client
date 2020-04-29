@@ -150,6 +150,7 @@ import sessionService from './services/session';
 import streamFilterService from './services/stream-filter';
 import streamerService from './services/streamer';
 import tagsService from './services/tags';
+import tasksService from './services/tasks';
 import threadsService from './services/threads';
 import toastMessenger from './services/toast-messenger';
 import unicodeService from './services/unicode';
@@ -193,6 +194,7 @@ function startAngularApp(config) {
     .register('streamer', streamerService)
     .register('streamFilter', streamFilterService)
     .register('tags', tagsService)
+    .register('tasks', tasksService)
     .register('threadsService', threadsService)
     .register('toastMessenger', toastMessenger)
     .register('unicode', unicodeService)
