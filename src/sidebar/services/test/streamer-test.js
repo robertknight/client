@@ -1,5 +1,6 @@
 import EventEmitter from 'tiny-emitter';
 
+import fakeReduxStore from '../../test/fake-redux-store';
 import Streamer from '../streamer';
 import { $imports } from '../streamer';
 
@@ -95,19 +96,22 @@ describe('Streamer', function () {
       },
     };
 
-    fakeStore = {
-      addAnnotations: sinon.stub(),
-      annotationExists: sinon.stub().returns(false),
-      clearPendingUpdates: sinon.stub(),
-      pendingUpdates: sinon.stub().returns({}),
-      pendingDeletions: sinon.stub().returns({}),
-      profile: sinon.stub().returns({
-        userid: 'jim@hypothes.is',
-      }),
-      receiveRealTimeUpdates: sinon.stub(),
-      removeAnnotations: sinon.stub(),
-      route: sinon.stub().returns('sidebar'),
-    };
+    fakeStore = fakeReduxStore(
+      {},
+      {
+        addAnnotations: sinon.stub(),
+        annotationExists: sinon.stub().returns(false),
+        clearPendingUpdates: sinon.stub(),
+        pendingUpdates: sinon.stub().returns({}),
+        pendingDeletions: sinon.stub().returns({}),
+        profile: sinon.stub().returns({
+          userid: 'jim@hypothes.is',
+        }),
+        receiveRealTimeUpdates: sinon.stub(),
+        removeAnnotations: sinon.stub(),
+        route: sinon.stub().returns('sidebar'),
+      }
+    );
 
     fakeGroups = {
       focused: sinon.stub().returns({ id: 'public' }),
@@ -238,6 +242,43 @@ describe('Streamer', function () {
         .then(function () {
           oldWebSocket = fakeWebSocket;
           return activeStreamer.reconnect();
+        })
+        .then(function () {
+          assert.ok(oldWebSocket.didClose);
+          assert.ok(!fakeWebSocket.didClose);
+        });
+    });
+  });
+
+  describe('#setUpAutoReconnect()', function () {
+    it('should reconnect when user changes', function () {
+      let oldWebSocket;
+      createDefaultStreamer();
+
+      return activeStreamer
+        .connect()
+        .then(function () {
+          oldWebSocket = fakeWebSocket;
+          fakeStore.profile.returns({ userid: 'somebody' });
+          return fakeStore.setState({});
+        })
+        .then(function () {
+          assert.ok(oldWebSocket.didClose);
+          assert.ok(!fakeWebSocket.didClose);
+        });
+    });
+
+    it('should only set up auto-reconnect once', () => {
+      let oldWebSocket;
+      createDefaultStreamer();
+      activeStreamer.connect();
+
+      return activeStreamer
+        .connect()
+        .then(function () {
+          oldWebSocket = fakeWebSocket;
+          fakeStore.profile.returns({ userid: 'somebody' });
+          fakeStore.setState({});
         })
         .then(function () {
           assert.ok(oldWebSocket.didClose);
