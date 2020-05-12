@@ -18,16 +18,12 @@ registerIcons(iconSet);
 import configFrom from './config/index';
 import Guest from './guest';
 import PdfSidebar from './pdf-sidebar';
-import BucketBarPlugin from './plugin/bucket-bar';
 import CrossFramePlugin from './plugin/cross-frame';
 import DocumentPlugin from './plugin/document';
 import PDFPlugin from './plugin/pdf';
 import Sidebar from './sidebar';
 
 const pluginClasses = {
-  // UI plugins
-  BucketBar: BucketBarPlugin,
-
   // Document type plugins
   PDF: PDFPlugin,
   Document: DocumentPlugin,

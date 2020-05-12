@@ -61,7 +61,7 @@ export default function Toolbar({
   useMinimalControls = false,
 }) {
   return (
-    <div>
+    <div className="annotator-toolbar">
       {useMinimalControls && isSidebarOpen && (
         <ToolbarButton
           extraClasses="annotator-frame-button--sidebar_close"

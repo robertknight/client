@@ -279,7 +279,7 @@ module.exports = class Guest extends Delegator
       self.anchors = self.anchors.concat(anchors)
 
       # Let plugins know about the new information.
-      self.plugins.BucketBar?.update()
+      self.toolbar?.anchors = anchors
       self.plugins.CrossFrame?.sync([annotation])
 
       return anchors
@@ -323,11 +323,11 @@ module.exports = class Guest extends Delegator
         anchors.push(anchor)
 
     this.anchors = anchors
+    this.toolbar?.anchors = anchors
 
     unhighlight = Array::concat(unhighlight...)
     requestAnimationFrame =>
       highlighter.removeHighlights(unhighlight)
-      this.plugins.BucketBar?.update()
 
   createAnnotation: (annotation = {}) ->
     self = this

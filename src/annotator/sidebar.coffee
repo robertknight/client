@@ -32,9 +32,6 @@ module.exports = class Sidebar extends Host
     if config.openSidebar || config.annotations || config.query || config.group
       this.on 'panelReady', => this.show()
 
-    if @plugins.BucketBar?
-      @plugins.BucketBar.element.on 'click', (event) => this.show()
-
     # Set up the toolbar on the left edge of the sidebar.
     toolbarContainer = document.createElement('div')
     @toolbar = new ToolbarController(toolbarContainer, {

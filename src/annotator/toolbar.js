@@ -1,5 +1,6 @@
-import { createElement, createRef, render } from 'preact';
+import { Fragment, createElement, createRef, render } from 'preact';
 
+import BucketBar from './components/bucket-bar';
 import Toolbar from './components/toolbar';
 
 /**
@@ -13,7 +14,9 @@ import Toolbar from './components/toolbar';
  * Controller for the toolbar on the edge of the sidebar.
  *
  * This toolbar provides controls for opening and closing the sidebar, toggling
- * highlight visibility etc.
+ * highlight visibility etc. It also displays the "bucket bar", which are a set
+ * of indicators showing where highlights are in the document and providing
+ * a means to scroll to them quickly.
  */
 export class ToolbarController {
   /**
@@ -24,8 +27,6 @@ export class ToolbarController {
     const { createAnnotation, setSidebarOpen, setHighlightsVisible } = options;
 
     this._container = container;
-    this._container.className = 'annotator-toolbar';
-
     this._useMinimalControls = false;
     this._newAnnotationType = 'note';
     this._highlightsVisible = false;
@@ -39,6 +40,9 @@ export class ToolbarController {
       createAnnotation();
       setSidebarOpen(true);
     };
+    this._anchors = [];
+
+    this._scrollContainer = window;
 
     /** Reference to the sidebar toggle button. */
     this._sidebarToggleButton = createRef();
@@ -110,19 +114,48 @@ export class ToolbarController {
     return this._sidebarToggleButton.current;
   }
 
+  /**
+   * Set the anchors displayed by the bucket bar.
+   */
+  set anchors(anchors) {
+    this._anchors = anchors;
+    this.render();
+  }
+
+  get anchors() {
+    return this._anchors;
+  }
+
+  set scrollContainer(container) {
+    this._scrollContainer = container;
+    this.render();
+  }
+
+  get scrollContainer() {
+    return this._scrollContainer;
+  }
+
   render() {
     render(
-      <Toolbar
-        closeSidebar={this._closeSidebar}
-        createAnnotation={this._createAnnotation}
-        newAnnotationType={this._newAnnotationType}
-        isSidebarOpen={this._sidebarOpen}
-        showHighlights={this._highlightsVisible}
-        toggleHighlights={this._toggleHighlights}
-        toggleSidebar={this._toggleSidebar}
-        toggleSidebarRef={this._sidebarToggleButton}
-        useMinimalControls={this.useMinimalControls}
-      />,
+      <Fragment>
+        <Toolbar
+          closeSidebar={this._closeSidebar}
+          createAnnotation={this._createAnnotation}
+          newAnnotationType={this._newAnnotationType}
+          isSidebarOpen={this._sidebarOpen}
+          showHighlights={this._highlightsVisible}
+          toggleHighlights={this._toggleHighlights}
+          toggleSidebar={this._toggleSidebar}
+          toggleSidebarRef={this._sidebarToggleButton}
+          useMinimalControls={this.useMinimalControls}
+        />
+        {!this.useMinimalControls && (
+          <BucketBar
+            anchors={this._anchors}
+            scrollContainer={this._scrollContainer}
+          />
+        )}
+      </Fragment>,
       this._container
     );
   }
