@@ -1,4 +1,3 @@
-import $ from 'jquery';
 import Delegator from '../delegator';
 import scrollIntoView from 'scroll-into-view';
 import {
@@ -6,6 +5,7 @@ import {
   constructPositionPoints,
   buildBuckets,
 } from '../util/buckets';
+import { setHighlightsFocused } from '../highlighter';
 
 const BUCKET_SIZE = 16; // Regular bucket size
 const BUCKET_NAV_SIZE = BUCKET_SIZE + 6; // Bucket plus arrow (up/down)
@@ -19,6 +19,13 @@ function scrollToClosest(anchors, direction) {
   }
 }
 
+/**
+ * @param {number} val
+ */
+function toPx(val) {
+  return val + 'px';
+}
+
 export default class BucketBar extends Delegator {
   constructor(element, options, annotator) {
     const defaultOptions = {
@@ -27,39 +34,50 @@ export default class BucketBar extends Delegator {
       // then that annotation will not be merged into the bucket
       // TODO: This is not currently used; reassess
       gapSize: 60,
-      html: '<div class="annotator-bucket-bar"></div>',
       // Selectors for the scrollable elements on the page
       scrollables: ['body'],
     };
 
     const opts = { ...defaultOptions, ...options };
-    super($(opts.html), opts);
+
+    const container = document.createElement('div');
+    container.className = 'annotator-bucket-bar';
+    super(container, opts);
 
     this.buckets = [];
     this.index = [];
-    this.tabs = $([]);
+
+    /** @type {HTMLElement[]} */
+    this.tabs = [];
 
     if (this.options.container) {
-      $(this.options.container).append(this.element);
+      const containerEl = document.querySelector(this.options.container);
+      containerEl.appendChild(this.element);
     } else {
-      $(element).append(this.element);
+      element.appendChild(this.element);
     }
 
     this.annotator = annotator;
 
     this.updateFunc = () => this.update();
 
-    $(window).on('resize scroll', this.updateFunc);
+    ['resize', 'scroll'].forEach(event =>
+      window.addEventListener(event, this.updateFunc)
+    );
 
-    this.options.scrollables.forEach(scrollable => {
-      $(scrollable).on('scroll', this.updateFunc);
+    this.options.scrollables.forEach(selector => {
+      const elements = document.querySelectorAll(selector);
+      elements.forEach(el => el.addEventListener('scroll', this.updateFunc));
     });
   }
 
   destroy() {
-    $(window).off('resize scroll', this.updateFunc);
-    this.options.scrollables.forEach(scrollable => {
-      $(scrollable).off('scroll', this.updateFunc);
+    ['resize', 'scroll'].forEach(event =>
+      window.removeEventListener(event, this.updateFunc)
+    );
+    this.options.scrollables.forEach(selector => {
+      const elements = document.querySelectorAll(selector);
+      elements.forEach(el => el.removeEventListener('scroll', this.updateFunc));
     });
   }
 
@@ -97,66 +115,74 @@ export default class BucketBar extends Delegator {
     );
 
     // Remove any extra tabs and update tabs.
-    this.tabs.slice(this.buckets.length).remove();
+    this.tabs.slice(this.buckets.length).forEach(tabEl => tabEl.remove());
     this.tabs = this.tabs.slice(0, this.buckets.length);
 
     // Create any new tabs if needed.
-    $.each(this.buckets.slice(this.tabs.length), () => {
-      const div = $('<div/>').appendTo(this.element);
+    // eslint-disable-next-line no-unused-vars
+    for (let bucket of this.buckets.slice(this.tabs.length)) {
+      const div = document.createElement('div');
+      this.element.appendChild(div);
 
-      this.tabs.push(div[0]);
+      this.tabs.push(div);
 
-      div
-        .addClass('annotator-bucket-indicator')
+      div.classList.add('annotator-bucket-indicator');
 
-        // Focus corresponding highlights bucket when mouse is hovered
-        // TODO: This should use event delegation on the container.
-        .on('mousemove', event => {
-          const bucketIndex = this.tabs.index(event.currentTarget);
-          for (let anchor of this.annotator.anchors) {
-            const toggle = this.buckets[bucketIndex].includes(anchor);
-            $(anchor.highlights).toggleClass(
-              'hypothesis-highlight-focused',
-              toggle
-            );
+      // Focus corresponding highlights bucket when mouse is hovered
+      // TODO: This should use event delegation on the container.
+      div.addEventListener('mousemove', event => {
+        const bucketIndex = this.tabs.indexOf(
+          /** @type {HTMLElement} */ (event.currentTarget)
+        );
+        for (let anchor of this.annotator.anchors) {
+          const toggle = this.buckets[bucketIndex].includes(anchor);
+          if (anchor.highlights) {
+            setHighlightsFocused(anchor.highlights, toggle);
           }
-        })
+        }
+      });
 
-        .on('mouseout', event => {
-          const bucket = this.tabs.index(event.currentTarget);
-          this.buckets[bucket].forEach(anchor =>
-            $(anchor.highlights).removeClass('hypothesis-highlight-focused')
-          );
-        })
-        .on('click', event => {
-          const bucket = this.tabs.index(event.currentTarget);
-          event.stopPropagation();
-
-          // If it's the upper tab, scroll to next anchor above
-          if (this.isUpper(bucket)) {
-            scrollToClosest(this.buckets[bucket], 'up');
-            // If it's the lower tab, scroll to next anchor below
-          } else if (this.isLower(bucket)) {
-            scrollToClosest(this.buckets[bucket], 'down');
-          } else {
-            const annotations = this.buckets[bucket].map(
-              anchor => anchor.annotation
-            );
-            this.annotator.selectAnnotations(
-              annotations,
-              event.ctrlKey || event.metaKey
-            );
+      div.addEventListener('mouseout', event => {
+        const bucket = this.tabs.indexOf(
+          /** @type {HTMLElement} */ (event.currentTarget)
+        );
+        this.buckets[bucket].forEach(anchor => {
+          if (anchor.highlights) {
+            setHighlightsFocused(anchor.highlights, false);
           }
         });
-    });
+      });
+
+      div.addEventListener('click', event => {
+        const bucket = this.tabs.indexOf(
+          /** @type {HTMLElement} */ (event.currentTarget)
+        );
+        event.stopPropagation();
+
+        // If it's the upper tab, scroll to next anchor above
+        if (this.isUpper(bucket)) {
+          scrollToClosest(this.buckets[bucket], 'up');
+          // If it's the lower tab, scroll to next anchor below
+        } else if (this.isLower(bucket)) {
+          scrollToClosest(this.buckets[bucket], 'down');
+        } else {
+          const annotations = this.buckets[bucket].map(
+            anchor => anchor.annotation
+          );
+          this.annotator.selectAnnotations(
+            annotations,
+            event.ctrlKey || event.metaKey
+          );
+        }
+      });
+    }
 
     this._buildTabs();
   }
 
   _buildTabs() {
-    this.tabs.each((index, el) => {
+    this.tabs.forEach((el, index) => {
       let bucketSize;
-      el = $(el);
       const bucket = this.buckets[index];
       const bucketLength = bucket?.length;
 
@@ -169,9 +195,9 @@ export default class BucketBar extends Delegator {
         return '';
       })();
 
-      el.attr('title', title);
-      el.toggleClass('upper', this.isUpper(index));
-      el.toggleClass('lower', this.isLower(index));
+      el.setAttribute('title', title);
+      el.classList.toggle('upper', this.isUpper(index));
+      el.classList.toggle('lower', this.isLower(index));
 
       if (this.isUpper(index) || this.isLower(index)) {
         bucketSize = BUCKET_NAV_SIZE;
@@ -179,14 +205,12 @@ export default class BucketBar extends Delegator {
         bucketSize = BUCKET_SIZE;
       }
 
-      el.css({
-        top: (this.index[index] + this.index[index + 1]) / 2,
-        marginTop: -bucketSize / 2,
-        display: !bucketLength ? 'none' : '',
-      });
+      el.style.top = toPx((this.index[index] + this.index[index + 1]) / 2);
+      el.style.marginTop = toPx(-bucketSize / 2);
+      el.style.display = !bucketLength ? 'none' : '';
 
       if (bucket) {
-        el.html(`<div class='label'>${bucketLength}</div>`);
+        el.innerHTML = `<div class='label'>${bucketLength}</div>`;
       }
     });
   }
@@ -194,6 +218,7 @@ export default class BucketBar extends Delegator {
   isUpper(i) {
     return i === 1;
   }
+
   isLower(i) {
     return i === this.index.length - 2;
   }

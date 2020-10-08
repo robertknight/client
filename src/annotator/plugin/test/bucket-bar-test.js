@@ -1,10 +1,9 @@
-import $ from 'jquery';
 import BucketBar from '../bucket-bar';
 import { $imports } from '../bucket-bar';
 
 // Return DOM elements for non-empty bucket indicators in a `BucketBar`.
 const nonEmptyBuckets = function (bucketBar) {
-  const buckets = bucketBar.element[0].querySelectorAll(
+  const buckets = bucketBar.element.querySelectorAll(
     '.annotator-bucket-indicator'
   );
   return Array.from(buckets).filter(bucket => {
@@ -111,9 +110,9 @@ describe('BucketBar', () => {
   // Note: This could be tested using only the public APIs of the `BucketBar`
   // class using the approach of the "when a bucket is clicked" tests above.
   describe('_buildTabs', () => {
-    const setup = function (tabs) {
+    const setup = function (tab) {
       const bucketBar = createBucketBar();
-      bucketBar.tabs = tabs;
+      bucketBar.tabs = [tab];
       bucketBar.buckets = [['AN ANNOTATION?']];
       bucketBar.index = [
         0,
@@ -123,92 +122,98 @@ describe('BucketBar', () => {
       return bucketBar;
     };
 
+    function createTab() {
+      return document.createElement('div');
+    }
+
     it('creates a tab with a title', () => {
-      const tab = $('<div />');
+      const tab = createTab();
       const bucketBar = setup(tab);
 
       bucketBar._buildTabs();
-      assert.equal(tab.attr('title'), 'Show one annotation');
+      assert.equal(tab.getAttribute('title'), 'Show one annotation');
     });
 
     it('creates a tab with a pluralized title', () => {
-      const tab = $('<div />');
+      const tab = createTab();
       const bucketBar = setup(tab);
       bucketBar.buckets[0].push('Another Annotation?');
 
       bucketBar._buildTabs();
-      assert.equal(tab.attr('title'), 'Show 2 annotations');
+      assert.equal(tab.getAttribute('title'), 'Show 2 annotations');
     });
 
     it('sets the tab text to the number of annotations', () => {
-      const tab = $('<div />');
+      const tab = createTab();
       const bucketBar = setup(tab);
       bucketBar.buckets[0].push('Another Annotation?');
 
       bucketBar._buildTabs();
-      assert.equal(tab.text(), '2');
+      assert.equal(tab.textContent, '2');
     });
 
     it('sets the tab text to the number of annotations', () => {
-      const tab = $('<div />');
+      const tab = createTab();
       const bucketBar = setup(tab);
       bucketBar.buckets[0].push('Another Annotation?');
 
       bucketBar._buildTabs();
-      assert.equal(tab.text(), '2');
+      assert.equal(tab.textContent, '2');
     });
 
     it('adds the class "upper" if the annotation is at the top', () => {
-      const tab = $('<div />');
+      const tab = createTab();
       const bucketBar = setup(tab);
       sinon.stub(bucketBar, 'isUpper').returns(true);
 
       bucketBar._buildTabs();
-      assert.equal(tab.hasClass('upper'), true);
+      assert.equal(tab.classList.contains('upper'), true);
     });
 
     it('removes the class "upper" if the annotation is not at the top', () => {
-      const tab = $('<div />').addClass('upper');
+      const tab = createTab();
+      tab.classList.add('upper');
       const bucketBar = setup(tab);
       sinon.stub(bucketBar, 'isUpper').returns(false);
 
       bucketBar._buildTabs();
-      assert.equal(tab.hasClass('upper'), false);
+      assert.equal(tab.classList.contains('upper'), false);
     });
 
     it('adds the class "lower" if the annotation is at the top', () => {
-      const tab = $('<div />');
+      const tab = createTab();
       const bucketBar = setup(tab);
       sinon.stub(bucketBar, 'isLower').returns(true);
 
       bucketBar._buildTabs();
-      assert.equal(tab.hasClass('lower'), true);
+      assert.equal(tab.classList.contains('lower'), true);
     });
 
     it('removes the class "lower" if the annotation is not at the top', () => {
-      const tab = $('<div />').addClass('lower');
+      const tab = createTab();
+      tab.classList.add('lower');
       const bucketBar = setup(tab);
       sinon.stub(bucketBar, 'isLower').returns(false);
 
       bucketBar._buildTabs();
-      assert.equal(tab.hasClass('lower'), false);
+      assert.equal(tab.classList.contains('lower'), false);
     });
 
     it('reveals the tab if there are annotations in the bucket', () => {
-      const tab = $('<div />');
+      const tab = createTab();
       const bucketBar = setup(tab);
 
       bucketBar._buildTabs();
-      assert.equal(tab.css('display'), '');
+      assert.equal(tab.style.display, '');
     });
 
     it('hides the tab if there are no annotations in the bucket', () => {
-      const tab = $('<div />');
+      const tab = createTab();
       const bucketBar = setup(tab);
       bucketBar.buckets = [];
 
       bucketBar._buildTabs();
-      assert.equal(tab.css('display'), 'none');
+      assert.equal(tab.style.display, 'none');
     });
   });
 });
