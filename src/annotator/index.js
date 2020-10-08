@@ -4,8 +4,6 @@
  * @typedef {import('../types/annotator').HypothesisWindow} HypothesisWindow
  */
 
-import $ from 'jquery';
-
 // Load polyfill for :focus-visible pseudo-class.
 import 'focus-visible';
 
@@ -50,7 +48,7 @@ const appLinkEl = /** @type {Element} */ (document.querySelector(
 
 const config = configFrom(window);
 
-$.noConflict(true)(function () {
+function init() {
   const isPDF = typeof window_.PDFViewerApplication !== 'undefined';
 
   /** @type {new (e: Element, config: any) => Guest} */
@@ -76,4 +74,10 @@ $.noConflict(true)(function () {
     appLinkEl.remove();
     annotator.destroy();
   });
-});
+}
+
+if (document.readyState !== 'loading') {
+  init();
+} else {
+  document.addEventListener('readystatechange', () => init());
+}
