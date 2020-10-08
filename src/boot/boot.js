@@ -103,7 +103,6 @@ function bootHypothesisClient(doc, config) {
   injectAssets(doc, config, [
     // Vendor code and polyfills
     ...polyfills,
-    'scripts/jquery.bundle.js',
 
     // Main entry point for the client
     'scripts/annotator.bundle.js',
