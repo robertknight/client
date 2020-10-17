@@ -20,7 +20,7 @@ export function isSelectionBackwards(selection) {
  * @param {Range} range
  * @param {(n: Node) => any} callback
  */
-function forEachNodeInRange(range, callback) {
+export function forEachNodeInRange(range, callback) {
   const root = range.commonAncestorContainer;
 
   // The `whatToShow`, `filter` and `expandEntityReferences` arguments are
