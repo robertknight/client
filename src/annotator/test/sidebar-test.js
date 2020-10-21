@@ -364,67 +364,32 @@ describe('Sidebar', () => {
       }));
   });
 
-  describe('pan gestures', () => {
+  describe('resizing sidebar', () => {
     let sidebar;
 
     beforeEach(() => {
       sidebar = createSidebar({});
     });
 
-    describe('panstart event', () => {
-      it('disables pointer events and transitions on the widget', () => {
-        sidebar._onPan({ type: 'panstart' });
-
-        assert.isTrue(
-          sidebar.frame.classList.contains('annotator-no-transition')
-        );
-        assert.equal(sidebar.frame.style.pointerEvents, 'none');
-      });
-
-      it('captures the left margin as the gesture initial state', () => {
-        sandbox
-          .stub(window, 'getComputedStyle')
-          .returns({ marginLeft: '100px' });
-        sidebar._onPan({ type: 'panstart' });
-        assert.equal(sidebar._gestureState.initial, '100');
-      });
+    it('begins a drag resize when the sidebar toggle button is dragged', () => {
+      // TODO
     });
 
-    describe('panend event', () => {
-      it('enables pointer events and transitions on the widget', () => {
-        sidebar._gestureState = { final: 0 };
-        sidebar._onPan({ type: 'panend' });
-        assert.isFalse(
-          sidebar.frame.classList.contains('annotator-no-transition')
-        );
-        assert.equal(sidebar.frame.style.pointerEvents, '');
-      });
-
-      it('calls `show` if the widget is fully visible', () => {
-        sidebar._gestureState = { final: -500 };
-        const show = sandbox.stub(sidebar, 'show');
-        sidebar._onPan({ type: 'panend' });
-        assert.calledOnce(show);
-      });
-
-      it('calls `hide` if the widget is not fully visible', () => {
-        sidebar._gestureState = { final: -100 };
-        const hide = sandbox.stub(sidebar, 'hide');
-        sidebar._onPan({ type: 'panend' });
-        assert.calledOnce(hide);
-      });
+    it('does not begin a drag resize if the sidebar is closed', () => {
+      // TODO
     });
 
-    describe('panleft and panright events', () =>
-      it('shrinks or grows the widget to match the delta', () => {
-        sidebar._gestureState = { initial: -100 };
+    it('resizes the sidebar as the drag moves', () => {
+      // TODO
+    });
 
-        sidebar._onPan({ type: 'panleft', deltaX: -50 });
-        assert.equal(sidebar._gestureState.final, -150);
+    it('limits the minimum and maximum size of the sidebar', () => {
+      // TODO
+    });
 
-        sidebar._onPan({ type: 'panright', deltaX: 100 });
-        assert.equal(sidebar._gestureState.final, 0);
-      }));
+    it('stops the drag resize when the pointer is released', () => {
+      // TODO
+    });
   });
 
   describe('panelReady event', () => {

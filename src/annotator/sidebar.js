@@ -1,5 +1,3 @@
-import Hammer from 'hammerjs';
-
 import annotationCounts from './annotation-counts';
 import sidebarTrigger from './sidebar-trigger';
 import { createSidebarConfig } from './config/sidebar';
@@ -14,6 +12,10 @@ import { ToolbarController } from './toolbar';
  * @prop {boolean} expanded
  * @prop {number} width
  * @prop {number} height
+ *
+ * @typedef DragResizeState
+ * @prop {number} frameWidth - Frame width when drag resize started
+ * @prop {number} pointerClientX - Pointer position when drag resize started
  */
 
 // Minimum width to which the frame can be resized.
@@ -122,11 +124,20 @@ export default class Sidebar extends Guest {
       );
     }
 
+    /** @type {DragResizeState|null} */
+    this._dragResizeState = null;
+
     // Set up the toolbar on the left edge of the sidebar.
     const toolbarContainer = document.createElement('div');
     this.toolbar = new ToolbarController(toolbarContainer, {
       createAnnotation: () => this.createAnnotation(),
-      setSidebarOpen: open => (open ? this.show() : this.hide()),
+      setSidebarOpen: open => {
+        if (open) {
+          this.show();
+        } else {
+          this.hide();
+        }
+      },
       setHighlightsVisible: show => this.setAllVisibleHighlights(show),
     });
     this.toolbar.useMinimalControls = config.theme === 'clean';
@@ -141,14 +152,7 @@ export default class Sidebar extends Guest {
       this.toolbarWidth = 0;
     }
 
-    this._gestureState = {
-      // Initial position at the start of a drag/pan resize event (in pixels).
-      initial: /** @type {number|null} */ (null),
-
-      // Final position at end of drag resize event.
-      final: /** @type {number|null} */ (null),
-    };
-    this._setupGestures();
+    this._setupDragResize();
     this.hide();
 
     // Publisher-provided callback functions
@@ -169,7 +173,6 @@ export default class Sidebar extends Guest {
   }
 
   destroy() {
-    this._hammerManager?.destroy();
     this.frame?.remove();
     super.destroy();
   }
@@ -207,48 +210,79 @@ export default class Sidebar extends Guest {
     });
   }
 
-  _resetGestureState() {
-    this._gestureState = { initial: null, final: null };
-  }
-
-  _setupGestures() {
-    const toggleButton = this.toolbar.sidebarToggleButton;
-    if (toggleButton) {
-      // Prevent any default gestures on the handle.
-      toggleButton.addEventListener('touchmove', e => e.preventDefault());
-
-      this._hammerManager = new Hammer.Manager(toggleButton)
-        // eslint-disable-next-line no-restricted-properties
-        .on('panstart panend panleft panright', this._onPan.bind(this));
-      this._hammerManager.add(
-        new Hammer.Pan({ direction: Hammer.DIRECTION_HORIZONTAL })
-      );
-    }
-  }
-
-  // Schedule any changes needed to update the sidebar layout.
-  _updateLayout() {
-    // Only schedule one frame at a time.
-    if (this.renderFrame) {
+  _setupDragResize() {
+    if (!this.frame) {
       return;
     }
+    const frame = this.frame;
 
-    // Schedule a frame.
-    this.renderFrame = requestAnimationFrame(() => {
-      this.renderFrame = null;
-
-      if (
-        this._gestureState.final !== this._gestureState.initial &&
-        this.frame
-      ) {
-        const margin = /** @type {number} */ (this._gestureState.final);
-        const width = -margin;
-        this.frame.style.marginLeft = `${margin}px`;
-        if (width >= MIN_RESIZE) {
-          this.frame.style.width = `${width}px`;
-        }
-        this._notifyOfLayoutChange();
+    /**
+     * @param {PointerEvent} event
+     */
+    const onDragResize = event => {
+      if (!this._dragResizeState) {
+        return;
       }
+
+      const deltaX = this._dragResizeState.pointerClientX - event.clientX;
+      const minWidth = 320;
+      const maxWidth = 600;
+      const width = Math.min(
+        Math.max(this._dragResizeState.frameWidth + deltaX, minWidth),
+        maxWidth
+      );
+
+      frame.style.width = `${width}px`;
+      frame.style.marginLeft = `${-width}px`;
+    };
+
+    const ignoreEventDuringDrag = e => {
+      e.stopPropagation();
+    };
+
+    const onDragEnd = () => {
+      this._dragResizeState = null;
+
+      // Undo changes made to frame when drag resize started.
+      frame.classList.remove('annotator-no-transition');
+      frame.style.pointerEvents = '';
+
+      document.body.removeEventListener('pointermove', onDragResize);
+      document.body.removeEventListener('pointerup', onDragEnd);
+    };
+
+    // Listen for sidebar toggle button being dragged to start a drag-resize.
+    this.toolbar.sidebarToggleButton.addEventListener('pointermove', e => {
+      if (
+        e.buttons === 0 || // No buttons pressed.
+        !this.isOpen() ||
+        !this.frame || // Using an externally-managed container.
+        this._dragResizeState // Drag resize already active.
+      ) {
+        return;
+      }
+
+      this._dragResizeState = {
+        frameWidth: this.frame.getBoundingClientRect().width,
+        pointerClientX: e.clientX,
+      };
+
+      // Prepare frame for resizing by disabling animated position transition
+      // and prevent sidebar iframe from receiving pointer events (which then
+      // would not be seen by the current frame).
+      frame.classList.add('annotator-no-transition');
+      frame.style.pointerEvents = 'none';
+
+      // Ignore click events during a drag resize, as otherwise these may
+      // cause the sidebar to close.
+      // FIXME - Make this work if `once` is not supported.
+      document.body.addEventListener('click', ignoreEventDuringDrag, {
+        capture: true,
+        once: true,
+      });
+
+      document.body.addEventListener('pointermove', onDragResize);
+      document.body.addEventListener('pointerup', onDragEnd);
     });
   }
 
@@ -308,59 +342,6 @@ export default class Sidebar extends Guest {
     this.publish('sidebarLayoutChanged', [layoutState]);
   }
 
-  _onPan(event) {
-    const frame = this.frame;
-    if (!frame) {
-      return;
-    }
-
-    switch (event.type) {
-      case 'panstart':
-        this._resetGestureState();
-
-        // Disable animated transition of sidebar position
-        frame.classList.add('annotator-no-transition');
-
-        // Disable pointer events on the iframe.
-        frame.style.pointerEvents = 'none';
-
-        this._gestureState.initial = parseInt(
-          getComputedStyle(frame).marginLeft
-        );
-
-        break;
-      case 'panend':
-        frame.classList.remove('annotator-no-transition');
-
-        // Re-enable pointer events on the iframe.
-        frame.style.pointerEvents = '';
-
-        // Snap open or closed.
-        if (
-          this._gestureState.final === null ||
-          this._gestureState.final <= -MIN_RESIZE
-        ) {
-          this.show();
-        } else {
-          this.hide();
-        }
-        this._resetGestureState();
-        break;
-      case 'panleft':
-      case 'panright': {
-        if (typeof this._gestureState.initial !== 'number') {
-          return;
-        }
-
-        const margin = this._gestureState.initial;
-        const delta = event.deltaX;
-        this._gestureState.final = Math.min(Math.round(margin + delta), 0);
-        this._updateLayout();
-        break;
-      }
-    }
-  }
-
   show() {
     this.crossframe.call('sidebarOpened');
     this.publish('sidebarOpened');
@@ -393,6 +374,10 @@ export default class Sidebar extends Guest {
     }
 
     this._notifyOfLayoutChange(false);
+  }
+
+  isOpen() {
+    return this.toolbar.sidebarOpen;
   }
 
   /**
