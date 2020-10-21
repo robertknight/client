@@ -6,12 +6,14 @@ import { createSidebarConfig } from './config/sidebar';
 import events from '../shared/bridge-events';
 import features from './features';
 
-import Guest from './guest';
+import Delegator from './delegator';
 import { ToolbarController } from './toolbar';
 import { createShadowRoot } from './util/shadow-root';
 import BucketBar from './bucket-bar';
 
 /**
+ * @typedef {import('./guest').default} Guest
+ *
  * @typedef LayoutState
  * @prop {boolean} expanded
  * @prop {number} width
@@ -55,12 +57,18 @@ function createSidebarIframe(config) {
  * The `Sidebar` class creates the sidebar application iframe and its container,
  * as well as the adjacent controls.
  */
-export default class Sidebar extends Guest {
+export default class Sidebar extends Delegator {
   /**
+   * Create the sidebar iframe, its container and adjacent controls.
+   *
    * @param {HTMLElement} element
    * @param {Record<string, any>} config
+   * @param {Guest} guest -
+   *   The `Guest` instance for the current frame. It is currently assumed that
+   *   it is always possible to annotate in the frame where the sidebar is
+   *   displayed.
    */
-  constructor(element, config) {
+  constructor(element, config, guest) {
     super(element, config);
 
     this.iframe = createSidebarIframe(config);
@@ -80,7 +88,7 @@ export default class Sidebar extends Guest {
       } else {
         this.bucketBar = new BucketBar(
           this.iframeContainer,
-          this,
+          guest,
           config.BucketBar
         );
       }
@@ -94,6 +102,8 @@ export default class Sidebar extends Guest {
 
       element.appendChild(this.hypothesisSidebar);
     }
+
+    this.guest = guest;
 
     /** @type {RegisteredListener[]} */
     this.registeredListeners = [];
@@ -126,7 +136,7 @@ export default class Sidebar extends Guest {
     // Set up the toolbar on the left edge of the sidebar.
     const toolbarContainer = document.createElement('div');
     this.toolbar = new ToolbarController(toolbarContainer, {
-      createAnnotation: () => this.createAnnotation(),
+      createAnnotation: () => guest.createAnnotation(),
       setSidebarOpen: open => (open ? this.show() : this.hide()),
       setHighlightsVisible: show => this.setAllVisibleHighlights(show),
     });
@@ -136,6 +146,13 @@ export default class Sidebar extends Guest {
     } else {
       this.toolbar.useMinimalControls = false;
     }
+
+    this.subscribe('highlightsVisibleChanged', visible => {
+      this.toolbar.highlightsVisible = visible;
+    });
+    this.subscribe('hasSelectionChanged', hasSelection => {
+      this.toolbar.newAnnotationType = hasSelection ? 'annotation' : 'note';
+    });
 
     if (this.iframeContainer) {
       // If using our own container frame for the sidebar, add the toolbar to it.
@@ -205,20 +222,20 @@ export default class Sidebar extends Guest {
   }
 
   _setupSidebarEvents() {
-    annotationCounts(document.body, this.crossframe);
+    annotationCounts(document.body, this.guest.crossframe);
     sidebarTrigger(document.body, () => this.show());
-    features.init(this.crossframe);
+    features.init(this.guest.crossframe);
 
-    this.crossframe.on('showSidebar', () => this.show());
-    this.crossframe.on('hideSidebar', () => this.hide());
+    this.guest.crossframe.on('showSidebar', () => this.show());
+    this.guest.crossframe.on('hideSidebar', () => this.hide());
 
     // Re-publish the crossframe event so that anything extending Delegator
     // can subscribe to it (without need for crossframe)
-    this.crossframe.on('showNotebook', groupId => {
+    this.guest.crossframe.on('showNotebook', groupId => {
       this.hide();
       this.publish('showNotebook', [groupId]);
     });
-    this.crossframe.on('hideNotebook', () => {
+    this.guest.crossframe.on('hideNotebook', () => {
       this.show();
       this.publish('hideNotebook');
     });
@@ -232,7 +249,7 @@ export default class Sidebar extends Guest {
     ];
     eventHandlers.forEach(([event, handler]) => {
       if (handler) {
-        this.crossframe.on(event, () => handler());
+        this.guest.crossframe.on(event, () => handler());
       }
     });
   }
@@ -408,7 +425,7 @@ export default class Sidebar extends Guest {
   }
 
   show() {
-    this.crossframe.call('sidebarOpened');
+    this.guest.crossframe.call('sidebarOpened');
     this.publish('sidebarOpened');
 
     if (this.iframeContainer) {
@@ -420,7 +437,7 @@ export default class Sidebar extends Guest {
     this.toolbar.sidebarOpen = true;
 
     if (this.options.showHighlights === 'whenSidebarOpen') {
-      this.setVisibleHighlights(true);
+      this.guest.setVisibleHighlights(true);
     }
 
     this._notifyOfLayoutChange(true);
@@ -435,7 +452,7 @@ export default class Sidebar extends Guest {
     this.toolbar.sidebarOpen = false;
 
     if (this.options.showHighlights === 'whenSidebarOpen') {
-      this.setVisibleHighlights(false);
+      this.guest.setVisibleHighlights(false);
     }
 
     this._notifyOfLayoutChange(false);
@@ -447,6 +464,6 @@ export default class Sidebar extends Guest {
    * @param {boolean} shouldShowHighlights
    */
   setAllVisibleHighlights(shouldShowHighlights) {
-    this.crossframe.call('setVisibleHighlights', shouldShowHighlights);
+    this.guest.crossframe.call('setVisibleHighlights', shouldShowHighlights);
   }
 }

@@ -48,15 +48,15 @@ const config = configFrom(window);
 function init() {
   const isPDF = typeof window_.PDFViewerApplication !== 'undefined';
 
-  /** @type {new (e: HTMLElement, config: any) => Guest} */
-  let Klass = isPDF ? PdfSidebar : Sidebar;
+  /** @type {(new (e: HTMLElement, config: any, guest: Guest) => Sidebar)|null} */
+  let SidebarClass = isPDF ? PdfSidebar : Sidebar;
 
   if (config.subFrameIdentifier) {
     // Make sure the PDF plugin is loaded if the subframe contains the PDF.js viewer.
     if (isPDF) {
       config.PDF = {};
     }
-    Klass = Guest;
+    SidebarClass = null;
 
     // Other modules use this to detect if this
     // frame context belongs to hypothesis.
@@ -66,10 +66,15 @@ function init() {
 
   config.pluginClasses = pluginClasses;
 
-  const annotator = new Klass(document.body, config);
+  const guest = new Guest(document.body, config);
+  const sidebar = SidebarClass
+    ? new SidebarClass(document.body, config, guest)
+    : null;
   const notebook = new Notebook(document.body, config);
+
   appLinkEl.addEventListener('destroy', function () {
-    annotator.destroy();
+    guest.destroy();
+    sidebar?.destroy();
     notebook.destroy();
 
     // Remove all the `<link>`, `<script>` and `<style>` elements added to the

@@ -21,7 +21,6 @@ import { normalizeURI } from './util/url';
  * @typedef {import('../types/annotator').AnnotationData} AnnotationData
  * @typedef {import('../types/annotator').Anchor} Anchor
  * @typedef {import('../types/api').Target} Target
- * @typedef {import('./toolbar').ToolbarController} ToolbarController
  */
 
 /**
@@ -119,9 +118,6 @@ export default class Guest extends Delegator {
     super(element, { ...defaultConfig, ...config });
 
     this.visibleHighlights = false;
-
-    /** @type {ToolbarController|null} */
-    this.toolbar = null;
 
     this.adderToolbar = document.createElement('hypothesis-adder');
     this.adderToolbar.style.display = 'none';
@@ -658,9 +654,7 @@ export default class Guest extends Delegator {
     }
 
     this.selectedRanges = [range];
-    if (this.toolbar) {
-      this.toolbar.newAnnotationType = 'annotation';
-    }
+    this.publish('hasSelectionChanged', [true]);
 
     this.adderCtrl.annotationsForSelection = annotationsForSelection();
     this.adderCtrl.show(focusRect, isBackwards);
@@ -669,9 +663,7 @@ export default class Guest extends Delegator {
   _onClearSelection() {
     this.adderCtrl.hide();
     this.selectedRanges = [];
-    if (this.toolbar) {
-      this.toolbar.newAnnotationType = 'note';
-    }
+    this.publish('hasSelectionChanged', [false]);
   }
 
   /**
@@ -707,10 +699,7 @@ export default class Guest extends Delegator {
    */
   setVisibleHighlights(shouldShowHighlights) {
     setHighlightsVisible(this.element, shouldShowHighlights);
-
     this.visibleHighlights = shouldShowHighlights;
-    if (this.toolbar) {
-      this.toolbar.highlightsVisible = shouldShowHighlights;
-    }
+    this.publish('highlightsVisibleChanged', [shouldShowHighlights]);
   }
 }
