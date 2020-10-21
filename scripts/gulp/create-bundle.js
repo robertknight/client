@@ -72,6 +72,8 @@ module.exports = function createBundle(config, buildOpts) {
     insertGlobalVars: {
       // Workaround for Hammer.JS on pages that use RequireJS. Hammer doesn't
       // set `module.exports` if a global variable called `define` exists.
+      //
+      // TODO - We don't use Hammer.JS any more, we may be able to remove this.
       define: () => 'undefined',
 
       // The Browserify polyfill for the `Buffer` global is large and
