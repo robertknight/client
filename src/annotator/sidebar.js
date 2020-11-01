@@ -16,6 +16,8 @@ import { ToolbarController } from './toolbar';
  * @typedef DragResizeState
  * @prop {number} frameWidth - Frame width when drag resize started
  * @prop {number} pointerClientX - Pointer position when drag resize started
+ * @prop {() => void} reset -
+ *   Undo temporary changes to the document made when the drag-resize started
  */
 
 // Minimum width to which the frame can be resized.
@@ -126,6 +128,7 @@ export default class Sidebar extends Guest {
 
     /** @type {DragResizeState|null} */
     this._dragResizeState = null;
+    this._endDragResize = this._endDragResize.bind(this);
 
     // Set up the toolbar on the left edge of the sidebar.
     const toolbarContainer = document.createElement('div');
@@ -223,9 +226,10 @@ export default class Sidebar extends Guest {
       if (!this._dragResizeState) {
         return;
       }
+      event.preventDefault();
 
       const deltaX = this._dragResizeState.pointerClientX - event.clientX;
-      const minWidth = 320;
+      const minWidth = MIN_RESIZE;
       const maxWidth = 600;
       const width = Math.min(
         Math.max(this._dragResizeState.frameWidth + deltaX, minWidth),
@@ -234,21 +238,6 @@ export default class Sidebar extends Guest {
 
       frame.style.width = `${width}px`;
       frame.style.marginLeft = `${-width}px`;
-    };
-
-    const ignoreEventDuringDrag = e => {
-      e.stopPropagation();
-    };
-
-    const onDragEnd = () => {
-      this._dragResizeState = null;
-
-      // Undo changes made to frame when drag resize started.
-      frame.classList.remove('annotator-no-transition');
-      frame.style.pointerEvents = '';
-
-      document.body.removeEventListener('pointermove', onDragResize);
-      document.body.removeEventListener('pointerup', onDragEnd);
     };
 
     // Listen for sidebar toggle button being dragged to start a drag-resize.
@@ -262,27 +251,30 @@ export default class Sidebar extends Guest {
         return;
       }
 
+      // Disable animated change of sidebar position during drag.
+      frame.classList.add('annotator-no-transition');
+
+      // Prevent pointer events from being consumed by the sidebar iframe
+      // during the drag, as this prevents the top frame from getting them.
+      frame.style.pointerEvents = 'none';
+
+      // Disable default browser handling (eg. panning) during drag.
+      document.body.style.touchAction = 'none';
+
       this._dragResizeState = {
         frameWidth: this.frame.getBoundingClientRect().width,
         pointerClientX: e.clientX,
+        reset: () => {
+          frame.classList.remove('annotator-no-transition');
+          frame.style.pointerEvents = '';
+          document.body.style.touchAction = '';
+          document.body.removeEventListener('pointermove', onDragResize);
+          document.body.removeEventListener('pointerup', this._endDragResize);
+        },
       };
 
-      // Prepare frame for resizing by disabling animated position transition
-      // and prevent sidebar iframe from receiving pointer events (which then
-      // would not be seen by the current frame).
-      frame.classList.add('annotator-no-transition');
-      frame.style.pointerEvents = 'none';
-
-      // Ignore click events during a drag resize, as otherwise these may
-      // cause the sidebar to close.
-      // FIXME - Make this work if `once` is not supported.
-      document.body.addEventListener('click', ignoreEventDuringDrag, {
-        capture: true,
-        once: true,
-      });
-
       document.body.addEventListener('pointermove', onDragResize);
-      document.body.addEventListener('pointerup', onDragEnd);
+      document.body.addEventListener('pointerup', this._endDragResize);
     });
   }
 
@@ -362,6 +354,8 @@ export default class Sidebar extends Guest {
   }
 
   hide() {
+    this._endDragResize();
+
     if (this.frame) {
       this.frame.style.marginLeft = '';
       this.frame.classList.add('annotator-collapsed');
@@ -387,5 +381,17 @@ export default class Sidebar extends Guest {
    */
   setAllVisibleHighlights(shouldShowHighlights) {
     this.crossframe.call('setVisibleHighlights', shouldShowHighlights);
+  }
+
+  _endDragResize() {
+    if (!this._dragResizeState) {
+      return;
+    }
+    this._dragResizeState.reset();
+    this._dragResizeState = null;
+    document.body.addEventListener('click', e => e.stopPropagation(), {
+      capture: true,
+      once: true,
+    });
   }
 }
