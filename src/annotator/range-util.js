@@ -14,30 +14,6 @@ export function isSelectionBackwards(selection) {
 }
 
 /**
- * Returns true if `node` lies within a range.
- *
- * This is a simplified version of `Range.isPointInRange()` for compatibility
- * with IE.
- *
- * @param {Range} range
- * @param {Node} node
- */
-export function isNodeInRange(range, node) {
-  if (node === range.startContainer || node === range.endContainer) {
-    return true;
-  }
-
-  const nodeRange = /** @type {Document} */ (node.ownerDocument).createRange();
-  nodeRange.selectNode(node);
-  const isAtOrBeforeStart =
-    range.compareBoundaryPoints(Range.START_TO_START, nodeRange) <= 0;
-  const isAtOrAfterEnd =
-    range.compareBoundaryPoints(Range.END_TO_END, nodeRange) >= 0;
-  nodeRange.detach();
-  return isAtOrBeforeStart && isAtOrAfterEnd;
-}
-
-/**
  * Iterate over all Node(s) in `range` in document order and invoke `callback`
  * for each of them.
  *
@@ -57,7 +33,7 @@ function forEachNodeInRange(range, callback) {
   let currentNode;
   while ((currentNode = nodeIter.nextNode())) {
     // eslint-disable-line no-cond-assign
-    if (isNodeInRange(range, currentNode)) {
+    if (range.intersectsNode(currentNode)) {
       callback(currentNode);
     }
   }

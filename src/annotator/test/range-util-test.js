@@ -44,28 +44,6 @@ describe('annotator.range-util', function () {
     selection.addRange(range);
   }
 
-  describe('#isNodeInRange', function () {
-    it('is true for a node in the range', function () {
-      const rng = createRange(testNode, 0, 1);
-      assert.equal(rangeUtil.isNodeInRange(rng, testNode.firstChild), true);
-    });
-
-    it('is false for a node before the range', function () {
-      testNode.innerHTML = 'one <b>two</b> three';
-      const rng = createRange(testNode, 1, 2);
-      assert.equal(rangeUtil.isNodeInRange(rng, testNode.firstChild), false);
-    });
-
-    it('is false for a node after the range', function () {
-      testNode.innerHTML = 'one <b>two</b> three';
-      const rng = createRange(testNode, 1, 2);
-      assert.equal(
-        rangeUtil.isNodeInRange(rng, testNode.childNodes.item(2)),
-        false
-      );
-    });
-  });
-
   describe('#getTextBoundingBoxes', function () {
     it('gets the bounding box of a range in a text node', function () {
       testNode.innerHTML = 'plain text';
