@@ -3,6 +3,11 @@
  */
 
 /**
+ * @typedef TextRange
+ * @prop {() => Range} toRange
+ */
+
+/**
  * @typedef {import("./api").Selector} Selector
  * @typedef {import("./api").Target} Target
  */
@@ -32,6 +37,7 @@
  * @prop {AnnotationData} annotation
  * @prop {HTMLElement[]} [highlights]
  * @prop {Range} [range]
+ * @prop {TextRange} [textRange]
  * @prop {Target} target
  */
 

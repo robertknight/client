@@ -4,6 +4,7 @@ import Delegator from './delegator';
 import { Adder } from './adder';
 
 import * as htmlAnchoring from './anchoring/html';
+import { TextRange } from './anchoring/text-range';
 import {
   getHighlightsContainingNode,
   highlightRange,
@@ -397,6 +398,7 @@ export default class Guest extends Delegator {
           annotation,
           target,
           range,
+          textRange: TextRange.fromRange(range),
         }))
         .catch(() => ({
           annotation,
@@ -414,7 +416,7 @@ export default class Guest extends Delegator {
         return anchor;
       }
       const highlights = /** @type {AnnotationHighlight[]} */ (highlightRange(
-        anchor.range
+        anchor.textRange?.toRange() || anchor.range
       ));
       highlights.forEach(h => {
         h._annotation = anchor.annotation;
