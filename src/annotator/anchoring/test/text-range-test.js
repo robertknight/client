@@ -174,7 +174,7 @@ describe('annotator/anchoring/text-range', () => {
 
   describe('TextRange', () => {
     describe('#toRange', () => {
-      it('resolves start and end points', () => {
+      it('resolves start and end points in same element', () => {
         const el = document.createElement('div');
         el.textContent = 'one two three';
 
@@ -185,6 +185,23 @@ describe('annotator/anchoring/text-range', () => {
         const range = textRange.toRange();
 
         assert.equal(range.toString(), 'two');
+      });
+
+      it('resolves start and end points in different elements', () => {
+        const parent = document.createElement('div');
+        const firstChild = document.createElement('span');
+        firstChild.append('foo');
+        const secondChild = document.createElement('span');
+        secondChild.append('bar');
+        parent.append(firstChild, secondChild);
+
+        const textRange = new TextRange(
+          new TextPosition(firstChild, 0),
+          new TextPosition(secondChild, 3)
+        );
+        const range = textRange.toRange();
+
+        assert.equal(range.toString(), 'foobar');
       });
 
       it('throws if start point cannot be resolved', () => {
