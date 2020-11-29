@@ -26,6 +26,41 @@ const defaultConfig = {
 };
 
 /**
+ * Apply a layout change to the document and preserve the scroll position.
+ *
+ * This utility tries to ensure that the same part of the document remains
+ * visible on screen after the content is resized.
+ *
+ * @param {() => any} callback - Callback that will apply the layout change
+ */
+function preserveScrollPosition(callback) {
+  // Element that we are going to scroll in order to keep the same content on
+  // screen after the document has been resized.
+  const scrollRoot = document.documentElement;
+
+  // Find an element near the top of the screen to serve as a reference point.
+  // We are currently just picking whatever element is in the middle of the screen,
+  // but this should ideally be an element that will scroll together with the
+  // scroll root, eg. excluding fixed elements.
+  const anchorElement = document.elementFromPoint(window.innerWidth / 2, 1);
+  if (!anchorElement) {
+    callback();
+    return;
+  }
+
+  const anchorTop = anchorElement.getBoundingClientRect().top;
+
+  callback();
+
+  const newAnchorTop = anchorElement.getBoundingClientRect().top;
+
+  // Determine how far we scrolled as a result of the layout change.
+  // This will be positive if the anchor element moved down or negative if it moved up.
+  const scrollDelta = newAnchorTop - anchorTop;
+  scrollRoot.scrollTop += scrollDelta;
+}
+
+/**
  * Create the iframe that will load the sidebar application.
  *
  * @return {HTMLIFrameElement}
@@ -166,12 +201,103 @@ export default class Sidebar extends Guest {
     // Initial layout notification
     this._notifyOfLayoutChange(false);
     this._setupSidebarEvents();
+
+    // Is the document currently displayed side-by-side with the sidebar?
+    this.sideBySideActive = false;
+
+    /** @type {LayoutState} */
+    let lastSidebarLayoutState = {
+      expanded: false,
+      width: 0,
+      height: 0,
+    };
+    this.subscribe('sidebarLayoutChanged', state => {
+      lastSidebarLayoutState = state;
+      this.fitSideBySide(state);
+    });
+
+    const fitSideBySideOnResize = () =>
+      this.fitSideBySide(lastSidebarLayoutState);
+    window.addEventListener('resize', fitSideBySideOnResize);
+    this._cleanupSideBySide = () => {
+      window.removeEventListener('resize', fitSideBySideOnResize);
+    };
   }
 
   destroy() {
+    this._cleanupSideBySide();
     this._hammerManager?.destroy();
     this.frame?.remove();
     super.destroy();
+  }
+
+  /**
+   * Respond to the sidebar opening or document being resized by updating the
+   * side-by-side mode.
+   *
+   * Subclasses may override `minSideBySideWidth`, `activateSideBySide` and
+   * `deactivateSideBySide` to customize when side-by-side mode is activated
+   * what changes are made to the document when it is.
+   *
+   * @param {LayoutState} layoutState
+   */
+  fitSideBySide(layoutState) {
+    const maximumWidthToFit = window.innerWidth - layoutState.width;
+
+    this.sideBySideActive =
+      layoutState.expanded && maximumWidthToFit >= this.minSideBySideWidth();
+    this.closeSidebarOnDocumentClick = !this.sideBySideActive;
+
+    if (this.sideBySideActive) {
+      this.activateSideBySide(maximumWidthToFit);
+    } else {
+      this.deactivateSideBySide();
+    }
+  }
+
+  /**
+   * Set the document body to the designated `width` and activate side-by-side mode.
+   *
+   * Subclasses can override this to customize how the document viewer is
+   * resized when side-by-side mode is activated. If they do, they should also
+   * implement `deactivateSideBySide`.
+   *
+   * @param {number} width - in pixels
+   */
+  activateSideBySide(width) {
+    // Margin between the edge of the open sidebar and the document.
+    const padding = 10;
+    const rightMargin = window.innerWidth - width + padding;
+
+    // TODO: Prevent the scroll position from jumping after the document layout
+    // changes. We might want to look at the heuristics that some browsers
+    // (eg. Chrome) use for "scroll anchoring", which solves the same problem
+    // for when images etc. load above the viewport.
+    preserveScrollPosition(() => {
+      document.body.style.marginRight = `${rightMargin}px`;
+    });
+  }
+
+  /**
+   * Undo the effects of `activateSideBySide`.
+   */
+  deactivateSideBySide() {
+    preserveScrollPosition(() => {
+      document.body.style.marginRight = '';
+    });
+  }
+
+  /**
+   * Return the minimum width that the document must have for side-by-side
+   * mode to be enabled when the sidebar is open.
+   *
+   * Subclasses can override this to specify a different minimum width for
+   * a particular document viewer.
+   *
+   * @return {number}
+   */
+  minSideBySideWidth() {
+    return 640;
   }
 
   _setupSidebarEvents() {
