@@ -29,7 +29,8 @@ const defaultConfig = {
  * Attempt to guess the region of the page that contains the main content.
  *
  * @param {Element} root
- * @return {{ left: number, right: number }|null}
+ * @return {{ left: number, right: number }|null} -
+ *   The left/right content margins or `null` if they could not be determined
  */
 function guessMainContentArea(root) {
   /** @type {Map<number,number>} */
@@ -38,58 +39,55 @@ function guessMainContentArea(root) {
   /** @type {Map<number,number>} */
   const rightMarginVotes = new Map();
 
-  // Get all the paragraphs of text in the document and gather statistics about them.
-  const contentParagraphs = Array.from(root.querySelectorAll('p'))
+  // Gather data about the paragraphs of text in the document.
+  const paragraphs = Array.from(root.querySelectorAll('p'))
     .map(p => {
-      // Gather some statistics about them.
+      // Gather some data about them.
       const rect = p.getBoundingClientRect();
-      return [
-        /** @type {string} */ (p.textContent).length,
-        rect.left,
-        rect.right,
-      ];
+      const textLength = /** @type {string} */ (p.textContent).length;
+      return { rect, textLength };
     })
-    .filter(([, left, right]) => {
-      // Filter out hidden or very narrow paragraphs
-      return right - left > 100;
+    .filter(({ rect }) => {
+      // Filter out hidden paragraphs
+      return rect.width > 0 && rect.height > 0;
     })
     // Select the paragraphs containing the most text.
-    .sort((a, b) => {
-      return b[0] - a[0];
-    })
+    .sort((a, b) => b.textLength - a.textLength)
     .slice(0, 15);
 
   // Let these paragraphs "vote" for what the left and right margins of the
   // main content area in the document are.
-  contentParagraphs.forEach(([, left, right]) => {
-    let leftVotes = leftMarginVotes.get(left) ?? 0;
+  paragraphs.forEach(({ rect }) => {
+    let leftVotes = leftMarginVotes.get(rect.left) ?? 0;
     leftVotes += 1;
-    leftMarginVotes.set(left, leftVotes);
+    leftMarginVotes.set(rect.left, leftVotes);
 
-    let rightVotes = rightMarginVotes.get(right) ?? 0;
+    let rightVotes = rightMarginVotes.get(rect.right) ?? 0;
     rightVotes += 1;
-    rightMarginVotes.set(right, rightVotes);
+    rightMarginVotes.set(rect.right, rightVotes);
   });
 
-  // Find the winners of the election.
+  // Find the margin values with the most votes.
+  if (leftMarginVotes.size === 0 || rightMarginVotes.size === 0) {
+    return null;
+  }
+
   const leftMargin = [...leftMarginVotes.entries()].sort((a, b) => b[1] - a[1]);
   const rightMargin = [...rightMarginVotes.entries()].sort(
     (a, b) => b[1] - a[1]
   );
 
-  if (leftMargin.length > 0 && rightMargin.length > 0) {
-    const [leftPos, leftVotes] = leftMargin[0];
-    const [rightPos, rightVotes] = rightMargin[0];
+  const [leftPos, leftVotes] = leftMargin[0];
+  const [rightPos, rightVotes] = rightMargin[0];
 
-    const minVotes = 5;
-    if (leftVotes < minVotes || rightVotes < minVotes) {
-      return null;
-    }
-
-    return { left: leftPos, right: rightPos };
-  } else {
+  // If we didn't find at least `minVotes` paragraphs with the same left or
+  // right edge, then we don't have enough confidence.
+  const minVotes = 5;
+  if (leftVotes < minVotes || rightVotes < minVotes) {
     return null;
   }
+
+  return { left: leftPos, right: rightPos };
 }
 
 /**
@@ -333,46 +331,58 @@ export default class Sidebar extends Guest {
    */
   activateSideBySide(width) {
     // When side-by-side mode is activated, what we want to achieve is that the
-    // main content of the page remains fully visible afterwards and is given
-    // as much space as possible. A challenge is that we don't know how the page
-    // will respond to reducing the width of the body.
+    // main content of the page is fully visible alongside the sidebar, with
+    // as much space given to the main content as possible. A challenge is that
+    // we don't know how the page will respond to reducing the width of the body.
     //
-    // - It may respond by reducing existing margins around the main content,
-    //   leaving it filling more of the space outside of the sidebar
-    //   For example, a page with a fixed-width article in the middle and
-    //   `margin: auto` for both margins.
+    // - The content might have margins which automatically get reduced as the
+    //   available width is reduced. For example a blog post with a fixed-width
+    //   article in the middle and `margin: auto` for both margins.
     //
-    // - It may respond by squashing the main content to be unnecessarily
-    //   narrow. For example, a news websites with a sidebar of ads on the right
-    //   which remains visible after the body is resized.
+    //   In this scenario we'd want to reduce the document width by the full
+    //   width of the sidebar.
     //
-    // Therefore what we do is to initially reduce the width of the document to
-    // a maximum of `width` pixels, then we use heuristics to determine how
-    // whether there is significant "free space" (ie. anything that is not the
-    // main content of the document, such as ads or links to related stories)
-    // to the right of the main content. If there is, make the document wider
-    // again to allow more space for the main content.
+    // - There might be sidebars to the left and/or right of the main content
+    //   which cause the main content to be squashed when the width is reduced.
+    //   For example a news website with a column of ads on the right.
+    //
+    //   In this scenario we'd want to not reduce the document width or reduce
+    //   it by a smaller amount and let the Hypothesis sidebar cover up the
+    //   document's sidebar, leaving as much space as possible to the content.
+    //
+    // Therefore what we do is to initially reduce the width of the document by
+    // the full width of the sidebar, then we use heuristics to analyze the
+    // resulting page layout and determine whether there is significant "free space"
+    // (ie. anything that is not the main content of the document, such as ads or
+    // links to related stories) to the right of the main content. If there is,
+    // we make the document wider again to allow more space for the main content.
     //
     // These heuristics assume a typical "article" page with one central block
     // of content. If we can't find the "main content" then we just assume that
     // everything on the page is potentially content that the user might want
-    // to annotate.
+    // to annotate and so try to keep it all visible.
     const padding = 10;
     const rightMargin = window.innerWidth - width + padding;
     const sidebarWidth = window.innerWidth - width;
 
     preserveScrollPosition(() => {
-      document.body.style.marginLeft = `${padding}px`;
+      // FIXME: If there is a `width: 100%` CSS rule for the body, that will override
+      // this margin.
       document.body.style.marginRight = `${rightMargin}px`;
 
-      // TODO - Decide which elements to use _before_ applying the initial squash,
-      // as the initial squash may make the content very narrow and so not look
-      // like the main content. This happens on Stack Overflow for example.
       const contentArea = guessMainContentArea(document.body);
       if (contentArea) {
+        // Check if we can give the main content more space by letting the
+        // sidebar overlap stuff in the document to the right of the main content.
         const freeSpace = window.innerWidth - sidebarWidth - contentArea.right;
         if (freeSpace > 200) {
           document.body.style.marginRight = `${rightMargin - freeSpace}px`;
+        }
+
+        // If the main content appears to be right up against the edge of the
+        // window, add padding for readability.
+        if (contentArea.left < 10) {
+          document.body.style.marginLeft = `${padding}px`;
         }
       }
     });
