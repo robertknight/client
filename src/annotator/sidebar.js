@@ -5,6 +5,10 @@ import sidebarTrigger from './sidebar-trigger';
 import { createSidebarConfig } from './config/sidebar';
 import events from '../shared/bridge-events';
 import features from './features';
+import {
+  guessMainContentArea,
+  preserveScrollPosition,
+} from './util/document-resizing';
 
 import Guest from './guest';
 import { ToolbarController } from './toolbar';
@@ -24,106 +28,6 @@ const defaultConfig = {
     container: '.annotator-frame',
   },
 };
-
-/**
- * Attempt to guess the region of the page that contains the main content.
- *
- * @param {Element} root
- * @return {{ left: number, right: number }|null} -
- *   The left/right content margins or `null` if they could not be determined
- */
-function guessMainContentArea(root) {
-  /** @type {Map<number,number>} */
-  const leftMarginVotes = new Map();
-
-  /** @type {Map<number,number>} */
-  const rightMarginVotes = new Map();
-
-  // Gather data about the paragraphs of text in the document.
-  const paragraphs = Array.from(root.querySelectorAll('p'))
-    .map(p => {
-      // Gather some data about them.
-      const rect = p.getBoundingClientRect();
-      const textLength = /** @type {string} */ (p.textContent).length;
-      return { rect, textLength };
-    })
-    .filter(({ rect }) => {
-      // Filter out hidden paragraphs
-      return rect.width > 0 && rect.height > 0;
-    })
-    // Select the paragraphs containing the most text.
-    .sort((a, b) => b.textLength - a.textLength)
-    .slice(0, 15);
-
-  // Let these paragraphs "vote" for what the left and right margins of the
-  // main content area in the document are.
-  paragraphs.forEach(({ rect }) => {
-    let leftVotes = leftMarginVotes.get(rect.left) ?? 0;
-    leftVotes += 1;
-    leftMarginVotes.set(rect.left, leftVotes);
-
-    let rightVotes = rightMarginVotes.get(rect.right) ?? 0;
-    rightVotes += 1;
-    rightMarginVotes.set(rect.right, rightVotes);
-  });
-
-  // Find the margin values with the most votes.
-  if (leftMarginVotes.size === 0 || rightMarginVotes.size === 0) {
-    return null;
-  }
-
-  const leftMargin = [...leftMarginVotes.entries()].sort((a, b) => b[1] - a[1]);
-  const rightMargin = [...rightMarginVotes.entries()].sort(
-    (a, b) => b[1] - a[1]
-  );
-
-  const [leftPos, leftVotes] = leftMargin[0];
-  const [rightPos, rightVotes] = rightMargin[0];
-
-  // If we didn't find at least `minVotes` paragraphs with the same left or
-  // right edge, then we don't have enough confidence.
-  const minVotes = 5;
-  if (leftVotes < minVotes || rightVotes < minVotes) {
-    return null;
-  }
-
-  return { left: leftPos, right: rightPos };
-}
-
-/**
- * Apply a layout change to the document and preserve the scroll position.
- *
- * This utility tries to ensure that the same part of the document remains
- * visible on screen after the content is resized.
- *
- * @param {() => any} callback - Callback that will apply the layout change
- */
-function preserveScrollPosition(callback) {
-  // Element that we are going to scroll in order to keep the same content on
-  // screen after the document has been resized.
-  const scrollRoot = document.documentElement;
-
-  // Find an element near the top of the screen to serve as a reference point.
-  // We are currently just picking whatever element is in the middle of the screen,
-  // but this should ideally be an element that will scroll together with the
-  // scroll root, eg. excluding fixed elements.
-  const anchorElement = document.elementFromPoint(window.innerWidth / 2, 1);
-  if (!anchorElement) {
-    callback();
-    return;
-  }
-
-  const anchorTop = anchorElement.getBoundingClientRect().top;
-
-  callback();
-
-  const newAnchorTop = anchorElement.getBoundingClientRect().top;
-
-  // Determine how far we scrolled as a result of the layout change.
-  // This will be positive if the anchor element moved down or negative if it moved up.
-  const scrollDelta = newAnchorTop - anchorTop;
-  scrollRoot.scrollTop += scrollDelta;
-}
 
 /**
  * Create the iframe that will load the sidebar application.
@@ -301,8 +205,8 @@ export default class Sidebar extends Guest {
    * side-by-side mode.
    *
    * Subclasses may override `minSideBySideWidth`, `activateSideBySide` and
-   * `deactivateSideBySide` to customize when side-by-side mode is activated
-   * what changes are made to the document when it is.
+   * `deactivateSideBySide` to customize what changes are made to the document
+   * when it is activated.
    *
    * @param {LayoutState} layoutState
    */
@@ -314,22 +218,22 @@ export default class Sidebar extends Guest {
     this.closeSidebarOnDocumentClick = !this.sideBySideActive;
 
     if (this.sideBySideActive) {
-      this.activateSideBySide(maximumWidthToFit);
+      this.activateSideBySide(layoutState.width);
     } else {
       this.deactivateSideBySide();
     }
   }
 
   /**
-   * Set the document body to the designated `width` and activate side-by-side mode.
+   * Resize the document content after side-by-side mode is activated.
    *
    * Subclasses can override this to customize how the document viewer is
    * resized when side-by-side mode is activated. If they do, they should also
    * implement `deactivateSideBySide`.
    *
-   * @param {number} width - in pixels
+   * @param {number} sidebarWidth
    */
-  activateSideBySide(width) {
+  activateSideBySide(sidebarWidth) {
     // When side-by-side mode is activated, what we want to achieve is that the
     // main content of the page is fully visible alongside the sidebar, with
     // as much space given to the main content as possible. A challenge is that
@@ -362,12 +266,13 @@ export default class Sidebar extends Guest {
     // everything on the page is potentially content that the user might want
     // to annotate and so try to keep it all visible.
     const padding = 10;
+    const width = window.innerWidth - sidebarWidth;
     const rightMargin = window.innerWidth - width + padding;
-    const sidebarWidth = window.innerWidth - width;
 
     preserveScrollPosition(() => {
-      // FIXME: If there is a `width: 100%` CSS rule for the body, that will override
-      // this margin.
+      // FIXME: If there is a CSS rule that sets the `width` of the body, that
+      // will override this margin. eg. There are various sites that have
+      // `width: 100%` rules for the body.
       document.body.style.marginRight = `${rightMargin}px`;
 
       const contentArea = guessMainContentArea(document.body);

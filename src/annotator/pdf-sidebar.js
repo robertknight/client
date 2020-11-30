@@ -39,9 +39,10 @@ export default class PdfSidebar extends Sidebar {
    * Set the PDF.js container element to the designated `width` and
    * activate side-by-side mode.
    *
-   * @param {number} width - in pixels
+   * @param {number} sidebarWidth - in pixels
    */
-  activateSideBySide(width) {
+  activateSideBySide(sidebarWidth) {
+    const width = window.innerWidth - sidebarWidth;
     this.pdfContainer.style.width = width + 'px';
     this.pdfContainer.classList.add('hypothesis-side-by-side');
 
