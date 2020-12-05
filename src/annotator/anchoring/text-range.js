@@ -37,9 +37,14 @@ function previousSiblingsTextLength(node) {
  *
  * @param {Element} element
  * @param {number[]} offsets - Offsets, which must be sorted in ascending order
+ * @param {TextPositionCache} [cache]
  * @return {{ node: Text, offset: number }[]}
  */
-function resolveOffsets(element, ...offsets) {
+function resolveOffsets(element, offsets, cache) {
+  if (cache) {
+    return offsets.map(off => cache.nodeOffset(off, element));
+  }
+
   let nextOffset = offsets.shift();
   const nodeIter = /** @type {Document} */ (element.ownerDocument).createNodeIterator(
     element,
@@ -143,12 +148,15 @@ export class TextPosition {
    *     Specifies in which direction to search for the nearest text node if
    *     `this.offset` is `0` and `this.element` has no text. If not specified
    *     an error is thrown.
+   *   @param {TextPositionCache} [options.cache] -
+   *     Optional cache to speed up the resolution. Has no effect on the output
+   *     provided that the document has not changed since the cache was built.
    * @return {{ node: Text, offset: number }}
    * @throws {RangeError}
    */
   resolve(options = {}) {
     try {
-      return resolveOffsets(this.element, this.offset)[0];
+      return resolveOffsets(this.element, [this.offset], options.cache)[0];
     } catch (err) {
       if (this.offset === 0 && options.direction !== undefined) {
         const tw = document.createTreeWalker(
@@ -232,6 +240,154 @@ export class TextPosition {
 }
 
 /**
+ * A cache to optimize mapping between offsets within the text content of
+ * an element and positions within the text nodes in that element.
+ */
+export class TextPositionCache {
+  /**
+   * Build a cache that maps between positions in `root.textContent` and
+   * text node offsets.
+   *
+   * @param {Element} root
+   */
+  constructor(root) {
+    this.root = root;
+
+    /**
+     * @typedef TextOffset
+     * @prop {number} start
+     * @prop {number} end
+     * @prop {Text} node
+     */
+
+    /** Cached text content of `root`. */
+    this._text = '';
+
+    /**
+     * List of text nodes in this element and the offset of their text within
+     * the complete text content of the node.
+     *
+     * @type {TextOffset[]}
+     */
+    this._textNodes = [];
+
+    /**
+     * Mapping between text node and offset in `this._textNodes`
+     * @type {Map<Text,number>}
+     */
+    this._textNodeIndex = new Map();
+
+    const nodeIter = /** @type {Document} */ (root.ownerDocument).createNodeIterator(
+      root,
+      NodeFilter.SHOW_TEXT
+    );
+    let current;
+    while ((current = nodeIter.nextNode())) {
+      const nodeText = /** @type {string} */ (current.nodeValue);
+      const nodeData = {
+        node: /** @type {Text} */ (current),
+        start: this._text.length,
+        end: this._text.length + nodeText.length,
+      };
+      this._textNodes.push(nodeData);
+      this._textNodeIndex.set(nodeData.node, this._textNodes.length - 1);
+      this._text += nodeText;
+    }
+  }
+
+  /**
+   * Return the cached text content of the root node.
+   *
+   * This is typically faster than calling `this.root.textContent` which will
+   * reconstuct the current text on each call.
+   */
+  text() {
+    return this._text;
+  }
+
+  /**
+   * Map a position within the cached text to a `Text` node and offset.
+   *
+   * Positions at the boundary between nodes are mapped to the node beginning
+   * at the position.
+   *
+   * @param {number} pos
+   * @param {Element} [element] -
+   *   Element which `pos` is relative to. Defaults to `this.root`.
+   * @return {{ node: Text, offset: number }}
+   */
+  nodeOffset(pos, element) {
+    if (this._textNodes.length === 0) {
+      throw new Error('No text nodes in range');
+    }
+
+    if (element && element !== this.root) {
+      const nodeIter = /** @type {Document} */ (element.ownerDocument).createNodeIterator(
+        element,
+        NodeFilter.SHOW_TEXT
+      );
+      const firstText = /** @type {Text|null} */ (nodeIter.nextNode());
+      if (!firstText) {
+        throw new RangeError('Offset exceeds text length');
+      }
+      pos += this.toPosition(firstText, 0);
+    }
+
+    const len = this._textNodes.length;
+    const lastNode = this._textNodes[len - 1];
+
+    if (pos < 0 || len === 0 || pos > lastNode.end) {
+      throw new RangeError('Position is out of range');
+    }
+
+    // Boundary case.
+    if (pos === lastNode.end) {
+      return { node: lastNode.node, offset: pos - lastNode.start };
+    }
+
+    let low = 0;
+    let high = len;
+
+    while (low < high) {
+      const middle = Math.floor((low + high) / 2);
+
+      const node = this._textNodes[middle];
+      if (pos >= node.start && pos < node.end) {
+        return { node: node.node, offset: pos - node.start };
+      }
+
+      if (pos >= node.start) {
+        low = middle + 1;
+      } else {
+        high = middle;
+      }
+    }
+
+    throw new Error('Text node not found');
+  }
+
+  /**
+   * Convert an offset within a text node under `this.root` to a position relative
+   * to `this.root.textContent`.
+   *
+   * @param {Text} node
+   * @param {number} offset
+   * @return {number}
+   */
+  toPosition(node, offset) {
+    const index = this._textNodeIndex.get(node);
+    if (index === undefined) {
+      throw new Error('No such text node');
+    }
+    const nodeData = this._textNodes[index];
+    if (offset < 0 || offset > nodeData.end - nodeData.start) {
+      throw new RangeError('Offset is out of range');
+    }
+    return nodeData.start + offset;
+  }
+}
+
+/**
  * Represents a region of a document as a (start, end) pair of `TextPosition` points.
  *
  * Representing a range in this way allows for changes in the DOM content of the
@@ -272,9 +428,12 @@ export class TextRange {
    *
    * May throw if the `start` or `end` positions cannot be resolved to a range.
    *
+   * @param {TextPositionCache} [cache] -
+   *   Optional cache to speed up the resolution. Has no effect on the output
+   *   provided that the document has not changed since the cache was built.
    * @return {Range}
    */
-  toRange() {
+  toRange(cache) {
     let start;
     let end;
 
@@ -285,12 +444,12 @@ export class TextRange {
       // Fast path for start and end points in same element.
       [start, end] = resolveOffsets(
         this.start.element,
-        this.start.offset,
-        this.end.offset
+        [this.start.offset, this.end.offset],
+        cache
       );
     } else {
-      start = this.start.resolve({ direction: RESOLVE_FORWARDS });
-      end = this.end.resolve({ direction: RESOLVE_BACKWARDS });
+      start = this.start.resolve({ cache, direction: RESOLVE_FORWARDS });
+      end = this.end.resolve({ cache, direction: RESOLVE_BACKWARDS });
     }
 
     const range = new Range();
