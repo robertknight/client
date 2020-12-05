@@ -3,6 +3,10 @@
  */
 
 /**
+ * @typedef {import("../annotator/anchoring/text-range").TextPositionCache} TextPositionCache
+ */
+
+/**
  * Object representing a region of a document that an annotation
  * has been anchored to.
  *
@@ -13,7 +17,7 @@
  * cheap operation.
  *
  * @typedef AbstractRange
- * @prop {() => Range} toRange -
+ * @prop {(cache?: TextPositionCache) => Range} toRange -
  *   Resolve the abstract range to a concrete live `Range`. The implementation
  *   may or may not return the same `Range` each time.
  */

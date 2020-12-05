@@ -13,6 +13,8 @@ import { TextRange, TextPosition } from './text-range';
 import { nodeFromXPath, xpathFromNode } from './xpath';
 
 /**
+ * @typedef {import('./text-range').TextPositionCache} TextPositionCache
+ *
  * @typedef {import('../../types/api').RangeSelector} RangeSelector
  * @typedef {import('../../types/api').TextPositionSelector} TextPositionSelector
  * @typedef {import('../../types/api').TextQuoteSelector} TextQuoteSelector
@@ -141,14 +143,20 @@ export class TextPositionAnchor {
     };
   }
 
-  toRange() {
-    return TextRange.fromOffsets(this.root, this.start, this.end).toRange();
+  /**
+   * @param {TextPositionCache} [cache]
+   */
+  toRange(cache) {
+    return TextRange.fromOffsets(this.root, this.start, this.end).toRange(
+      cache
+    );
   }
 }
 
 /**
  * @typedef QuoteMatchOptions
  * @prop {number} [hint] - Expected position of match in text. See `matchQuote`.
+ * @prop {TextPositionCache} [cache]
  */
 
 /**
@@ -225,14 +233,15 @@ export class TextQuoteAnchor {
    * @param {QuoteMatchOptions} [options]
    */
   toRange(options = {}) {
-    return this.toPositionAnchor(options).toRange();
+    return this.toPositionAnchor(options).toRange(options.cache);
   }
 
   /**
    * @param {QuoteMatchOptions} [options]
    */
   toPositionAnchor(options = {}) {
-    const text = /** @type {string} */ (this.root.textContent);
+    const text =
+      options.cache?.text() ?? /** @type {string} */ (this.root.textContent);
     const match = matchQuote(text, this.exact, {
       ...this.context,
       hint: options.hint,

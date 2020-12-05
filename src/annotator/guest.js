@@ -4,7 +4,7 @@ import Delegator from './delegator';
 import { Adder } from './adder';
 
 import * as htmlAnchoring from './anchoring/html';
-import { TextRange } from './anchoring/text-range';
+import { TextPositionCache, TextRange } from './anchoring/text-range';
 import {
   getHighlightsContainingNode,
   highlightRange,
@@ -68,14 +68,15 @@ function annotationsAt(node) {
  * the anchor was created in a way that invalidates the anchor.
  *
  * @param {Anchor} anchor
+ * @param {TextPositionCache} [cache]
  * @return {Range|null}
  */
-function resolveAnchor(anchor) {
+function resolveAnchor(anchor, cache) {
   if (!anchor.range) {
     return null;
   }
   try {
-    return anchor.range.toRange();
+    return anchor.range.toRange(cache);
   } catch {
     return null;
   }
@@ -303,7 +304,8 @@ export default class Guest extends Delegator {
     });
 
     this.subscribe('annotationsLoaded', annotations => {
-      annotations.map(annotation => this.anchor(annotation));
+      const cache = new TextPositionCache(this.element);
+      annotations.forEach(annotation => this.anchor(annotation, cache));
     });
   }
 
@@ -370,9 +372,10 @@ export default class Guest extends Delegator {
    * Anchor (locate) an annotation's selectors in the document.
    *
    * @param {AnnotationData} annotation
+   * @param {TextPositionCache} [positionCache]
    * @return {Promise<Anchor[]>}
    */
-  anchor(annotation) {
+  anchor(annotation, positionCache) {
     let anchor;
     const root = this.element;
 
@@ -418,7 +421,7 @@ export default class Guest extends Delegator {
 
       // Find a target using the anchoring module.
       return this.anchoring
-        .anchor(root, target.selector)
+        .anchor(root, target.selector, { cache: positionCache })
         .then(range => ({
           annotation,
           target,
@@ -441,7 +444,7 @@ export default class Guest extends Delegator {
      * @param {Anchor} anchor
      */
     const highlight = anchor => {
-      const range = resolveAnchor(anchor);
+      const range = resolveAnchor(anchor, positionCache);
       if (!range) {
         return anchor;
       }

@@ -2,16 +2,8 @@ import { RangeAnchor, TextPositionAnchor, TextQuoteAnchor } from './types';
 
 /**
  * @typedef {import('../../types/api').Selector} Selector
+ * @typedef {import('./text-range').TextPositionCache} TextPositionCache
  */
-
-/**
- * @param {RangeAnchor|TextPositionAnchor|TextQuoteAnchor} anchor
- * @param {Object} [options]
- *  @param {number} [options.hint]
- */
-async function querySelector(anchor, options = {}) {
-  return anchor.toRange(options);
-}
 
 /**
  * Anchor a set of selectors.
@@ -23,6 +15,7 @@ async function querySelector(anchor, options = {}) {
  * @param {Element} root - The root element of the anchoring context.
  * @param {Selector[]} selectors - The selectors to try.
  * @param {Object} [options]
+ *   @param {TextPositionCache} [options.cache]
  *   @param {number} [options.hint]
  */
 export function anchor(root, selectors, options = {}) {
@@ -66,21 +59,25 @@ export function anchor(root, selectors, options = {}) {
   if (range) {
     promise = promise.catch(() => {
       let anchor = RangeAnchor.fromSelector(root, range);
-      return querySelector(anchor, options).then(maybeAssertQuote);
+      const result = anchor.toRange();
+      maybeAssertQuote(result);
+      return result;
     });
   }
 
   if (position) {
     promise = promise.catch(() => {
       let anchor = TextPositionAnchor.fromSelector(root, position);
-      return querySelector(anchor, options).then(maybeAssertQuote);
+      const result = anchor.toRange(options.cache);
+      maybeAssertQuote(result);
+      return result;
     });
   }
 
   if (quote) {
     promise = promise.catch(() => {
       let anchor = TextQuoteAnchor.fromSelector(root, quote);
-      return querySelector(anchor, options);
+      return anchor.toRange(options);
     });
   }
 
