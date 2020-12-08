@@ -61,10 +61,6 @@ function TopBar({
     store.toggleSidebarPanel(uiConstants.PANEL_SHARE_ANNOTATIONS);
   };
 
-  // FIXME - This will re-render every time. It should be replaced with
-  // a selector.
-  const currentActivePanel = store.getState().sidebarPanels.activePanelName;
-
   /**
    * Open the help panel, or, if a service callback is configured to handle
    * help requests, fire a relevant event instead
@@ -116,7 +112,7 @@ function TopBar({
           <Button
             className="top-bar__icon-button"
             icon="help"
-            isExpanded={currentActivePanel === uiConstants.PANEL_HELP}
+            isExpanded={store.isSidebarPanelOpen(uiConstants.PANEL_HELP)}
             onClick={requestHelp}
             title="Help"
           />
@@ -147,9 +143,9 @@ function TopBar({
             <Button
               className="top-bar__icon-button"
               icon="share"
-              isExpanded={
-                currentActivePanel === uiConstants.PANEL_SHARE_ANNOTATIONS
-              }
+              isExpanded={store.isSidebarPanelOpen(
+                uiConstants.PANEL_SHARE_ANNOTATIONS
+              )}
               onClick={toggleSharePanel}
               title="Share annotations on this page"
             />
@@ -157,7 +153,7 @@ function TopBar({
           <Button
             className="top-bar__icon-button"
             icon="help"
-            isExpanded={currentActivePanel === uiConstants.PANEL_HELP}
+            isExpanded={store.isSidebarPanelOpen(uiConstants.PANEL_HELP)}
             onClick={requestHelp}
             title="Help"
           />

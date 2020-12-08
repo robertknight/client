@@ -93,9 +93,7 @@ Tab.propTypes = {
 function SelectionTabs({ isLoading, settings }) {
   const store = useStoreProxy();
 
-  // FIXME - This should use an appropriate selector.
-  const selectedTab = store.getState().selection.selectedTab;
-
+  const selectedTab = store.selectedTab();
   const noteCount = store.noteCount();
   const annotationCount = store.annotationCount();
   const orphanCount = store.orphanCount();
