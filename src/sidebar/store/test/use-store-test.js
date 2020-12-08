@@ -1,10 +1,12 @@
 import { mount } from 'enzyme';
 import { createElement } from 'preact';
 import { act } from 'preact/test-utils';
-import { createStore } from 'redux';
+import { createStore as createPlainStore } from 'redux';
+import createStore from '../create-store';
 
-import useStore, { $imports } from '../use-store';
+import useStore, { useStoreProxy, $imports } from '../use-store';
 
+// Plain Redux reducer used by `useStore` tests. Remove once `useStore` is removed.
 const initialState = { value: 10, otherValue: 20 };
 const reducer = (state = initialState, action) => {
   if (action.type === 'INCREMENT') {
@@ -16,22 +18,47 @@ const reducer = (state = initialState, action) => {
   }
 };
 
-describe('useStore', () => {
+// Store module for use with `createStore` in tests.
+const thingsModule = {
+  namespace: 'things',
+
+  init: () => ({
+    things: [],
+  }),
+
+  update: {
+    ADD_THING(state, action) {
+      if (state.things.some(t => t.id === action.thing.id)) {
+        return {};
+      }
+      return { things: [...state.things, action.thing] };
+    },
+  },
+
+  actions: {
+    addThing(id) {
+      return { type: 'ADD_THING', thing: { id } };
+    },
+  },
+
+  selectors: {
+    thingCount(state) {
+      return state.things.length;
+    },
+
+    getThing(state, id) {
+      return state.things.find(t => t.id === id);
+    },
+  },
+};
+
+describe('sidebar/store/use-store', () => {
   let renderCount;
   let testStore;
-  let TestComponent;
 
   beforeEach(() => {
     renderCount = 0;
-
-    // eslint-disable-next-line react/display-name
-    TestComponent = () => {
-      renderCount += 1;
-      const aValue = useStore(store => store.getState().value);
-      return <div>{aValue}</div>;
-    };
-
-    testStore = createStore(reducer);
+    testStore = createPlainStore(reducer);
     $imports.$mock({
       '../util/service-context': {
         useService: name => (name === 'store' ? testStore : null),
@@ -43,63 +70,204 @@ describe('useStore', () => {
     $imports.$restore();
   });
 
-  it('returns result of `callback(store)`', () => {
-    const wrapper = mount(<TestComponent />);
-    assert.equal(wrapper.text(), '10');
+  // Tests for deprecated `useStore` function.
+  describe('useStore', () => {
+    let TestComponent;
+
+    beforeEach(() => {
+      // eslint-disable-next-line react/display-name
+      TestComponent = () => {
+        renderCount += 1;
+        const aValue = useStore(store => store.getState().value);
+        return <div>{aValue}</div>;
+      };
+    });
+
+    it('returns result of `callback(store)`', () => {
+      const wrapper = mount(<TestComponent />);
+      assert.equal(wrapper.text(), '10');
+    });
+
+    it('re-renders when the store changes and result of `callback(store)` also changes', () => {
+      // An update which changes result of `callback(store)` should cause a re-render.
+      const wrapper = mount(<TestComponent />);
+      act(() => {
+        testStore.dispatch({ type: 'INCREMENT' });
+      });
+      wrapper.update();
+      assert.equal(wrapper.text(), '11');
+
+      // The new result from `callback(store)` should be remembered so that another
+      // update which doesn't change the result doesn't cause a re-render.
+      const prevRenderCount = renderCount;
+      act(() => {
+        testStore.dispatch({ type: 'INCREMENT_OTHER' });
+      });
+      wrapper.update();
+      assert.equal(renderCount, prevRenderCount);
+    });
+
+    it('does not re-render if the result of `callback(store)` did not change', () => {
+      mount(<TestComponent />);
+      const originalRenderCount = renderCount;
+      act(() => {
+        testStore.dispatch({ type: 'INCREMENT_OTHER' });
+      });
+      assert.equal(renderCount, originalRenderCount);
+    });
+
+    it('warns if the callback always returns a different value', () => {
+      const warnOnce = sinon.stub();
+      $imports.$mock({
+        '../../shared/warn-once': warnOnce,
+      });
+      const BuggyComponent = () => {
+        // The result of the callback is an object with an `aValue` property
+        // which is a new array every time. This causes unnecessary re-renders.
+        useStore(() => ({ aValue: [] }));
+        return null;
+      };
+      mount(<BuggyComponent />);
+      assert.called(warnOnce);
+      assert.match(warnOnce.firstCall.args[0], /changes every time/);
+    });
+
+    it('unsubscribes when the component is unmounted', () => {
+      const unsubscribe = sinon.stub();
+      testStore.subscribe = sinon.stub().returns(unsubscribe);
+
+      const wrapper = mount(<TestComponent />);
+
+      assert.calledOnce(testStore.subscribe);
+      wrapper.unmount();
+      assert.calledOnce(unsubscribe);
+    });
   });
 
-  it('re-renders when the store changes and result of `callback(store)` also changes', () => {
-    // An update which changes result of `callback(store)` should cause a re-render.
-    const wrapper = mount(<TestComponent />);
-    act(() => {
-      testStore.dispatch({ type: 'INCREMENT' });
+  describe('useStoreProxy', () => {
+    let store;
+    let renderCount;
+
+    beforeEach(() => {
+      renderCount = 0;
+      store = createStore([thingsModule]);
+      $imports.$mock({
+        '../util/service-context': {
+          useService: name => (name === 'store' ? store : null),
+        },
+      });
+
+      store.addThing('foo');
+      store.addThing('bar');
     });
-    wrapper.update();
-    assert.equal(wrapper.text(), '11');
 
-    // The new result from `callback(store)` should be remembered so that another
-    // update which doesn't change the result doesn't cause a re-render.
-    const prevRenderCount = renderCount;
-    act(() => {
-      testStore.dispatch({ type: 'INCREMENT_OTHER' });
+    function renderTestComponent() {
+      let proxy;
+      const TestComponent = () => {
+        ++renderCount;
+        proxy = useStoreProxy();
+        return <div>{proxy.thingCount()}</div>;
+      };
+      const wrapper = mount(<TestComponent />);
+      return { proxy, wrapper };
+    }
+
+    it('returns a proxy that wraps the store', () => {
+      const addThingSpy = sinon.spy(store, 'addThing');
+
+      const { proxy } = renderTestComponent();
+
+      assert.ok(proxy);
+
+      // Test proxied selector method.
+      assert.deepEqual(proxy.getThing('foo'), { id: 'foo' });
+      assert.deepEqual(proxy.getThing('bar'), { id: 'bar' });
+
+      // Test proxied action dispatch.
+      proxy.addThing('baz');
+      assert.calledWith(addThingSpy, 'baz');
     });
-    wrapper.update();
-    assert.equal(renderCount, prevRenderCount);
-  });
 
-  it('does not re-render if the result of `callback(store)` did not change', () => {
-    mount(<TestComponent />);
-    const originalRenderCount = renderCount;
-    act(() => {
-      testStore.dispatch({ type: 'INCREMENT_OTHER' });
+    it('proxies non-function properties', () => {
+      store.someString = 'foobar';
+
+      const { proxy } = renderTestComponent();
+
+      assert.equal(proxy.someString, 'foobar');
     });
-    assert.equal(renderCount, originalRenderCount);
-  });
 
-  it('warns if the callback always returns a different value', () => {
-    const warnOnce = sinon.stub();
-    $imports.$mock({
-      '../../shared/warn-once': warnOnce,
+    it('caches calls based on method name and arguments', () => {
+      const getThingSpy = sinon.spy(store, 'getThing');
+
+      const { proxy } = renderTestComponent();
+
+      proxy.getThing('foo');
+      proxy.getThing('foo');
+
+      assert.calledWith(getThingSpy, 'foo');
+      assert.calledOnce(getThingSpy);
+
+      proxy.getThing('bar');
+      proxy.getThing('bar');
+
+      assert.calledWith(getThingSpy, 'bar');
+      assert.calledTwice(getThingSpy);
     });
-    const BuggyComponent = () => {
-      // The result of the callback is an object with an `aValue` property
-      // which is a new array every time. This causes unnecessary re-renders.
-      useStore(() => ({ aValue: [] }));
-      return null;
-    };
-    mount(<BuggyComponent />);
-    assert.called(warnOnce);
-    assert.match(warnOnce.firstCall.args[0], /changes every time/);
-  });
 
-  it('unsubscribes when the component is unmounted', () => {
-    const unsubscribe = sinon.stub();
-    testStore.subscribe = sinon.stub().returns(unsubscribe);
+    it('does not cache the result of action dispatches', () => {
+      const addThingSpy = sinon.spy(store, 'addThing');
 
-    const wrapper = mount(<TestComponent />);
+      const { proxy } = renderTestComponent();
 
-    assert.calledOnce(testStore.subscribe);
-    wrapper.unmount();
-    assert.calledOnce(unsubscribe);
+      proxy.addThing('foo');
+      proxy.addThing('foo');
+
+      assert.calledTwice(addThingSpy);
+      assert.calledWith(addThingSpy, 'foo');
+    });
+
+    it('invalidates cache and re-renders component when used store state changes', () => {
+      const { wrapper } = renderTestComponent();
+      assert.equal(wrapper.text(), '2');
+      assert.equal(renderCount, 1);
+
+      // Dispatch an action which changes the store state.
+      act(() => {
+        store.addThing('baz');
+      });
+      wrapper.update();
+
+      assert.equal(renderCount, 2);
+      assert.equal(wrapper.text(), '3');
+    });
+
+    it('does not invalidate cache if used store state does not change', () => {
+      const { wrapper } = renderTestComponent();
+      assert.equal(wrapper.text(), '2');
+      assert.equal(renderCount, 1);
+
+      // Dispatch an action which does not affect the store state.
+      act(() => {
+        store.addThing('foo'); // nb. `foo` item already exists in store.
+      });
+      wrapper.update();
+
+      assert.equal(renderCount, 1); // No re-render should happen.
+      assert.equal(wrapper.text(), '2');
+    });
+
+    it('unsubscribes when component is unmounted', () => {
+      const { wrapper } = renderTestComponent();
+      wrapper.unmount();
+
+      // Trigger a store change after unmounting. It should not re-render the
+      // component.
+      act(() => {
+        store.addThing('baz');
+      });
+      wrapper.update();
+
+      assert.equal(renderCount, 1);
+    });
   });
 });
