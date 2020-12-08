@@ -6,7 +6,7 @@ import { countVisible } from '../util/thread';
 import Button from './button';
 
 import useRootThread from './hooks/use-root-thread';
-import useStore from '../store/use-store';
+import { useStoreProxy } from '../store/use-store';
 
 /**
  * @typedef {import('../store/modules/selection').FilterState} FilterState
@@ -117,10 +117,10 @@ FilterStatusPanel.propTypes = {
  * @param {FilterModeProps} props
  */
 function SelectionFilterStatus({ filterState, rootThread }) {
-  const clearSelection = useStore(store => store.clearSelection);
-  const directLinkedId = useStore(store => store.directLinkedAnnotationId());
+  const store = useStoreProxy();
+  const directLinkedId = store.directLinkedAnnotationId();
   // The total number of top-level annotations (visible or not)
-  const totalCount = useStore(store => store.annotationCount());
+  const totalCount = store.annotationCount();
   // Count the number of visible annotations—top-level only
   const visibleAnnotationCount = (rootThread.children || []).filter(
     thread => thread.annotation && thread.visible
@@ -143,7 +143,7 @@ function SelectionFilterStatus({ filterState, rootThread }) {
     <Button
       buttonText={buttonText}
       className="button--primary"
-      onClick={() => clearSelection()}
+      onClick={() => store.clearSelection()}
       icon="cancel"
     />
   );
@@ -175,7 +175,7 @@ SelectionFilterStatus.propTypes = {
  * @param {FilterModeProps} props
  */
 function QueryFilterStatus({ filterState, rootThread }) {
-  const clearSelection = useStore(store => store.clearSelection);
+  const store = useStoreProxy();
   const visibleCount = countVisible(rootThread);
   const resultCount = visibleCount - filterState.forcedVisibleCount;
 
@@ -184,7 +184,7 @@ function QueryFilterStatus({ filterState, rootThread }) {
       icon="cancel"
       className="button--primary"
       buttonText="Clear search"
-      onClick={() => clearSelection()}
+      onClick={() => store.clearSelection()}
     />
   );
 
@@ -223,17 +223,16 @@ QueryFilterStatus.propTypes = {
  * @param {FilterModeProps} props
  */
 function FocusFilterStatus({ filterState, rootThread }) {
-  const clearSelection = useStore(store => store.clearSelection);
-  const toggleFocusMode = useStore(store => store.toggleFocusMode);
+  const store = useStoreProxy();
   const visibleCount = countVisible(rootThread);
   const resultCount = visibleCount - filterState.forcedVisibleCount;
   const buttonProps = {};
 
   if (filterState.forcedVisibleCount > 0) {
-    buttonProps.onClick = () => clearSelection();
+    buttonProps.onClick = () => store.clearSelection();
     buttonProps.buttonText = 'Reset filters';
   } else {
-    buttonProps.onClick = () => toggleFocusMode();
+    buttonProps.onClick = () => store.toggleFocusMode();
     buttonProps.buttonText = filterState.focusActive
       ? 'Show all'
       : `Show only ${filterState.focusDisplayName}`;
@@ -267,7 +266,8 @@ FocusFilterStatus.propTypes = {
  */
 export default function FilterStatus() {
   const rootThread = useRootThread();
-  const filterState = useStore(store => store.filterState());
+  const store = useStoreProxy();
+  const filterState = store.filterState();
 
   if (filterState.selectedCount > 0) {
     return (
