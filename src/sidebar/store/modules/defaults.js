@@ -1,5 +1,7 @@
 import * as util from '../util';
 
+import { createStoreModule } from '../types';
+
 /**
  * A store module for managing client-side user-convenience defaults.
  *
@@ -55,18 +57,7 @@ function getDefaults(state) {
   return state;
 }
 
-/**
- * @typedef DefaultsStore
- *
- * // Actions
- * @prop {typeof setDefault} setDefault
- *
- * // Selectors
- * @prop {(key: string) => string|null} getDefault
- * @prop {() => Object.<string,string|null>} getDefaults
- */
-
-export default {
+export default createStoreModule({
   init,
   namespace: 'defaults',
   update,
@@ -77,4 +68,4 @@ export default {
     getDefault,
     getDefaults,
   },
-};
+});

@@ -1,8 +1,9 @@
 import { createSelector } from 'reselect';
 
 import * as util from '../util';
+import { createStoreModule } from '../types';
 
-import session from './session';
+import { isLoggedIn } from './session';
 
 /**
  * @typedef {import('../../../types/api').Group} Group
@@ -115,7 +116,7 @@ function focusedGroup(state) {
  *
  * @return {string|null}
  */
-function focusedGroupId(state) {
+export function focusedGroupId(state) {
   return state.focusedGroupId;
 }
 
@@ -169,7 +170,7 @@ const getInScopeGroups = createSelector(
  */
 const getMyGroups = createSelector(
   rootState => rootState.groups.groups,
-  rootState => session.selectors.isLoggedIn(rootState.session),
+  rootState => isLoggedIn(rootState.session),
   (groups, loggedIn) => {
     // If logged out, the Public group still has isMember set to true so only
     // return groups with membership in logged in state.
@@ -196,28 +197,7 @@ const getCurrentlyViewingGroups = createSelector(
   }
 );
 
-/**
- * @typedef GroupsStore
- *
- * // Actions
- * @prop {typeof focusGroup} focusGroup
- * @prop {typeof loadGroups} loadGroups
- * @prop {typeof clearGroups} clearGroups
- *
- * // Selectors
- * @prop {() => Group[]} allGroups
- * @prop {() => Group|undefined|null} focusedGroup
- * @prop {() => string|null} focusedGroupId
- * @prop {() => Group[]} getFeaturedGroups
- * @prop {(id: string) => Group|undefined} getGroup
- * @prop {() => Group[]} getInScopeGroups
- *
- * // Root selectors
- * @prop {() => Group[]} getCurrentlyViewingGroups,
- * @prop {() => Group[]} getMyGroups,
- */
-
-export default {
+export default createStoreModule({
   init,
   namespace: 'groups',
   update,
@@ -238,4 +218,4 @@ export default {
     getCurrentlyViewingGroups,
     getMyGroups,
   },
-};
+});

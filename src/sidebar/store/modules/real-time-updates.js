@@ -10,10 +10,11 @@
 import { createSelector } from 'reselect';
 
 import { actionTypes } from '../util';
+import { createStoreModule } from '../types';
 
-import annotations from './annotations';
-import groups from './groups';
-import route from './route';
+import { annotationExists } from './annotations';
+import { focusedGroupId } from './groups';
+import { route as getRoute } from './route';
 
 function init() {
   return {
@@ -102,8 +103,8 @@ function receiveRealTimeUpdates({
       const routeState = getState().route;
 
       if (
-        ann.group === groups.selectors.focusedGroupId(groupState) ||
-        route.selectors.route(routeState) !== 'sidebar'
+        ann.group === focusedGroupId(groupState) ||
+        getRoute(routeState) !== 'sidebar'
       ) {
         pendingUpdates[/** @type {string} */ (ann.id)] = ann;
       }
@@ -120,7 +121,7 @@ function receiveRealTimeUpdates({
       // new annotation (saved in pendingUpdates and removed above), that has
       // not yet been loaded.
       const annotationsState = getState().annotations;
-      if (annotations.selectors.annotationExists(annotationsState, id)) {
+      if (annotationExists(annotationsState, id)) {
         pendingDeletions[id] = true;
       }
     });
@@ -182,21 +183,7 @@ function hasPendingDeletion(state, id) {
   return state.pendingDeletions.hasOwnProperty(id);
 }
 
-/**
- * @typedef RealTimeUpdatesStore
- *
- * // Actions
- * @prop {typeof receiveRealTimeUpdates} receiveRealTimeUpdates
- * @prop {typeof clearPendingUpdates} clearPendingUpdates
- *
- * // Selectors
- * @prop {() => boolean} hasPendingDeletion
- * @prop {() => Object.<string, boolean>} pendingDeletions
- * @prop {() => Object.<string, Annotation>} pendingUpdates
- * @prop {() => number} pendingUpdateCount
- */
-
-export default {
+export default createStoreModule({
   init,
   namespace: 'realTimeUpdates',
   update,
@@ -210,4 +197,4 @@ export default {
     pendingUpdates,
     pendingUpdateCount,
   },
-};
+});

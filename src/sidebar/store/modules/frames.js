@@ -6,6 +6,7 @@ import {
 import shallowEqual from 'shallowequal';
 
 import * as util from '../util';
+import { createStoreModule } from '../types';
 
 /**
  * @typedef {import('../../../types/annotator').DocumentMetadata} DocumentMetadata
@@ -154,21 +155,7 @@ const searchUris = createShallowEqualSelector(
   uris => uris
 );
 
-/**
- * @typedef FramesStore
- *
- * // Actions
- * @prop {typeof connectFrame} connectFrame
- * @prop {typeof destroyFrame} destroyFrame
- * @prop {typeof updateFrameAnnotationFetchStatus} updateFrameAnnotationFetchStatus
- *
- * // Selectors
- * @prop {() => Frame[]} frames
- * @prop {() => Frame|null} mainFrame
- * @prop {() => string[]} searchUris
- */
-
-export default {
+export default createStoreModule({
   init: init,
   namespace: 'frames',
   update: update,
@@ -184,4 +171,4 @@ export default {
     mainFrame,
     searchUris,
   },
-};
+});

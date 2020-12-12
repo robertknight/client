@@ -52,43 +52,24 @@ import viewer from './modules/viewer';
  * // Base redux store
  * @typedef {import("redux").Store} ReduxStore
  *
- * // Custom stores
- * @typedef {import("./modules/activity").ActivityStore} ActivityStore
- * @typedef {import("./modules/annotations").AnnotationsStore} AnnotationsStore
- * @typedef {import("./modules/defaults").DefaultsStore} DefaultsStore
- * @typedef {import("./modules/direct-linked").DirectLinkedStore} DirectLinkedStore
- * @typedef {import("./modules/drafts").DraftsStore} DraftsStore
- * @typedef {import("./modules/filters").FiltersStore} FiltersStore
- * @typedef {import("./modules/frames").FramesStore} FramesStore
- * @typedef {import("./modules/groups").GroupsStore} GroupsStore
- * @typedef {import("./modules/links").LinksStore} LinksStore
- * @typedef {import("./modules/real-time-updates").RealTimeUpdatesStore} RealTimeUpdatesStore
- * @typedef {import("./modules/route").RouteStore} RouteStore
- * @typedef {import("./modules/selection").SelectionStore} SelectionStore
- * @typedef {import("./modules/session").SessionStore} SessionStore
- * @typedef {import("./modules/sidebar-panels").SidebarPanelsStore} SidebarPanelsStore
- * @typedef {import("./modules/toast-messages").ToastMessagesStore} ToastMessagesStore
- * @typedef {import("./modules/viewer").ViewerStore} ViewerStore
- * // TODO: add more stores
- *
- * // Combine all stores
  * @typedef {ReduxStore &
- *  ActivityStore &
- *  AnnotationsStore &
- *  DefaultsStore &
- *  DirectLinkedStore &
- *  DraftsStore &
- *  FiltersStore &
- *  FramesStore &
- *  GroupsStore &
- *  LinksStore &
- *  RealTimeUpdatesStore &
- *  RouteStore &
- *  SelectionStore &
- *  SessionStore &
- *  SidebarPanelsStore &
- *  ToastMessagesStore &
- *  ViewerStore} SidebarStore
+ *  typeof activity &
+ *  typeof annotations &
+ *  typeof defaults &
+ *  typeof directLinked &
+ *  typeof drafts &
+ *  typeof filters &
+ *  typeof frames &
+ *  typeof groups &
+ *  typeof links &
+ *  typeof realTimeUpdates &
+ *  typeof route &
+ *  typeof selection &
+ *  typeof session &
+ *  typeof sidebarPanels &
+ *  typeof toastMessages &
+ *  typeof viewer
+ *  } SidebarStore
  */
 
 /**

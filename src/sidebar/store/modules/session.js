@@ -1,5 +1,7 @@
 import * as util from '../util';
 
+import { createStoreModule } from '../types';
+
 /**
  * @typedef {import('../../../types/api').Profile} Profile
  */
@@ -55,7 +57,7 @@ function updateProfile(profile) {
  *
  * @param {object} state - The application state
  */
-function isLoggedIn(state) {
+export function isLoggedIn(state) {
   return state.profile.userid !== null;
 }
 
@@ -91,20 +93,7 @@ function profile(state) {
   return state.profile;
 }
 
-/**
- * @typedef SessionStore
- *
- * // Actions
- * @prop {typeof hasFetchedProfile} hasFetchedProfile
- *
- * // Selectors
- * @prop {() => boolean} hasFetchedProfile
- * @prop {(feature: string) => boolean} isFeatureEnabled
- * @prop {() => boolean} isLoggedIn
- * @prop {() => Profile} profile
- */
-
-export default {
+export default createStoreModule({
   init,
   namespace: 'session',
   update,
@@ -119,4 +108,4 @@ export default {
     isLoggedIn,
     profile,
   },
-};
+});

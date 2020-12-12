@@ -17,8 +17,9 @@ import { createSelector } from 'reselect';
 import * as metadata from '../../util/annotation-metadata';
 import { countIf, toTrueMap, trueKeys } from '../../util/collections';
 import * as util from '../util';
+import { createStoreModule } from '../types';
 
-import route from './route';
+import { route as getRoute } from './route';
 
 /**
  * Return a copy of `current` with all matching annotations in `annotations`
@@ -90,6 +91,7 @@ function initializeAnnotation(annotation, tag) {
 
 function init() {
   return {
+    /** @type {Annotation[]} */
     annotations: [],
     // A set of annotations that are currently "focused" — e.g. hovered over in
     // the UI
@@ -254,7 +256,7 @@ function addAnnotations(annotations) {
     // If we're not in the sidebar, we're done here.
     // FIXME Split the annotation-adding from the anchoring code; possibly
     // move into service
-    if (route.selectors.route(getState().route) !== 'sidebar') {
+    if (getRoute(getState().route) !== 'sidebar') {
       return;
     }
 
@@ -344,7 +346,7 @@ function highlightAnnotations(ids) {
  *   Annotations to remove. These may be complete annotations or stubs which
  *   only contain an `id` property.
  */
-function removeAnnotations(annotations) {
+export function removeAnnotations(annotations) {
   return (dispatch, getState) => {
     const remainingAnnotations = excludeAnnotations(
       getState().annotations.annotations,
@@ -427,7 +429,7 @@ function allAnnotations(state) {
  * @param {string} id
  * @return {boolean}
  */
-function annotationExists(state, id) {
+export function annotationExists(state, id) {
   return state.annotations.some(annot => annot.id === id);
 }
 
@@ -552,39 +554,7 @@ function savedAnnotations(state) {
   });
 }
 
-/**
- * @typedef AnnotationsStore
- *
- * // Actions
- * @prop {typeof addAnnotations} addAnnotations
- * @prop {typeof clearAnnotations} clearAnnotations
- * @prop {typeof focusAnnotations} focusAnnotations
- * @prop {typeof hideAnnotation} hideAnnotation
- * @prop {typeof highlightAnnotations} highlightAnnotations
- * @prop {typeof removeAnnotations} removeAnnotations
- * @prop {typeof unhideAnnotation} unhideAnnotation
- * @prop {typeof updateAnchorStatus} updateAnchorStatus
- * @prop {typeof updateFlagStatus} updateFlagStatus
-
- *
- * // Selectors
- * @prop {() => Annotation[]} allAnnotations
- * @prop {() => number} annotationCount
- * @prop {(id: string) => boolean} annotationExists
- * @prop {(id: string) => Annotation} findAnnotationByID
- * @prop {(tags: string[]) => string[]} findIDsForTags
- * @prop {() => string[]} focusedAnnotations
- * @prop {() => string[]} highlightedAnnotations
- * @prop {(tag: string) => boolean} isAnnotationFocused
- * @prop {() => boolean} isWaitingToAnchorAnnotations
- * @prop {() => Annotation[]} newAnnotations
- * @prop {() => Annotation[]} newHighlights
- * @prop {() => number} noteCount
- * @prop {() => number} orphanCount
- * @prop {() => Annotation[]} savedAnnotations
- */
-
-export default {
+export default createStoreModule({
   init: init,
   namespace: 'annotations',
   update: update,
@@ -599,7 +569,6 @@ export default {
     updateAnchorStatus,
     updateFlagStatus,
   },
-
   selectors: {
     allAnnotations,
     annotationCount,
@@ -616,4 +585,4 @@ export default {
     orphanCount,
     savedAnnotations,
   },
-};
+});

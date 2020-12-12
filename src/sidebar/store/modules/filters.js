@@ -1,6 +1,7 @@
 import { createSelector } from 'reselect';
 
 import { actionTypes } from '../util';
+import { createStoreModule } from '../types';
 
 /**
  * @typedef FocusConfig
@@ -194,23 +195,7 @@ function userFilter(state) {
   return state.focus.active ? state.focus.user.filter : null;
 }
 
-/**
- * @typedef FiltersStore
- *
- * // Actions
- * @prop {typeof changeFocusModeUser} changeFocusModeUser
- * @prop {typeof setFilterQuery} setFilterQuery
- * @prop {typeof toggleFocusMode} toggleFocusMode
- *
- * // Selectors
- * @prop {() => string|null} filterQuery
- * @prop {() => FocusState} focusState
- * @prop {() => boolean} hasAppliedFilter
- * @prop {() => string|null} userFilter
- *
- */
-
-export default {
+export default createStoreModule({
   init,
   namespace: 'filters',
   update,
@@ -225,4 +210,4 @@ export default {
     hasAppliedFilter,
     userFilter,
   },
-};
+});

@@ -1,5 +1,7 @@
 import * as util from '../util';
 
+import { createStoreModule } from '../types';
+
 /**
  * @typedef ToastMessage
  * @prop {('error'|'success'|'notice')} type
@@ -110,21 +112,7 @@ function hasMessage(state, type, text) {
   });
 }
 
-/**
- * @typedef ToastMessagesStore
- *
- * // Actions
- * @prop {typeof addMessage} addToastMessage
- * @prop {typeof removeMessage} removeToastMessage
- * @prop {typeof updateMessage} updateToastMessage
- *
- * // Selectors
- * @prop {(id: string) => (ToastMessage|undefined)} getToastMessage
- * @prop {() => ToastMessage[]} getToastMessages
- * @prop {(type: string, text: string) => boolean} hasToastMessage
- */
-
-export default {
+export default createStoreModule({
   init,
   namespace: 'toastMessages',
   update,
@@ -138,4 +126,4 @@ export default {
     getToastMessages: getMessages,
     hasToastMessage: hasMessage,
   },
-};
+});

@@ -1,4 +1,5 @@
 import { actionTypes } from '../util';
+import { createStoreModule } from '../types';
 
 /**
  * Reducer for storing a "links" object in the Redux state store.
@@ -32,14 +33,7 @@ function updateLinks(newLinks) {
   };
 }
 
-/**
- * @typedef LinksStore
- *
- * // Actions
- * @prop {typeof updateLinks} updateLinks
- */
-
-export default {
+export default createStoreModule({
   init: init,
   namespace: 'links',
   update,
@@ -47,4 +41,4 @@ export default {
     updateLinks,
   },
   selectors: {},
-};
+});
