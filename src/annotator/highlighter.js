@@ -252,6 +252,8 @@ export function highlightRange(range, cssClass = 'hypothesis-highlight') {
   );
 
   // Wrap each text node span with a `<hypothesis-highlight>` element.
+  /** @type {boolean|undefined} */
+  let isPDF;
   const highlights = [];
   textNodeSpans.forEach(nodes => {
     // A custom element name is used here rather than `<span>` to reduce the
@@ -261,10 +263,15 @@ export function highlightRange(range, cssClass = 'hypothesis-highlight') {
     const highlightEl = document.createElement('hypothesis-highlight');
     highlightEl.className = cssClass;
 
-    nodes[0].parentNode.replaceChild(highlightEl, nodes[0]);
-    nodes.forEach(node => highlightEl.appendChild(node));
+    const parent = nodes[0].parentNode;
+    const nextSibling = nodes[nodes.length - 1].nextSibling;
+    highlightEl.append(...nodes);
+    parent.insertBefore(highlightEl, nextSibling);
 
-    if (!isPlaceholder) {
+    if (isPDF === undefined) {
+      isPDF = getPdfCanvas(highlightEl) !== null;
+    }
+    if (isPDF && !isPlaceholder) {
       // For PDF highlights, create the highlight effect by using an SVG placed
       // above the page's canvas rather than CSS `background-color` on the
       // highlight element. This enables more control over blending of the
