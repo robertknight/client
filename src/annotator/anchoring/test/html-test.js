@@ -295,15 +295,6 @@ const rangeSpecs = [
   ],
 ];
 
-/**
- * Test cases for which describing the range is known to fail for certain
- * selectors.
- */
-const expectedFailures = [
-  // [description, expectedFailureTypes]
-  // Currently empty.
-];
-
 describe('HTML anchoring', function () {
   let container;
 
@@ -345,21 +336,9 @@ describe('HTML anchoring', function () {
       const positionSel = findByType(selectors, 'TextPositionSelector');
       const quoteSel = findByType(selectors, 'TextQuoteSelector');
 
-      const failInfo = expectedFailures.find(function (f) {
-        return f[0] === testCase.description;
-      });
-      let failTypes = {};
-      if (failInfo) {
-        failTypes = failInfo[1];
-      }
-
-      const assertRange = failTypes.range ? assert.notOk : assert.ok;
-      const assertQuote = failTypes.quote ? assert.notOk : assert.ok;
-      const assertPosition = failTypes.position ? assert.notOk : assert.ok;
-
-      assertRange(rangeSel, 'range selector');
-      assertPosition(positionSel, 'position selector');
-      assertQuote(quoteSel, 'quote selector');
+      assert.ok(rangeSel, 'range selector not generated');
+      assert.ok(positionSel, 'position selector not generated');
+      assert.ok(quoteSel, 'quote selector not generated');
 
       // Map each selector back to a Range and check that it refers to the same
       // text. We test each selector in turn to make sure they are all valid.

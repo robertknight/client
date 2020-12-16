@@ -5,15 +5,6 @@ import { RangeAnchor, TextPositionAnchor, TextQuoteAnchor } from './types';
  */
 
 /**
- * @param {RangeAnchor|TextPositionAnchor|TextQuoteAnchor} anchor
- * @param {Object} [options]
- *  @param {number} [options.hint]
- */
-async function querySelector(anchor, options = {}) {
-  return anchor.toRange(options);
-}
-
-/**
  * Anchor a set of selectors.
  *
  * This function converts a set of selectors into a document range.
@@ -22,69 +13,67 @@ async function querySelector(anchor, options = {}) {
  *
  * @param {Element} root - The root element of the anchoring context.
  * @param {Selector[]} selectors - The selectors to try.
- * @param {Object} [options]
- *   @param {number} [options.hint]
+ * @return {Promise<Range>}
  */
-export function anchor(root, selectors, options = {}) {
-  let position = null;
-  let quote = null;
-  let range = null;
+export async function anchor(root, selectors) {
+  let positionSelector = null;
+  let quoteSelector = null;
+  let rangeSelector = null;
 
   // Collect all the selectors
   for (let selector of selectors) {
     switch (selector.type) {
       case 'TextPositionSelector':
-        position = selector;
-        options.hint = position.start; // TextQuoteAnchor hint
+        positionSelector = selector;
         break;
       case 'TextQuoteSelector':
-        quote = selector;
+        quoteSelector = selector;
         break;
       case 'RangeSelector':
-        range = selector;
+        rangeSelector = selector;
         break;
     }
   }
 
-  /**
-   * Assert the quote matches the stored quote, if applicable
-   * @param {Range} range
-   */
-  const maybeAssertQuote = range => {
-    if (quote?.exact && range.toString() !== quote.exact) {
+  /** @param {Range} range */
+  const checkQuote = range => {
+    if (quoteSelector?.exact && range.toString() !== quoteSelector.exact) {
       throw new Error('quote mismatch');
-    } else {
-      return range;
     }
   };
 
-  // From a default of failure, we build up catch clauses to try selectors in
-  // order, from simple to complex.
-  /** @type {Promise<Range>} */
-  let promise = Promise.reject('unable to anchor');
-
-  if (range) {
-    promise = promise.catch(() => {
-      let anchor = RangeAnchor.fromSelector(root, range);
-      return querySelector(anchor, options).then(maybeAssertQuote);
-    });
+  if (rangeSelector) {
+    try {
+      const range = RangeAnchor.fromSelector(root, rangeSelector).toRange();
+      checkQuote(range);
+      return range;
+    } catch {
+      // fall through
+    }
   }
 
-  if (position) {
-    promise = promise.catch(() => {
-      let anchor = TextPositionAnchor.fromSelector(root, position);
-      return querySelector(anchor, options).then(maybeAssertQuote);
-    });
+  if (positionSelector) {
+    try {
+      const range = TextPositionAnchor.fromSelector(
+        root,
+        positionSelector
+      ).toRange();
+      checkQuote(range);
+      return range;
+    } catch {
+      // fall through
+    }
   }
 
-  if (quote) {
-    promise = promise.catch(() => {
-      let anchor = TextQuoteAnchor.fromSelector(root, quote);
-      return querySelector(anchor, options);
-    });
+  if (quoteSelector) {
+    const options = {};
+    if (positionSelector) {
+      options.hint = positionSelector.start;
+    }
+    return TextQuoteAnchor.fromSelector(root, quoteSelector).toRange(options);
   }
 
-  return promise;
+  throw new Error('unable to anchor');
 }
 
 /**
