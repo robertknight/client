@@ -6,7 +6,7 @@
 import 'focus-visible';
 
 // Enable debug checks for Preact. Removed in prod builds by Rollup config.
-import 'preact/debug';
+// import 'preact/debug'; - Not available in ureact
 
 // Load icons.
 import { registerIcons } from '@hypothesis/frontend-shared';

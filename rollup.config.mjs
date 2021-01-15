@@ -1,5 +1,6 @@
 import { readFileSync } from 'fs';
 
+import alias from '@rollup/plugin-alias';
 import { babel } from '@rollup/plugin-babel';
 import commonjs from '@rollup/plugin-commonjs';
 import { nodeResolve } from '@rollup/plugin-node-resolve';
@@ -43,6 +44,14 @@ function bundleConfig({ name, entry }) {
     context: 'void(0)',
 
     plugins: [
+      alias({
+        entries: [
+          {
+            find: 'preact',
+            replacement: 'ureact',
+          },
+        ],
+      }),
       replace({
         preventAssignment: true,
         values: {
@@ -56,7 +65,7 @@ function bundleConfig({ name, entry }) {
         exclude: 'node_modules/**',
       }),
       nodeResolve(),
-      commonjs({ include: 'node_modules/**' }),
+      commonjs({ include: ['node_modules/**', '.yalc/**'] }),
       string({
         include: '**/*.svg',
       }),

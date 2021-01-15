@@ -27,7 +27,7 @@ disableOpenerForExternalLinks(document.body);
 import 'focus-visible';
 
 // Enable debugging checks for Preact. Removed in prod builds by Rollup config.
-import 'preact/debug';
+// import 'preact/debug'; - Not available in ureact
 
 // Install Preact renderer options to work around browser quirks
 rendererOptions.setupBrowserFixes();

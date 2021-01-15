@@ -1,5 +1,6 @@
 import { readFileSync } from 'fs';
 
+import alias from '@rollup/plugin-alias';
 import { babel } from '@rollup/plugin-babel';
 import commonjs from '@rollup/plugin-commonjs';
 import json from '@rollup/plugin-json';
@@ -21,13 +22,21 @@ export default {
     // used with stubs. Per @rollup/plugin-virtual's docs, this must be listed
     // first.
     virtual({
-      // Enzyme dependency used in its "Static Rendering" mode, which we don't use.
-      'cheerio/lib/utils': '',
-      cheerio: '',
-
       // Node modules that are not available in the browser.
       crypto: '',
       util: '',
+    }),
+    alias({
+      entries: [
+        {
+          find: 'enzyme',
+          replacement: 'ureact/enzyme',
+        },
+        {
+          find: 'preact',
+          replacement: 'ureact',
+        },
+      ],
     }),
     replace({
       preventAssignment: true,
@@ -48,7 +57,7 @@ export default {
       preferBuiltins: false,
     }),
     commonjs({
-      include: 'node_modules/**',
+      include: ['node_modules/**', '.yalc/**'],
     }),
     string({
       include: '**/*.{html,svg}',
@@ -68,7 +77,7 @@ export default {
             // about `this`. See https://github.com/babel/babel/issues/9149.
             development: false,
             runtime: 'automatic',
-            importSource: 'preact',
+            importSource: 'ureact',
           },
         ],
       ],
