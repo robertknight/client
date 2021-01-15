@@ -109,7 +109,11 @@
     ]
   },
   "browser": {
-    "fetch-mock": "./node_modules/fetch-mock/cjs/client.js"
+    "enzyme": "ureact/dist/enzyme",
+    "fetch-mock": "./node_modules/fetch-mock/cjs/client.js",
+    "preact": "ureact",
+    "preact/hooks": "ureact",
+    "preact/test-utils": "ureact/dist/test-utils"
   },
   "main": "./build/boot.js",
   "scripts": {
