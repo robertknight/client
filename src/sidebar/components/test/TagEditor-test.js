@@ -222,11 +222,16 @@ describe('TagEditor', () => {
 
     it('closes the suggestions when focus is removed from the <input> field', () => {
       const wrapper = createComponent();
+
       wrapper.find('input').instance().value = 'non-empty';
       typeInput(wrapper);
       assert.equal(wrapper.find('AutocompleteList').prop('open'), true);
-      document.body.dispatchEvent(new Event('focus'));
+
+      act(() => {
+        document.body.dispatchEvent(new Event('focus'));
+      });
       wrapper.update();
+
       assert.equal(wrapper.find('AutocompleteList').prop('open'), false);
     });
 

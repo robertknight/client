@@ -160,7 +160,9 @@ describe('AnnotationEditor', () => {
       it('checks for unsaved tags on save', async () => {
         const wrapper = createComponent();
         // Simulate "typing in" some tag text into the tag editor
-        wrapper.find('TagEditor').props().onTagInput('foobar');
+        act(() => {
+          wrapper.find('TagEditor').props().onTagInput('foobar');
+        });
         wrapper.update();
 
         await act(

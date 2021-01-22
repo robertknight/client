@@ -439,6 +439,7 @@ describe('MarkdownEditor', () => {
         act(() => {
           wrapper.find('Toolbar').props().onTogglePreview();
         });
+        wrapper.update();
         const previewButton = wrapper
           .find('button')
           .filterWhere(el => el.text() === 'Write');
