@@ -167,7 +167,6 @@ describe('sidebar/store/use-store', () => {
       act(() => {
         store.addThing('baz');
       });
-      wrapper.update();
 
       assert.equal(renderCount, 1);
     });
