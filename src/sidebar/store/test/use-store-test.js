@@ -43,8 +43,10 @@ describe('sidebar/store/use-store', () => {
   describe('useStoreProxy', () => {
     let store;
     let renderCount;
+    let wrappers;
 
     beforeEach(() => {
+      wrappers = [];
       renderCount = 0;
       store = createStore([thingsModule]);
 
@@ -58,6 +60,10 @@ describe('sidebar/store/use-store', () => {
       });
     });
 
+    afterEach(() => {
+      wrappers.forEach(w => w.unmount());
+    });
+
     function renderTestComponent() {
       let proxy;
 
@@ -69,6 +75,7 @@ describe('sidebar/store/use-store', () => {
       };
 
       const wrapper = mount(<TestComponent />);
+      wrappers.push(wrapper);
       return { proxy, wrapper };
     }
 
