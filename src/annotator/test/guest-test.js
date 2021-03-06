@@ -33,23 +33,21 @@ describe('Guest', () => {
   const sandbox = sinon.createSandbox();
   let highlighter;
   let guestConfig;
-  let htmlAnchoring;
   let rangeUtil;
   let notifySelectionChanged;
 
   let CrossFrame;
   let fakeCrossFrame;
 
-  let DocumentMeta;
-  let fakeDocumentMeta;
-
-  let PdfIntegration;
-  let fakePdfIntegration;
+  let fakeIntegration;
 
   const createGuest = (config = {}) => {
     const element = document.createElement('div');
     const eventBus = new EventBus();
-    return new Guest(element, eventBus, { ...guestConfig, ...config });
+    return new Guest(element, eventBus, fakeIntegration, {
+      ...guestConfig,
+      ...config,
+    });
   };
 
   beforeEach(() => {
@@ -61,10 +59,6 @@ describe('Guest', () => {
       removeAllHighlights: sinon.stub(),
       setHighlightsFocused: sinon.stub(),
       setHighlightsVisible: sinon.stub(),
-    };
-    htmlAnchoring = {
-      anchor: sinon.stub(),
-      describe: sinon.stub(),
     };
     rangeUtil = {
       itemsForRange: sinon.stub().returns([]),
@@ -82,21 +76,16 @@ describe('Guest', () => {
     };
     CrossFrame = sandbox.stub().returns(fakeCrossFrame);
 
-    fakeDocumentMeta = {
+    fakeIntegration = {
+      anchor: sinon.stub(),
+      describe: sinon.stub(),
       destroy: sinon.stub(),
-      metadata: { title: 'Test title' },
-      uri: sinon.stub().returns('https://example.com/test.html'),
-    };
-    DocumentMeta = sandbox.stub().returns(fakeDocumentMeta);
-
-    fakePdfIntegration = {
-      destroy: sinon.stub(),
-      getMetadata: sinon
+      metadata: sinon
         .stub()
         .resolves({ documentFingerprint: 'test-fingerprint' }),
+      on: sinon.stub(),
       uri: sinon.stub().resolves('https://example.com/test.pdf'),
     };
-    PdfIntegration = sinon.stub().returns(fakePdfIntegration);
 
     class FakeSelectionObserver {
       constructor(callback) {
@@ -107,15 +96,12 @@ describe('Guest', () => {
 
     $imports.$mock({
       './adder': { Adder: FakeAdder },
-      './anchoring/html': htmlAnchoring,
       './anchoring/text-range': {
         TextRange: FakeTextRange,
       },
       './highlighter': highlighter,
       './range-util': rangeUtil,
       './plugin/cross-frame': CrossFrame,
-      './plugin/document': DocumentMeta,
-      './plugin/pdf': PdfIntegration,
       './selection-observer': {
         SelectionObserver: FakeSelectionObserver,
       },
@@ -366,62 +352,43 @@ describe('Guest', () => {
         };
       }
 
-      context('in an HTML document', () => {
-        it('calls the callback with HTML URL and metadata', done => {
-          guest = createGuest();
+      it('calls the callback with URL and metadata', done => {
+        guest = createGuest();
+        const metadata = { title: 'hi' };
 
-          emitGuestEvent(
-            'getDocumentInfo',
-            createCallback(
-              fakeDocumentMeta.uri(),
-              fakeDocumentMeta.metadata,
-              done
-            )
-          );
-        });
+        fakeIntegration.metadata.resolves(metadata);
+
+        emitGuestEvent(
+          'getDocumentInfo',
+          createCallback('https://example.com/test.pdf', metadata, done)
+        );
       });
 
-      context('in a PDF document', () => {
-        it('calls the callback with PDF URL and metadata', done => {
-          guest = createGuest({ documentType: 'pdf' });
-          const metadata = { title: 'hi' };
+      it('calls the callback with fallback URL if document URL cannot be determined', done => {
+        guest = createGuest();
 
-          fakePdfIntegration.getMetadata.resolves(metadata);
+        fakeIntegration.metadata.resolves({});
+        fakeIntegration.uri.rejects(new Error('Not a PDF document'));
 
-          emitGuestEvent(
-            'getDocumentInfo',
-            createCallback('https://example.com/test.pdf', metadata, done)
-          );
-        });
+        emitGuestEvent(
+          'getDocumentInfo',
+          createCallback(window.location.href, {}, done)
+        );
+      });
 
-        it('calls the callback with fallback URL if PDF URL cannot be determined', done => {
-          guest = createGuest({ documentType: 'pdf' });
+      it('calls the callback with fallback metadata if metadata extraction fails', done => {
+        guest = createGuest();
+        const metadata = {
+          title: document.title,
+          link: [{ href: window.location.href }],
+        };
 
-          fakePdfIntegration.getMetadata.resolves({});
-          fakePdfIntegration.uri.rejects(new Error('Not a PDF document'));
+        fakeIntegration.metadata.rejects(new Error('Not a PDF document'));
 
-          emitGuestEvent(
-            'getDocumentInfo',
-            createCallback(window.location.href, {}, done)
-          );
-        });
-
-        it('calls the callback with fallback metadata if PDF metadata extraction fails', done => {
-          guest = createGuest({ documentType: 'pdf' });
-          const metadata = {
-            title: document.title,
-            link: [{ href: window.location.href }],
-          };
-
-          fakePdfIntegration.getMetadata.rejects(
-            new Error('Not a PDF document')
-          );
-
-          emitGuestEvent(
-            'getDocumentInfo',
-            createCallback('https://example.com/test.pdf', metadata, done)
-          );
-        });
+        emitGuestEvent(
+          'getDocumentInfo',
+          createCallback('https://example.com/test.pdf', metadata, done)
+        );
       });
     });
 
@@ -612,14 +579,14 @@ describe('Guest', () => {
     });
 
     it('preserves the components of the URI other than the fragment', () => {
-      fakeDocumentMeta.uri.returns('http://foobar.com/things?id=42');
+      fakeIntegration.uri.resolves('http://foobar.com/things?id=42');
       return guest
         .getDocumentInfo()
         .then(({ uri }) => assert.equal(uri, 'http://foobar.com/things?id=42'));
     });
 
     it('removes the fragment identifier from URIs', () => {
-      fakeDocumentMeta.uri.returns('http://foobar.com/things?id=42#ignoreme');
+      fakeIntegration.uri.resolves('http://foobar.com/things?id=42#ignoreme');
       return guest
         .getDocumentInfo()
         .then(({ uri }) => assert.equal(uri, 'http://foobar.com/things?id=42'));
@@ -632,8 +599,8 @@ describe('Guest', () => {
 
       const annotation = await guest.createAnnotation();
 
-      assert.equal(annotation.uri, fakeDocumentMeta.uri());
-      assert.deepEqual(annotation.document, fakeDocumentMeta.metadata);
+      assert.equal(annotation.uri, await fakeIntegration.uri());
+      assert.deepEqual(annotation.document, await fakeIntegration.metadata());
     });
 
     it('adds selectors for selected ranges to the annotation', async () => {
@@ -643,15 +610,15 @@ describe('Guest', () => {
 
       const selectorA = { type: 'TextPositionSelector', start: 0, end: 10 };
       const selectorB = { type: 'TextQuoteSelector', exact: 'foobar' };
-      htmlAnchoring.anchor.resolves({});
-      htmlAnchoring.describe.returns([selectorA, selectorB]);
+      fakeIntegration.anchor.resolves({});
+      fakeIntegration.describe.returns([selectorA, selectorB]);
 
       const annotation = await guest.createAnnotation({});
 
-      assert.calledWith(htmlAnchoring.describe, guest.element, fakeRange);
+      assert.calledWith(fakeIntegration.describe, guest.element, fakeRange);
       assert.deepEqual(annotation.target, [
         {
-          source: fakeDocumentMeta.uri(),
+          source: await fakeIntegration.uri(),
           selector: [selectorA, selectorB],
         },
       ]);
@@ -747,7 +714,7 @@ describe('Guest', () => {
       const annotation = {
         target: [{ selector: [{ type: 'TextQuoteSelector', exact: 'hello' }] }],
       };
-      htmlAnchoring.anchor.returns(Promise.resolve(range));
+      fakeIntegration.anchor.resolves(range);
 
       return guest
         .anchor(annotation)
@@ -762,11 +729,11 @@ describe('Guest', () => {
           { selector: [{ type: 'TextQuoteSelector', exact: 'hello' }] },
         ],
       };
-      htmlAnchoring.anchor
+      fakeIntegration.anchor
         .onFirstCall()
-        .returns(Promise.reject())
+        .rejects(new Error('Oh no'))
         .onSecondCall()
-        .returns(Promise.resolve(range));
+        .resolves(range);
 
       return guest
         .anchor(annotation)
@@ -780,7 +747,7 @@ describe('Guest', () => {
           { selector: [{ type: 'TextQuoteSelector', exact: 'notinhere' }] },
         ],
       };
-      htmlAnchoring.anchor.returns(Promise.reject());
+      fakeIntegration.anchor.returns(Promise.reject());
 
       return guest
         .anchor(annotation)
@@ -795,7 +762,7 @@ describe('Guest', () => {
           { selector: [{ type: 'TextQuoteSelector', exact: 'neitherami' }] },
         ],
       };
-      htmlAnchoring.anchor.returns(Promise.reject());
+      fakeIntegration.anchor.rejects();
 
       return guest
         .anchor(annotation)
@@ -811,7 +778,7 @@ describe('Guest', () => {
       };
       // This shouldn't be called, but if it is, we successfully anchor so that
       // this test is guaranteed to fail.
-      htmlAnchoring.anchor.returns(Promise.resolve(range));
+      fakeIntegration.anchor.resolves(range);
 
       return guest
         .anchor(annotation)
@@ -828,7 +795,7 @@ describe('Guest', () => {
 
       return guest
         .anchor(annotation)
-        .then(() => assert.notCalled(htmlAnchoring.anchor));
+        .then(() => assert.notCalled(fakeIntegration.anchor));
     });
 
     it('syncs annotations to the sidebar', () => {
@@ -854,7 +821,7 @@ describe('Guest', () => {
     it('returns a promise of the anchors for the annotation', () => {
       const guest = createGuest();
       const highlights = [document.createElement('span')];
-      htmlAnchoring.anchor.returns(Promise.resolve(range));
+      fakeIntegration.anchor.resolves(range);
       highlighter.highlightRange.returns(highlights);
       const target = {
         selector: [{ type: 'TextQuoteSelector', exact: 'hello' }],
@@ -867,7 +834,7 @@ describe('Guest', () => {
     it('adds the anchor to the "anchors" instance property"', () => {
       const guest = createGuest();
       const highlights = [document.createElement('span')];
-      htmlAnchoring.anchor.returns(Promise.resolve(range));
+      fakeIntegration.anchor.resolves(range);
       highlighter.highlightRange.returns(highlights);
       const target = {
         selector: [{ type: 'TextQuoteSelector', exact: 'hello' }],
@@ -902,11 +869,11 @@ describe('Guest', () => {
       const annotation = {
         target: [{ selector: [{ type: 'TextQuoteSelector', exact: 'hello' }] }],
       };
-      htmlAnchoring.anchor.returns(Promise.resolve(range));
+      fakeIntegration.anchor.resolves(range);
       return guest.anchor(annotation).then(() =>
         guest.anchor(annotation).then(() => {
           assert.equal(guest.anchors.length, 1);
-          assert.calledOnce(htmlAnchoring.anchor);
+          assert.calledOnce(fakeIntegration.anchor);
         })
       );
     });
@@ -966,10 +933,10 @@ describe('Guest', () => {
       assert.isNull(adder.parentElement);
     });
 
-    it('cleans up PDF integration', () => {
-      const guest = createGuest({ documentType: 'pdf' });
+    it('cleans up integration', () => {
+      const guest = createGuest();
       guest.destroy();
-      assert.calledOnce(fakePdfIntegration.destroy);
+      assert.calledOnce(fakeIntegration.destroy);
     });
 
     it('removes all highlights', () => {

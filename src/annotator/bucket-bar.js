@@ -15,10 +15,9 @@ export default class BucketBar {
   /**
    * @param {HTMLElement} container
    * @param {Pick<import('./guest').default, 'anchors'|'selectAnnotations'>} guest
-   * @param {BucketBarOptions} [options]
+   * @param {BucketBarOptions} contentContainer
    */
   constructor(container, guest, { contentContainer = document.body } = {}) {
-    this._contentContainer = contentContainer;
     this.element = document.createElement('div');
 
     this.guest = guest;

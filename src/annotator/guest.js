@@ -2,10 +2,7 @@ import scrollIntoView from 'scroll-into-view';
 
 import { Adder } from './adder';
 import CrossFrame from './plugin/cross-frame';
-import DocumentMeta from './plugin/document';
-import PDFIntegration from './plugin/pdf';
 
-import * as htmlAnchoring from './anchoring/html';
 import { TextRange } from './anchoring/text-range';
 import {
   getHighlightsContainingNode,
@@ -23,6 +20,7 @@ import { normalizeURI } from './util/url';
  * @typedef {import('./util/emitter').EventBus} EventBus
  * @typedef {import('../types/annotator').AnnotationData} AnnotationData
  * @typedef {import('../types/annotator').Anchor} Anchor
+ * @typedef {import('../types/annotator').Integration} Integration
  * @typedef {import('../types/api').Target} Target
  */
 
@@ -109,12 +107,13 @@ export default class Guest {
    *   or create annotations. In an ordinary web page this typically `document.body`.
    * @param {EventBus} eventBus -
    *   Enables communication between components sharing the same eventBus
+   * @param {Integration} integration
    * @param {Record<string, any>} [config]
-   * @param {typeof htmlAnchoring} [anchoring] - Anchoring implementation
    */
-  constructor(element, eventBus, config = {}, anchoring = htmlAnchoring) {
+  constructor(element, eventBus, integration, config = {}) {
     this.element = element;
     this._emitter = eventBus.createEmitter();
+
     this.visibleHighlights = false;
     this.adderToolbar = document.createElement('hypothesis-adder');
     this.adderToolbar.style.display = 'none';
@@ -146,19 +145,8 @@ export default class Guest {
     /** @type {Anchor[]} */
     this.anchors = [];
 
-    // Setup the document type-specific integration consisting of metadata extraction,
-    // anchoring module and logic to respond to activity (eg. scrolling) in the page.
-    //
-    // In future the plan is to put these behind a common interface so that the
-    // `Guest` class doesn't need different code paths depending on the document type.
-
-    // nb. The `anchoring` field defaults to HTML anchoring and in PDFs is replaced
-    // by `PDFIntegration` below.
-    this.anchoring = anchoring;
-    this.documentMeta = new DocumentMeta();
-    if (config.documentType === 'pdf') {
-      this.pdfIntegration = new PDFIntegration(this);
-    }
+    this.integration = integration;
+    this.integration.on('contentChanged', () => this._checkAnchors());
 
     // Set the frame identifier if it's available.
     // The "top" guest instance will have this as null since it's in a top frame not a sub frame
@@ -179,6 +167,40 @@ export default class Guest {
     // Setup event handlers on the root element
     this._elementEventListeners = [];
     this._setupElementEvents();
+  }
+
+  /**
+   * Check the validity of current anchors after the document's content changes
+   * and re-anchor any which are no longer valid.
+   */
+  _checkAnchors() {
+    const refreshAnnotations = [];
+    for (let anchor of this.anchors) {
+      // Skip any we already know about.
+      if (anchor.highlights) {
+        if (refreshAnnotations.includes(anchor.annotation)) {
+          continue;
+        }
+
+        // If the highlights are no longer in the document it means then we
+        // need to re-anchor the annotation.
+        for (let index = 0; index < anchor.highlights.length; index++) {
+          const hl = anchor.highlights[index];
+          if (!this.element.contains(hl)) {
+            anchor.highlights.splice(index, 1);
+            delete anchor.range;
+            refreshAnnotations.push(anchor.annotation);
+            break;
+          }
+        }
+      }
+    }
+
+    const newAnchors = refreshAnnotations.map(annotation =>
+      this.anchor(annotation)
+    );
+
+    return Promise.all(newAnchors);
   }
 
   // Add DOM event listeners for clicks, taps etc. on the document and
@@ -242,35 +264,27 @@ export default class Guest {
   /**
    * Retrieve metadata for the current document.
    */
-  getDocumentInfo() {
-    let metadataPromise;
-    let uriPromise;
+  async getDocumentInfo() {
+    const uriPromise = this.integration.uri().catch(err => {
+      console.warn('Failed to get document URI', err);
+      return decodeURIComponent(window.location.href);
+    });
 
-    if (this.pdfIntegration) {
-      metadataPromise = this.pdfIntegration.getMetadata();
-      uriPromise = this.pdfIntegration.uri();
-    } else {
-      uriPromise = Promise.resolve(this.documentMeta.uri());
-      metadataPromise = Promise.resolve(this.documentMeta.metadata);
-    }
+    const metadataPromise = this.integration.metadata().catch(err => {
+      console.warn('Failed to get document metadata', err);
+      return {
+        title: document.title,
+        link: [{ href: decodeURIComponent(window.location.href) }],
+      };
+    });
 
-    uriPromise = uriPromise.catch(() =>
-      decodeURIComponent(window.location.href)
-    );
-    metadataPromise = metadataPromise.catch(() => ({
-      title: document.title,
-      link: [{ href: decodeURIComponent(window.location.href) }],
-    }));
+    const [metadata, uri] = await Promise.all([metadataPromise, uriPromise]);
 
-    return Promise.all([metadataPromise, uriPromise]).then(
-      ([metadata, href]) => {
-        return {
-          uri: normalizeURI(href),
-          metadata,
-          frameIdentifier: this.frameIdentifier,
-        };
-      }
-    );
+    return {
+      uri: normalizeURI(uri),
+      metadata,
+      frameIdentifier: this.frameIdentifier,
+    };
   }
 
   _setupInitialState(config) {
@@ -340,9 +354,9 @@ export default class Guest {
 
     removeAllHighlights(this.element);
 
-    this.pdfIntegration?.destroy();
     this._emitter.destroy();
     this.crossframe.destroy();
+    this.integration.destroy();
   }
 
   /**
@@ -396,7 +410,7 @@ export default class Guest {
       }
 
       // Find a target using the anchoring module.
-      return this.anchoring
+      return this.integration
         .anchor(root, target.selector)
         .then(range => ({
           annotation,
@@ -543,7 +557,7 @@ export default class Guest {
     const info = await this.getDocumentInfo();
     const root = this.element;
     const rangeSelectors = await Promise.all(
-      ranges.map(range => this.anchoring.describe(root, range))
+      ranges.map(range => this.integration.describe(root, range))
     );
     const target = rangeSelectors.map(selectors => ({
       source: info.uri,

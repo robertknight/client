@@ -90,6 +90,7 @@ export function anchor(root, selectors, options = {}) {
 /**
  * @param {Element} root
  * @param {Range} range
+ * @return {Selector[]}
  */
 export function describe(root, range) {
   const types = [RangeAnchor, TextPositionAnchor, TextQuoteAnchor];

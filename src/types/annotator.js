@@ -95,6 +95,47 @@
  */
 
 /**
+ * @typedef LayoutState
+ * @prop {boolean} expanded
+ * @prop {number} width
+ * @prop {number} height
+ */
+
+/**
+ * Interface for the integration which handles all aspects of working with a particular
+ * type of document (web page, PDF etc.).
+ *
+ * The functionality of an integration includes:
+ *  - Generating and resolving ("anchoring") serialized representations ("selectors") of
+ *    a document selection.
+ *  - Fetching the URI and metadata of the current document
+ *  - Emitting events when the currently visible content or loaded document changes
+ *  - Adjusting the layout of the content to be able to fit the sidebar alongside
+ *    it, if there is enough room.
+ *
+ * @typedef Integration
+ * @prop {(ls: LayoutState) => boolean} fitSideBySide -
+ *   Return true if side-by-side mode is active.
+ * @prop {() => HTMLElement} contentContainer -
+ *   Return the DOM element that contains the main content of the document.
+ *   This is used by the bucket bar to set the vertical position of buckets.
+ * @prop {() => void} destroy -
+ *   Cleanup any event listeners, observers, caches etc. created by this integration.
+ * @prop {(root: HTMLElement, selectors: Selector[]) => Promise<Range>} anchor
+ * @prop {(root: HTMLElement, range: Range) => Selector[]|Promise<Selector[]>} describe
+ * @prop {() => Promise<string>} uri -
+ *   Return the main URL or URI for the current document
+ * @prop {() => Promise<DocumentMetadata>} metadata -
+ *   Return the metadata for the current document
+ * @prop {(event: 'contentChanged', callback: () => any) => void} on -
+ *   Subscribe to notifications related the content.
+ *
+ *   'contentChanged' - The content of the document changed. This can happen
+ *   in a PDF for example when scrolling through the document causes a different
+ *   set of pages to be rendered.
+ */
+
+/**
  * Global variables which the Hypothesis client looks for on the `window` object
  * when loaded in a frame that influence how it behaves.
  *

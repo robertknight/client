@@ -1,11 +1,12 @@
 import debounce from 'lodash.debounce';
 import { render } from 'preact';
+import { TinyEmitter as EventEmitter } from 'tiny-emitter';
 
-import * as pdfAnchoring from '../anchoring/pdf';
+import { anchor, describe, documentHasText } from '../anchoring/pdf';
 import WarningBanner from '../components/WarningBanner';
 import RenderingStates from '../pdfjs-rendering-states';
-import { createShadowRoot } from '../util/shadow-root';
 import { ListenerCollection } from '../util/listener-collection';
+import { createShadowRoot } from '../util/shadow-root';
 
 import PDFMetadata from './pdf-metadata';
 
@@ -13,18 +14,18 @@ import PDFMetadata from './pdf-metadata';
  * @typedef {import('../../types/annotator').Anchor} Anchor
  * @typedef {import('../../types/annotator').Annotator} Annotator
  * @typedef {import('../../types/annotator').HypothesisWindow} HypothesisWindow
+ * @typedef {import('../../types/annotator').Selector} Selector
  */
 
-export default class PDF {
-  /**
-   * @param {Annotator} annotator
-   */
-  constructor(annotator) {
-    this.annotator = annotator;
-    annotator.anchoring = pdfAnchoring;
+const MIN_PDF_WIDTH = 680;
+
+export class PDFIntegration extends EventEmitter {
+  constructor() {
+    super();
 
     const window_ = /** @type {HypothesisWindow} */ (window);
     this.pdfViewer = window_.PDFViewerApplication.pdfViewer;
+    this.pdfContainer = window_.PDFViewerApplication.appConfig?.appContainer;
     this.pdfViewer.viewer.classList.add('has-transparent-text-layer');
 
     this.pdfMetadata = new PDFMetadata(window_.PDFViewerApplication);
@@ -67,6 +68,7 @@ export default class PDF {
       'selectionchange',
       this._updateAnnotationLayerVisibility
     );
+    this.window = window;
   }
 
   destroy() {
@@ -75,12 +77,64 @@ export default class PDF {
     this.observer.disconnect();
   }
 
+  contentContainer() {
+    return /** @type {HTMLElement} */ (document.querySelector(
+      '#viewerContainer'
+    ));
+  }
+
+  fitSideBySide(sidebarLayoutState) {
+    let active;
+    const maximumWidthToFit = this.window.innerWidth - sidebarLayoutState.width;
+    if (sidebarLayoutState.expanded && maximumWidthToFit >= MIN_PDF_WIDTH) {
+      this.pdfContainer.style.width = maximumWidthToFit + 'px';
+      this.pdfContainer.classList.add('hypothesis-side-by-side');
+      active = true;
+    } else {
+      this.pdfContainer.style.width = 'auto';
+      this.pdfContainer.classList.remove('hypothesis-side-by-side');
+      active = false;
+    }
+
+    // The following logic is pulled from PDF.js `webViewerResize`
+    const currentScaleValue = this.pdfViewer.currentScaleValue;
+    if (
+      currentScaleValue === 'auto' ||
+      currentScaleValue === 'page-fit' ||
+      currentScaleValue === 'page-width'
+    ) {
+      // NB: There is logic within the setter for `currentScaleValue`
+      // Setting this scale value will prompt PDF.js to recalculate viewport
+      this.pdfViewer.currentScaleValue = currentScaleValue;
+    }
+    // This will cause PDF pages to re-render if their scaling has changed
+    this.pdfViewer.update();
+
+    return active;
+  }
+
   uri() {
     return this.pdfMetadata.getUri();
   }
 
-  getMetadata() {
+  metadata() {
     return this.pdfMetadata.getMetadata();
+  }
+
+  /**
+   * @param {HTMLElement} root
+   * @param {Selector[]} selectors
+   */
+  anchor(root, selectors) {
+    return anchor(root, selectors);
+  }
+
+  /**
+   * @param {HTMLElement} root
+   * @param {Range} range
+   */
+  describe(root, range) {
+    return describe(root, range);
   }
 
   /**
@@ -95,7 +149,7 @@ export default class PDF {
     }
 
     try {
-      const hasText = await pdfAnchoring.documentHasText();
+      const hasText = await documentHasText();
       this._showNoSelectableTextWarning(!hasText);
     } catch (err) {
       /* istanbul ignore next */
@@ -146,9 +200,6 @@ export default class PDF {
 
   // This method (re-)anchors annotations when pages are rendered and destroyed.
   _update() {
-    // A list of annotations that need to be refreshed.
-    const refreshAnnotations = [];
-
     const pageCount = this.pdfViewer.pagesCount;
     for (let pageIndex = 0; pageIndex < pageCount; pageIndex++) {
       const page = this.pdfViewer.getPageView(pageIndex);
@@ -178,29 +229,6 @@ export default class PDF {
       }
     }
 
-    // Find all the anchors that have been invalidated by page state changes.
-    for (let anchor of this.annotator.anchors) {
-      // Skip any we already know about.
-      if (anchor.highlights) {
-        if (refreshAnnotations.includes(anchor.annotation)) {
-          continue;
-        }
-
-        // If the highlights are no longer in the document it means that either
-        // the page was destroyed by PDF.js or the placeholder was removed above.
-        // The annotations for these anchors need to be refreshed.
-        for (let index = 0; index < anchor.highlights.length; index++) {
-          const hl = anchor.highlights[index];
-          if (!document.body.contains(hl)) {
-            anchor.highlights.splice(index, 1);
-            delete anchor.range;
-            refreshAnnotations.push(anchor.annotation);
-            break;
-          }
-        }
-      }
-    }
-
-    refreshAnnotations.map(annotation => this.annotator.anchor(annotation));
+    this.emit('contentChanged');
   }
 }

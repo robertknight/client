@@ -83,7 +83,7 @@ export default class Sidebar {
         this.iframeContainer.classList.add('annotator-frame--theme-clean');
       } else {
         const bucketBar = new BucketBar(this.iframeContainer, guest, {
-          contentContainer: config.contentContainer,
+          contentContainer: guest.integration.contentContainer(),
         });
         this._emitter.subscribe('anchorsChanged', () => bucketBar.update());
         this.bucketBar = bucketBar;
@@ -97,6 +97,12 @@ export default class Sidebar {
       shadowDom.appendChild(this.iframeContainer);
 
       element.appendChild(this.hypothesisSidebar);
+
+      this._lastLayoutState = {
+        expanded: false,
+        width: 0,
+        height: 0,
+      };
     }
 
     this.guest = guest;
@@ -335,7 +341,12 @@ export default class Sidebar {
     if (this.onLayoutChange) {
       this.onLayoutChange(layoutState);
     }
+
     this._emitter.publish('sidebarLayoutChanged', layoutState);
+
+    this.sideBySideActive = this.guest.integration.fitSideBySide(layoutState);
+    this.guest.closeSidebarOnDocumentClick = !this.sideBySideActive;
+    this._lastLayoutState = layoutState;
   }
 
   /**
