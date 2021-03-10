@@ -208,6 +208,18 @@ export default class Sidebar extends Delegator {
     super.destroy();
   }
 
+  connectNotebook(port) {
+    const frame = /** @type {Window} */ (this.iframe.contentWindow);
+    frame.postMessage(
+      {
+        jsonrpc: '2.0',
+        method: 'connectNotebook',
+      },
+      '*' /* targetOrigin */,
+      [port]
+    );
+  }
+
   /**
    * @param {Window|HTMLElement} eventTarget
    * @param {string} eventType

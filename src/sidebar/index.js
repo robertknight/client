@@ -92,6 +92,13 @@ function setupFrameSync(frameSync, store) {
   }
 }
 
+// @inject
+function connectToSidebar(store, sidebarConnector) {
+  if (store.route() === 'notebook') {
+    sidebarConnector.connect();
+  }
+}
+
 // Register icons used by the sidebar app (and maybe other assets in future).
 import { registerIcons } from '@hypothesis/frontend-shared';
 import iconSet from './icons';
@@ -117,10 +124,12 @@ import frameSyncService from './services/frame-sync';
 import groupsService from './services/groups';
 import loadAnnotationsService from './services/load-annotations';
 import localStorageService from './services/local-storage';
+import { NotebookConnectorService } from './services/notebook-connector';
 import persistedDefaultsService from './services/persisted-defaults';
 import routerService from './services/router';
 import serviceUrlService from './services/service-url';
 import sessionService from './services/session';
+import { SidebarConnectorService } from './services/sidebar-connector';
 import streamFilterService from './services/stream-filter';
 import streamerService from './services/streamer';
 import tagsService from './services/tags';
@@ -150,10 +159,12 @@ function startApp(config) {
     .register('groups', groupsService)
     .register('loadAnnotationsService', loadAnnotationsService)
     .register('localStorage', localStorageService)
+    .register('notebookConnector', NotebookConnectorService)
     .register('persistedDefaults', persistedDefaultsService)
     .register('router', routerService)
     .register('serviceUrl', serviceUrlService)
     .register('session', sessionService)
+    .register('sidebarConnector', SidebarConnectorService)
     .register('streamer', streamerService)
     .register('streamFilter', streamFilterService)
     .register('tags', tagsService)
@@ -177,6 +188,7 @@ function startApp(config) {
   container.run(setupRoute);
   container.run(startRPCServer);
   container.run(setupFrameSync);
+  container.run(connectToSidebar);
 
   // Render the UI.
   const appEl = /** @type {HTMLElement} */ (document.querySelector(

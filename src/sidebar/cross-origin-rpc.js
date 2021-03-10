@@ -1,17 +1,24 @@
 import warnOnce from '../shared/warn-once';
 
+/**
+ * @typedef {import('./services/notebook-connector').NotebookConnector} NotebookConnector
+ * @typedef {import('./store').SidebarStore} Store
+ */
+
 // Array to keep track of pre-start requests
 let preStartQueue = [];
 
 /**
  * Return the mapped methods that can be called remotely via this server.
  *
- * @param {Object} store - The global store
- * @return {Object}
+ * @param {object} options
+ *   @param {NotebookConnector} options.notebookConnector
+ *   @param {Store} options.store
  */
-const registeredMethods = store => {
+const registeredMethods = ({ notebookConnector, store }) => {
   return {
     changeFocusModeUser: store.changeFocusModeUser,
+    connectNotebook: port => notebookConnector.connect(port),
   };
 };
 
@@ -48,8 +55,8 @@ function isJsonRpcMessage(data) {
  * All methods called upon must be mapped in the `registeredMethods` function.
  */
 // @inject
-export function startServer(store, settings, $window) {
-  const methods = registeredMethods(store);
+export function startServer(notebookConnector, store, settings, $window) {
+  const methods = registeredMethods({ notebookConnector, store });
 
   // Process the pre-start incoming RPC requests
   preStartQueue.forEach(event => {
@@ -69,7 +76,10 @@ export function startServer(store, settings, $window) {
       return;
     }
 
-    if (!allowedOrigins.includes(event.origin)) {
+    if (
+      !allowedOrigins.includes(event.origin) &&
+      event.origin !== window.origin
+    ) {
       warnOnce(
         `Ignoring JSON-RPC request from non-whitelisted origin ${event.origin}`
       );
@@ -98,6 +108,8 @@ export function startServer(store, settings, $window) {
     }
 
     // Call the method and return the result response.
+    const params = request.params ?? [];
+    method(...params);
     if (request.params) {
       method(...request.params);
     } else {

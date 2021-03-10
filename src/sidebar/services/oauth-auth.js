@@ -299,6 +299,20 @@ export default function auth(
     localStorage.removeItem(storageKey());
   }
 
+  /**
+   * Set the access token used for authentication.
+   *
+   * @param {string} token
+   */
+  function setAccessToken(token) {
+    const oneHour = 1000 * 60 * 60;
+    tokenInfoPromise = Promise.resolve({
+      accessToken: token,
+      refreshToken: 'n/a',
+      expiresAt: Date.now() + oneHour,
+    });
+  }
+
   listenForTokenStorageEvents();
 
   // The returned object `extends` the emitter. We could rework this
@@ -307,5 +321,6 @@ export default function auth(
     login,
     logout,
     tokenGetter,
+    setAccessToken,
   });
 }

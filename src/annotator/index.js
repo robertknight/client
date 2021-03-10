@@ -55,7 +55,9 @@ function init() {
   const sidebar = SidebarClass
     ? new SidebarClass(document.body, guest, config)
     : null;
-  const notebook = new Notebook(document.body, config);
+  const notebook = new Notebook(document.body, {
+    onConnectSidebar: port => sidebar?.connectNotebook(port),
+  });
 
   appLinkEl.addEventListener('destroy', () => {
     sidebar?.destroy();
