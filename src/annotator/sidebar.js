@@ -84,7 +84,7 @@ export default class Sidebar extends Delegator {
     } else {
       this.iframeContainer = document.createElement('div');
       this.iframeContainer.style.display = 'none';
-      this.iframeContainer.className = 'annotator-frame';
+      this.iframeContainer.className = 'annotator-frame annotator-reset';
 
       if (config.theme === 'clean') {
         this.iframeContainer.classList.add('annotator-frame--theme-clean');

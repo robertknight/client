@@ -6,11 +6,9 @@
 @use '../mixins/layout';
 @use '../mixins/utils';
 
-// note: These components CSS classes are nested inside
-// .annotator-frame to avoid being overridden by the
-// CSS reset styles applied to .annotator-frame, which would otherwise
-// have higher specificity
-.annotator-frame {
+// Toolbar styles are nested inside `.annotator-reset` to ensure they take
+// precedence over the CSS reset applied by that class.
+.annotator-reset {
   // the vertical toolbar at the left-edge of the sidebar
   // which provides controls for toggling the sidebar,
   // toggling highlights etc.

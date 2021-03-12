@@ -3,9 +3,9 @@
 
 $bucket-bar-width: 22px;
 
-// Bucket-bar styles are nested inside `.annotator-frame` to ensure they take
-// precedence over the CSS reset applied to `.annotator-frame`.
-.annotator-frame {
+// Bucket-bar styles are nested inside `.annotator-reset` to ensure they take
+// precedence over the CSS reset applied by that class.
+.annotator-reset {
   .Buckets__list {
     background: var.$grey-2; // When sidebar is unfolded, remove the background transparency
     pointer-events: none;

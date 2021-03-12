@@ -18,10 +18,14 @@
 @use './highlights';
 @use './notebook';
 
-// Sidebar
-.annotator-frame {
-  // CSS reset which attempts to isolate this element and its children from
-  // host page styles.
+// CSS reset which attempts to isolate this element and its children from
+// host page styles. Annotator UI components must nest their styles under this
+// class to override the reset (`.annotator-reset .SomeComponent { ... }`).
+//
+// When we retire support for browsers that don't support Shadow DOM, we can
+// just load the CSS reset directly inside the shadow roots of annotator UI
+// components.
+.annotator-reset {
   @include meta.load-css('../reset');
   @include reset.nested-reset;
   @include reset.reset-box-model;
@@ -33,7 +37,10 @@
     height: initial;
     width: initial;
   }
+}
 
+// Sidebar
+.annotator-frame {
   // frame styles
   position: fixed;
   top: 0;
