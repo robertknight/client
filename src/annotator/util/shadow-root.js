@@ -3,7 +3,7 @@
  */
 function loadStyles(shadowRoot) {
   const url = /** @type {HTMLLinkElement|undefined} */ (document.querySelector(
-    'link[rel="stylesheet"][href*="/build/styles/annotator.css"]'
+    'link[href*="/build/styles/annotator.css"]'
   ))?.href;
 
   if (!url) {

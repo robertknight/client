@@ -1,4 +1,8 @@
-// SASS entry point for annotator styling
+// SASS entry point for annotator UI components (sidebar, adder toolbar etc.).
+//
+// In browsers that support shadow DOM, this file is only loaded inside shadow
+// roots and is isolated from the host page. In browsers that do not support
+// shadow DOM, this file is also loaded in the host page.
 
 @use "sass:meta";
 @use "sass:color" as color;
@@ -10,12 +14,11 @@
 // -----------------
 @use '@hypothesis/frontend-shared/styles';
 
-// Annotator-specific components.
+// Annotator UI components.
 @use './components/AdderToolbar';
 @use './components/Buckets';
 @use './components/Toolbar';
 @use './components/WarningBanner';
-@use './highlights';
 @use './notebook';
 
 // CSS reset which attempts to isolate this element and its children from

@@ -109,13 +109,26 @@ function preloadUrl(doc, type, url) {
 }
 
 /**
+ * Return the absolute URL of the asset with the given relative path.
+ *
+ * @param {SidebarAppConfig|AnnotatorConfig} config
+ * @param {string} path
+ */
+function resolveAsset(config, path) {
+  if (!config.manifest[path]) {
+    throw new Error(`Missing entry in manifest for "${path}"`);
+  }
+  return config.assetRoot + 'build/' + config.manifest[path];
+}
+
+/**
  * @param {Document} doc
  * @param {SidebarAppConfig|AnnotatorConfig} config
  * @param {string[]} assets
  */
 function injectAssets(doc, config, assets) {
   assets.forEach(function (path) {
-    const url = config.assetRoot + 'build/' + config.manifest[path];
+    const url = resolveAsset(config, path);
     if (url.match(/\.css/)) {
       injectStylesheet(doc, url);
     } else {
@@ -166,6 +179,13 @@ export function bootHypothesisClient(doc, config) {
 
   const polyfills = polyfillBundles(commonPolyfills);
 
+  const annotatorStyles = resolveAsset(config, 'styles/annotator.css');
+  if (Element.prototype.attachShadow) {
+    preloadUrl(doc, 'style', annotatorStyles);
+  } else {
+    injectStylesheet(doc, annotatorStyles);
+  }
+
   injectAssets(doc, config, [
     // Vendor code and polyfills
     ...polyfills,
@@ -173,7 +193,7 @@ export function bootHypothesisClient(doc, config) {
     // Main entry point for the client
     'scripts/annotator.bundle.js',
 
-    'styles/annotator.css',
+    'styles/highlights.css',
     'styles/pdfjs-overrides.css',
   ]);
 }
