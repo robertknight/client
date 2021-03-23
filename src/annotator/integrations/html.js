@@ -1,7 +1,7 @@
 import { TinyEmitter as EventEmitter } from 'tiny-emitter';
 
 import DocumentMeta from './html-metadata';
-import * as anchoring from '../anchoring/html';
+import { anchor, describe } from '../anchoring/html';
 
 /**
  * @typedef {import('../../types/api').Selector} Selector
@@ -30,7 +30,7 @@ export class HTMLIntegration extends EventEmitter {
    * @return {Promise<Range>}
    */
   anchor(root, selectors) {
-    return anchoring.anchor(root, selectors);
+    return anchor(root, selectors);
   }
 
   /**
@@ -39,7 +39,7 @@ export class HTMLIntegration extends EventEmitter {
    * @return {Selector[]|Promise<Selector[]>}
    */
   describe(root, range) {
-    return anchoring.describe(root, range);
+    return describe(root, range);
   }
 
   async uri() {
@@ -47,7 +47,6 @@ export class HTMLIntegration extends EventEmitter {
   }
 
   async metadata() {
-    this.documentMeta.getDocumentMetadata();
-    return this.documentMeta.metadata;
+    return this.documentMeta.getDocumentMetadata();
   }
 }
