@@ -46,6 +46,12 @@ function init() {
   // Load the PDF anchoring/metadata integration.
   config.documentType = isPDF ? 'pdf' : 'html';
 
+  // TODO:
+  //  - Establish if this is the host frame
+  //  - If this is a host frame, create a `SidebarConnector` instance
+  //  - Request a connection to the sidebar synchronously or asynchronously
+  //    depending on the host status
+
   const eventBus = new EventBus();
   const guest = new Guest(document.body, eventBus, config);
   const sidebar = !config.subFrameIdentifier
