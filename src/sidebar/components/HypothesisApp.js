@@ -199,12 +199,10 @@ function HypothesisApp({ auth, bridge, settings, session, toastMessenger }) {
   );
 }
 
-HypothesisApp.injectedProps = [
+export default withServices(HypothesisApp, [
   'auth',
   'bridge',
   'session',
   'settings',
   'toastMessenger',
-];
-
-export default withServices(HypothesisApp);
+]);

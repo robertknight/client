@@ -128,7 +128,7 @@ function TopBar({
       {/* Sidebar view */}
       {isSidebar && (
         <div className="TopBar__inner content">
-          <GroupList className="GroupList" auth={auth} />
+          <GroupList />
           <div className="u-stretch" />
           {pendingUpdateCount > 0 && (
             <IconButton
@@ -169,6 +169,4 @@ function TopBar({
   );
 }
 
-TopBar.injectedProps = ['bridge', 'settings', 'streamer'];
-
-export default withServices(TopBar);
+export default withServices(TopBar, ['bridge', 'settings', 'streamer']);
