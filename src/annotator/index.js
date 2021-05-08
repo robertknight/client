@@ -8,9 +8,7 @@
 import 'focus-visible';
 
 // Enable debug checks for Preact components.
-if (process.env.NODE_ENV !== 'production') {
-  require('preact/debug');
-}
+import 'preact/debug';
 
 // Load icons.
 import { registerIcons } from '@hypothesis/frontend-shared';
