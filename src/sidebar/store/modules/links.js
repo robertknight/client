@@ -1,66 +1,45 @@
-import { actionTypes } from '../util';
 import { replaceURLParams } from '../../util/url';
-import { storeModule } from '../create-store';
 
-function init() {
-  return null;
-}
+import { createStoreModule } from '../create-store';
 
-const update = {
-  UPDATE_LINKS(state, action) {
-    return {
-      ...action.links,
-    };
-  },
-};
+/** @typedef {Record<string, string>|null} State */
 
-const actions = actionTypes(update);
-
-/**
- * Update the link map
- *
- * @param {Record<string, string>} links - Link map fetched from the `/api/links` endpoint
- */
-function updateLinks(links) {
-  return {
-    type: actions.UPDATE_LINKS,
-    links,
-  };
-}
-
-/**
- * Render a service link (URL) using the given `params`
- *
- * Returns an empty string if links have not been fetched yet.
- *
- * @param {string} linkName
- * @param {Record<string, string>} [params]
- * @return {string}
- */
-function getLink(state, linkName, params = {}) {
-  if (!state) {
-    return '';
-  }
-  const template = state[linkName];
-  if (!template) {
-    throw new Error(`Unknown link "${linkName}"`);
-  }
-  const { url, unusedParams } = replaceURLParams(template, params);
-  const unusedKeys = Object.keys(unusedParams);
-  if (unusedKeys.length > 0) {
-    throw new Error(`Unused parameters: ${unusedKeys.join(', ')}`);
-  }
-  return url;
-}
-
-export default storeModule({
-  init,
+export default createStoreModule(/** @type {State} */ (null), {
   namespace: 'links',
-  update,
   actions: {
-    updateLinks,
+    /**
+     * Update the link map
+     *
+     * @param {Record<string, string>} links - Link map fetched from the `/api/links` endpoint
+     */
+    updateLinks(state, links) {
+      return links;
+    },
   },
   selectors: {
-    getLink,
+    /**
+     * Render a service link (URL) using the given `params`
+     *
+     * Returns an empty string if links have not been fetched yet.
+     *
+     * @param {string} linkName
+     * @param {Record<string, string>} [params]
+     * @return {string}
+     */
+    getLink(state, linkName, params = {}) {
+      if (!state) {
+        return '';
+      }
+      const template = state[linkName];
+      if (!template) {
+        throw new Error(`Unknown link "${linkName}"`);
+      }
+      const { url, unusedParams } = replaceURLParams(template, params);
+      const unusedKeys = Object.keys(unusedParams);
+      if (unusedKeys.length > 0) {
+        throw new Error(`Unused parameters: ${unusedKeys.join(', ')}`);
+      }
+      return url;
+    },
   },
 });

@@ -8,132 +8,83 @@
  * may be "active" (open) at one time.
  */
 
+import { createStoreModule } from '../create-store';
+
 /**
  * @typedef {import("../../../types/sidebar").PanelName} PanelName
  */
 
-import * as util from '../util';
-
-import { storeModule } from '../create-store';
-
-function init() {
-  return {
-    /*
-     * The `panelName` of the currently-active sidebar panel.
-     * Only one `panelName` may be active at a time, but it is valid (though not
-     * the standard use case) for multiple `SidebarPanel` components to share
-     * the same `panelName`—`panelName` is not intended as a unique ID/key.
-     *
-     * e.g. If `activePanelName` were `foobar`, all `SidebarPanel` components
-     * with `panelName` of `foobar` would be active, and thus visible.
-     *
-     */
-    activePanelName: null,
-  };
-}
-
-const update = {
-  OPEN_SIDEBAR_PANEL: function (state, action) {
-    return { activePanelName: action.panelName };
-  },
-
-  CLOSE_SIDEBAR_PANEL: function (state, action) {
-    let activePanelName = state.activePanelName;
-    if (action.panelName === activePanelName) {
-      // `action.panelName` is indeed the currently-active panel; deactivate
-      activePanelName = null;
-    }
-    // `action.panelName` is not the active panel; nothing to do here
-    return {
-      activePanelName,
-    };
-  },
-
-  TOGGLE_SIDEBAR_PANEL: function (state, action) {
-    let activePanelName;
-    // Is the panel in question currently the active panel?
-    const panelIsActive = state.activePanelName === action.panelName;
-    // What state should the panel in question move to next?
-    const panelShouldBeActive =
-      typeof action.panelState !== 'undefined'
-        ? action.panelState
-        : !panelIsActive;
-
-    if (panelShouldBeActive) {
-      // If the specified panel should be open (active), set it as active
-      activePanelName = action.panelName;
-    } else if (panelIsActive && !panelShouldBeActive) {
-      // If the specified panel is currently open (active), but it shouldn't be anymore
-      activePanelName = null;
-    } else {
-      // This panel is already inactive; do nothing
-      activePanelName = state.activePanelName;
-    }
-
-    return {
-      activePanelName,
-    };
-  },
-};
-
-const actions = util.actionTypes(update);
-
 /**
- * Designate `panelName` as the currently-active panel name
- *
- * @param {PanelName} panelName
+ * @typedef State
+ * @prop {PanelName|null} activePanelName
  */
-function openSidebarPanel(panelName) {
-  return { type: actions.OPEN_SIDEBAR_PANEL, panelName: panelName };
-}
 
-/**
- * `panelName` should not be the active panel
- *
- * @param {PanelName} panelName
- */
-function closeSidebarPanel(panelName) {
-  return { type: actions.CLOSE_SIDEBAR_PANEL, panelName: panelName };
-}
+/** @type {State} */
+const initialState = { activePanelName: null };
 
-/**
- * Toggle a sidebar panel from its current state, or set it to the
- * designated `panelState`.
- *
- * @param {PanelName} panelName
- * @param {boolean} [panelState] -
- *   Should the panel be active? Omit this prop to simply toggle the value.
- */
-function toggleSidebarPanel(panelName, panelState) {
-  return {
-    type: actions.TOGGLE_SIDEBAR_PANEL,
-    panelName: panelName,
-    panelState: panelState,
-  };
-}
-
-/**
- * Is the panel indicated by `panelName` currently active (open)?
- *
- * @param {PanelName} panelName
- * @return {boolean} - `true` if `panelName` is the currently-active panel
- */
-function isSidebarPanelOpen(state, panelName) {
-  return state.activePanelName === panelName;
-}
-
-export default storeModule({
+export default createStoreModule(initialState, {
   namespace: 'sidebarPanels',
-  init: init,
-  update: update,
 
   actions: {
-    openSidebarPanel,
-    closeSidebarPanel,
-    toggleSidebarPanel,
+    /**
+     * @param {PanelName} panelName
+     */
+    openSidebarPanel(state, panelName) {
+      return { activePanelName: panelName };
+    },
+
+    /**
+     * @param {PanelName} panelName
+     */
+    closeSidebarPanel(state, panelName) {
+      let activePanelName = state.activePanelName;
+      if (panelName === activePanelName) {
+        // `action.panelName` is indeed the currently-active panel; deactivate
+        activePanelName = null;
+      }
+      // `action.panelName` is not the active panel; nothing to do here
+      return {
+        activePanelName,
+      };
+    },
+
+    /**
+     * @param {PanelName} panelName
+     * @param {boolean} [panelState]
+     */
+    toggleSidebarPanel(state, panelName, panelState) {
+      let activePanelName;
+      // Is the panel in question currently the active panel?
+      const panelIsActive = state.activePanelName === panelName;
+      // What state should the panel in question move to next?
+      const panelShouldBeActive =
+        typeof panelState !== 'undefined' ? panelState : !panelIsActive;
+
+      if (panelShouldBeActive) {
+        // If the specified panel should be open (active), set it as active
+        activePanelName = panelName;
+      } else if (panelIsActive && !panelShouldBeActive) {
+        // If the specified panel is currently open (active), but it shouldn't be anymore
+        activePanelName = null;
+      } else {
+        // This panel is already inactive; do nothing
+        activePanelName = state.activePanelName;
+      }
+
+      return {
+        activePanelName,
+      };
+    },
   },
 
   selectors: {
-    isSidebarPanelOpen,
+    /**
+     * Is the panel indicated by `panelName` currently active (open)?
+     *
+     * @param {PanelName} panelName
+     */
+    isSidebarPanelOpen(state, panelName) {
+      return state.activePanelName === panelName;
+    },
   },
 });
