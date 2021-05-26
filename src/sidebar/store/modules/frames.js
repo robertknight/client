@@ -5,8 +5,7 @@ import {
 } from 'reselect';
 import shallowEqual from 'shallowequal';
 
-import * as util from '../util';
-import { storeModule } from '../create-store';
+import { createStoreModule } from '../create-store';
 
 /**
  * @typedef {import('../../../types/annotator').DocumentMetadata} DocumentMetadata
@@ -20,95 +19,12 @@ import { storeModule } from '../create-store';
  * @prop {string} uri - Current primary URI of the document being displayed
  */
 
-function init() {
-  // The list of frames connected to the sidebar app
-  return [];
-}
-
-const update = {
-  CONNECT_FRAME: function (state, action) {
-    return [...state, action.frame];
-  },
-
-  DESTROY_FRAME: function (state, action) {
-    return state.filter(f => f !== action.frame);
-  },
-
-  UPDATE_FRAME_ANNOTATION_FETCH_STATUS: function (state, action) {
-    const frames = state.map(function (frame) {
-      const match = frame.uri && frame.uri === action.uri;
-      if (match) {
-        return Object.assign({}, frame, {
-          isAnnotationFetchComplete: action.isAnnotationFetchComplete,
-        });
-      } else {
-        return frame;
-      }
-    });
-    return frames;
-  },
-};
-
-const actions = util.actionTypes(update);
-
 /**
- * Add a frame to the list of frames currently connected to the sidebar app.
+ * The list of frames connected to the sidebar app
  *
- * @param {Frame} frame
+ * @type {Frame[]}
  */
-function connectFrame(frame) {
-  return { type: actions.CONNECT_FRAME, frame: frame };
-}
-
-/**
- * Remove a frame from the list of frames currently connected to the sidebar app.
- *
- * @param {Frame} frame
- */
-function destroyFrame(frame) {
-  return { type: actions.DESTROY_FRAME, frame: frame };
-}
-
-/**
- * Update the `isAnnotationFetchComplete` flag of the frame.
- *
- * @param {string} uri
- * @param {boolean} isFetchComplete
- */
-function updateFrameAnnotationFetchStatus(uri, isFetchComplete) {
-  return {
-    type: actions.UPDATE_FRAME_ANNOTATION_FETCH_STATUS,
-    isAnnotationFetchComplete: isFetchComplete,
-    uri: uri,
-  };
-}
-
-/**
- * Return the list of frames currently connected to the sidebar app.
- */
-function frames(state) {
-  return state;
-}
-
-/**
- * Return the "main" frame that the sidebar is connected to.
- *
- * The sidebar may be connected to multiple frames from different URLs.
- * For some purposes, the main frame (typically the top-level one that contains
- * the sidebar) needs to be distinguished. This selector returns the main frame
- * for that purpose.
- *
- * This may be `null` during startup.
- *
- * @type {(state: any) => Frame|null}
- */
-const mainFrame = createSelector(
-  state => state,
-
-  // Sub-frames will all have a "frame identifier" set. The main frame is the
-  // one with a `null` id.
-  frames => frames.find(f => !f.id) || null
-);
+const initialState = [];
 
 /**
  * @param {Frame} frame
@@ -117,13 +33,11 @@ function searchUrisForFrame(frame) {
   let uris = [frame.uri];
 
   if (frame.metadata && frame.metadata.documentFingerprint) {
-    uris = frame.metadata.link.map(function (link) {
-      return link.href;
-    });
+    uris = frame.metadata.link.map(link => link.href);
   }
 
   if (frame.metadata && frame.metadata.link) {
-    frame.metadata.link.forEach(function (link) {
+    frame.metadata.link.forEach(link => {
       if (link.href.startsWith('doi:')) {
         uris.push(link.href);
       }
@@ -155,20 +69,74 @@ const searchUris = createShallowEqualSelector(
   uris => uris
 );
 
-export default storeModule({
-  init: init,
+export default createStoreModule(initialState, {
   namespace: 'frames',
-  update: update,
 
   actions: {
-    connectFrame,
-    destroyFrame,
-    updateFrameAnnotationFetchStatus,
+    /**
+     * Add a frame to the list of frames currently connected to the sidebar app.
+     *
+     * @param {Frame} frame
+     */
+    connectFrame(state, frame) {
+      return [...state, frame];
+    },
+
+    /**
+     * Remove a frame from the list of frames currently connected to the sidebar app.
+     *
+     * @param {Frame} frame
+     */
+    destroyFrame(state, frame) {
+      return state.filter(f => f !== frame);
+    },
+
+    /**
+     * Update the `isAnnotationFetchComplete` flag of the frame.
+     *
+     * @param {string} uri
+     * @param {boolean} fetchComplete
+     */
+    updateFrameAnnotationFetchStatus(state, uri, fetchComplete) {
+      const frames = state.map(frame => {
+        const match = frame.uri && frame.uri === uri;
+        if (match) {
+          return Object.assign({}, frame, {
+            isAnnotationFetchComplete: fetchComplete,
+          });
+        } else {
+          return frame;
+        }
+      });
+      return frames;
+    },
   },
 
   selectors: {
-    frames,
-    mainFrame,
+    frames(state) {
+      return state;
+    },
+
+    /**
+     * Return the "main" frame that the sidebar is connected to.
+     *
+     * The sidebar may be connected to multiple frames from different URLs.
+     * For some purposes, the main frame (typically the top-level one that contains
+     * the sidebar) needs to be distinguished. This selector returns the main frame
+     * for that purpose.
+     *
+     * This may be `null` during startup.
+     *
+     * @type {(state: Readonly<Frame[]>) => Frame|null}
+     */
+    mainFrame: createSelector(
+      state => state,
+
+      // Sub-frames will all have a "frame identifier" set. The main frame is the
+      // one with a `null` id.
+      frames => frames.find(f => !f.id) || null
+    ),
+
     searchUris,
   },
 });
