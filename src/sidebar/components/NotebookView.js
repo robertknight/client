@@ -147,7 +147,7 @@ function NotebookView({ loadAnnotationsService, streamer }) {
           forcedVisibleCount={forcedVisibleCount}
           isFiltered={hasAppliedFilter}
           isLoading={isLoading}
-          resultCount={resultCount}
+          resultCount={resultCount ?? 0}
         />
       </div>
       <div className="NotebookView__items">
