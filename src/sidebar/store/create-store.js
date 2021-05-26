@@ -8,18 +8,17 @@ import immutable from '../util/immutable';
 import { createReducer, bindSelectors } from './util';
 
 /**
- * Helper that strips the first argument from a function type.
+ * Helper that removes the first argument from a function type.
  *
  * @template F
  * @typedef {F extends (x: any, ...args: infer P) => infer R ? (...args: P) => R : never} OmitFirstArg
  */
 
 /**
- * Helper that converts an object of selector functions, which take a `state`
- * parameter plus zero or more arguments, into selector methods, with no `state` parameter.
+ * Helper that removes the first argument from each method in an object.
  *
  * @template T
- * @typedef {{ [K in keyof T]: OmitFirstArg<T[K]> }} SelectorMethods
+ * @typedef {{ [K in keyof T]: OmitFirstArg<T[K]> }} OmitFirstArgFromMethods
  */
 
 /**
@@ -83,20 +82,20 @@ import { createReducer, bindSelectors } from './util';
  * @template {object} RootSelectors
  * @typedef {redux.Store &
  *   Actions &
- *   SelectorMethods<Selectors> &
- *   SelectorMethods<RootSelectors>} Store
+ *   OmitFirstArgFromMethods<Selectors> &
+ *   OmitFirstArgFromMethods<RootSelectors>} Store
  */
 
 /**
- * Create a Redux store from a set of _modules_.
+ * Create a Redux store from a set of modules.
  *
  * Each module defines the logic related to a particular piece of the application
- * state, including:
+ * state. Modules are typically defined with the `createStoreModule` helper and
+ * include:
  *
- *  - The initial value of that state
- *  - The _actions_ that can change that state
- *  - The _selectors_ for reading that state or computing things
- *    from that state.
+ *  - The initial value of a module's state
+ *  - The _actions_ that can change the module's state
+ *  - The _selectors_ for accessing a module's state
  *
  * In addition to the standard Redux store interface, the returned store also exposes
  * each action and selector from the input modules as a method. For example, if
@@ -197,4 +196,120 @@ export function storeModule(config) {
   // helpful error messages when typechecking if there is something incorrect
   // in the configuration.
   return config;
+}
+
+/**
+ * @template S
+ * @typedef {{ [method: string]: (state: Readonly<S>, ...args: any[]) => Partial<S> }} Actions
+ */
+
+/**
+ * @template S
+ * @typedef {{ [method: string]: (state: Readonly<S>, ...args: any[]) => any }} Selectors
+ */
+
+/**
+ * @template {Record<string, Function>} Actions
+ * @param {string} namespace
+ * @param {Actions} actions
+ * @return {OmitFirstArgFromMethods<Actions>}
+ */
+function makeActionCreators(namespace, actions) {
+  const creators = {};
+  Object.keys(actions).forEach(name => {
+    creators[name] = (...args) => {
+      return {
+        type: `${namespace}/${name}`,
+        payload: args,
+      };
+    };
+  });
+  return /** @type {OmitFirstArgFromMethods<Actions>} */ (creators);
+}
+
+/**
+ * @param {string} namespace
+ * @param {Record<string, Function>} actions
+ */
+function makeReducers(namespace, actions) {
+  const reducers = {};
+  Object.keys(actions).forEach(name => {
+    reducers[`${namespace}/${name}`] = (state, action) => {
+      return actions[name](state, ...action.payload);
+    };
+  });
+  return reducers;
+}
+
+/**
+ * Create a store module for use with `createStore`.
+ *
+ * A store module consists of state related to some aspect of the application,
+ * actions that specify how that state can evolve and selectors that enable
+ * code outside the module to access the state.
+ *
+ * When a store is created from modules using `createStore`, the action and
+ * selector methods are exposed as methods of the store, except that the
+ * `state` argument does not need to be passed when calling the methods.
+ * The current module state is automatically passed instead.
+ *
+ * @template {object} State
+ * @template {Selectors<State>} SelectorMap
+ * @template {Actions<State>} ActionMap
+ * @template {Record<string,Function>} ActionCreators
+ * @template {Record<string,Function>} RootSelectors
+ * @template {Actions<State>} ReducerMap
+ * @param {State|(() => State)} initialState - Initial state of the store. This argument is
+ *   separate from `config` to allow the type of the `state` argument of
+ *   selector methods and actions in `config` to be automatically inferred.
+ * @param {object} config
+ *   @param {string} config.namespace -
+ *     The key under which this module's state is stored in the root state and
+ *     the prefix used for actions dispatched by this module.
+ *   @param {SelectorMap} config.selectors -
+ *     Object defining selector functions that read from this module's state.
+ *     Each function receives the module's state and zero or more arguments and
+ *     returns the extracted data.
+ *   @param {ActionMap} config.actions -
+ *     Object defining actions that update the module's state. Each function
+ *     receives the current module state and zero or more arguments for the
+ *     action. The function returns the updates to the module state.
+ *   @param {ActionCreators} [config.actionCreators] -
+ *   @param {RootSelectors} [config.rootSelectors] -
+ *     Selectors that operate over state from multiple modules. These behave
+ *     similarly to `selectors` except that they receive the root store state
+ *     as the first argument.
+ *   @param {ReducerMap} [config.reducers] -
+ *     Additional reducer functions. These allow this module's state to be
+ *     updated in response to actions from other modules.
+ */
+export function createStoreModule(initialState, config) {
+  const {
+    actions,
+    namespace,
+    selectors,
+
+    // Optional config. Type casts are needed here so that the types, if specified,
+    // are not "erased" to just `{}`.
+    actionCreators = /** @type {ActionCreators} */ ({}),
+    reducers = /** @type {Reducers<State>} */ ({}),
+    rootSelectors,
+  } = config;
+
+  const init =
+    initialState instanceof Function ? initialState : () => initialState;
+
+  return storeModule({
+    namespace,
+    init,
+
+    // The properties of `update` are internal to the store, so the type
+    // doesn't matter.
+    // @ts-ignore
+    update: { ...reducers, ...makeReducers(namespace, actions) },
+
+    actions: { ...actionCreators, ...makeActionCreators(namespace, actions) },
+    selectors,
+    rootSelectors,
+  });
 }
