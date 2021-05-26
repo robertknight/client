@@ -1,69 +1,44 @@
-import * as util from '../util';
-
-import { storeModule } from '../create-store';
+import { createStoreModule } from '../create-store';
 
 /**
  * This module defines actions and state related to the display mode of the
  * sidebar.
  */
 
-function init() {
-  return {
-    // Has the sidebar ever been opened? NB: This is not necessarily the
-    // current state of the sidebar, but tracks whether it has ever been open
-    sidebarHasOpened: false,
-    visibleHighlights: false,
-  };
-}
-
-const update = {
-  SET_HIGHLIGHTS_VISIBLE: function (state, action) {
-    return { visibleHighlights: action.visible };
-  },
-  SET_SIDEBAR_OPENED: (state, action) => {
-    if (action.opened === true) {
-      // If the sidebar is open, track that it has ever been opened
-      return { sidebarHasOpened: true };
-    }
-    // Otherwise, nothing to do here
-    return {};
-  },
+const initialState = {
+  /**
+   * Has the sidebar ever been opened? NB: This is not necessarily the
+   * current state of the sidebar, but tracks whether it has ever been open.
+   */
+  sidebarHasOpened: false,
+  visibleHighlights: false,
 };
 
-const actions = util.actionTypes(update);
-
-// Action creators
-
-/**
- * Sets whether annotation highlights in connected documents are shown
- * or not.
- */
-function setShowHighlights(show) {
-  return { type: actions.SET_HIGHLIGHTS_VISIBLE, visible: show };
-}
-
-/**
- * @param {boolean} opened - If the sidebar is open
- */
-function setSidebarOpened(opened) {
-  return { type: actions.SET_SIDEBAR_OPENED, opened };
-}
-
-// Selectors
-
-function hasSidebarOpened(state) {
-  return state.sidebarHasOpened;
-}
-
-export default storeModule({
-  init: init,
+export default createStoreModule(initialState, {
   namespace: 'viewer',
-  update: update,
   actions: {
-    setShowHighlights,
-    setSidebarOpened,
+    /**
+     * @param {boolean} show
+     */
+    setShowHighlights(state, show) {
+      return { visibleHighlights: show };
+    },
+
+    /**
+     * @param {boolean} opened
+     */
+    setSidebarOpened(state, opened) {
+      // FIXME - The `opened` argument is pointless
+      if (opened) {
+        return { sidebarHasOpened: opened };
+      } else {
+        return {};
+      }
+    },
   },
   selectors: {
-    hasSidebarOpened,
+    hasSidebarOpened(state) {
+      return state.sidebarHasOpened;
+    },
   },
 });
