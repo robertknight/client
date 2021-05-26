@@ -1,72 +1,51 @@
-import { actionTypes } from '../util';
+import { createStoreModule } from '../create-store';
 
-import { storeModule } from '../create-store';
+/** @typedef {'sidebar'|'annotation'|'stream'|'notebook'} RouteName */
 
-function init() {
-  return {
-    /**
-     * The current route.
-     * One of null (if no route active yet), "sidebar", "annotation" or "stream".
-     */
-    name: null,
+const initialState = {
+  /**
+   * The current route.
+   *
+   * @type {RouteName|null}
+   */
+  name: null,
 
-    /**
-     * Parameters of the current route.
-     *
-     * - The "annotation" route has an "id" (annotation ID) parameter.
-     * - The "stream" route has a "q" (query) parameter.
-     * - The "sidebar" route has no parameters.
-     */
-    params: {},
-  };
-}
-
-const update = {
-  CHANGE_ROUTE(state, { name, params }) {
-    return { name, params };
-  },
+  /**
+   * Parameters of the current route.
+   *
+   * - The "annotation" route has an "id" (annotation ID) parameter.
+   * - The "stream" route has a "q" (query) parameter.
+   * - The "sidebar" route has no parameters.
+   *
+   * @type {Record<string, string>}
+   */
+  params: {},
 };
 
-const actions = actionTypes(update);
-
-/**
- * Change the active route.
- *
- * @param {string} name - Name of the route to activate. See `init` for possible values
- * @param {Object.<string,string>} params - Parameters associated with the route
- */
-function changeRoute(name, params = {}) {
-  return {
-    type: actions.CHANGE_ROUTE,
-    name,
-    params,
-  };
-}
-
-/**
- * Return the name of the current route.
- */
-function route(state) {
-  return state.name;
-}
-
-/**
- * Return any parameters for the current route, extracted from the path and
- * query string.
- */
-function routeParams(state) {
-  return state.params;
-}
-
-export default storeModule({
-  init,
+export default createStoreModule(initialState, {
   namespace: 'route',
-  update,
   actions: {
-    changeRoute,
+    /**
+     * Change the active route.
+     *
+     * @param {RouteName} name - Name of the route to activate.
+     * @param {Record<string,string>} params - Parameters associated with the route
+     */
+    changeRoute(state, name, params = {}) {
+      return { name, params };
+    },
   },
   selectors: {
-    route,
-    routeParams,
+    route(state) {
+      return state.name;
+    },
+
+    /**
+     * Return any parameters for the current route, extracted from the path and
+     * query string.
+     */
+    routeParams(state) {
+      return state.params;
+    },
   },
 });
