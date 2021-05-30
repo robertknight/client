@@ -1,7 +1,6 @@
 import { createSelector } from 'reselect';
 
-import { actionTypes } from '../util';
-import { storeModule } from '../create-store';
+import { createStoreModule } from '../create-store';
 
 /**
  * Manage state pertaining to the filtering of annotations in the UI.
@@ -56,7 +55,7 @@ import { storeModule } from '../create-store';
  * @prop {string} displayName
  */
 
-function init(settings) {
+function initialState(settings) {
   const focusConfig = settings.focus || {};
   return {
     /**
@@ -105,133 +104,6 @@ function focusFiltersFromConfig(focusConfig) {
   };
 }
 
-const update = {
-  CHANGE_FOCUS_MODE_USER: function (state, action) {
-    if (isValidFocusConfig({ user: action.user })) {
-      return {
-        focusActive: true,
-        focusFilters: focusFiltersFromConfig({ user: action.user }),
-      };
-    }
-    return {
-      focusActive: false,
-    };
-  },
-
-  SET_FILTER: function (state, action) {
-    const updatedFilters = {
-      ...state.filters,
-      [action.filterName]: action.filterOption,
-    };
-    // If the filter's value is empty, remove the filter
-    if (action.filterOption?.value === '') {
-      delete updatedFilters[action.filterName];
-    }
-    return { filters: updatedFilters };
-  },
-
-  SET_FILTER_QUERY: function (state, action) {
-    return { query: action.query };
-  },
-
-  SET_FOCUS_MODE: function (state, action) {
-    const active = action.active ?? !state.focusActive;
-    return {
-      focusActive: active,
-    };
-  },
-
-  // Actions defined in other modules
-
-  CLEAR_SELECTION: function () {
-    return {
-      filters: {},
-      focusActive: false,
-      query: null,
-    };
-  },
-};
-
-const actions = actionTypes(update);
-
-// Action creators
-
-/**
- * Change the focused user filter and activate focus
- *
- * @param {FocusUserConfig} user - The user to focus on
- */
-function changeFocusModeUser(user) {
-  return { type: actions.CHANGE_FOCUS_MODE_USER, user };
-}
-
-/**
- * @param {FilterKey} filterName
- * @param {FilterOption} filterOption
- */
-function setFilter(filterName, filterOption) {
-  return (dispatch, getState) => {
-    // If there is a filter conflict with focusFilters, deactivate focus
-    // mode to prevent unintended collisions and let the new filter value
-    // take precedence.
-    if (getState().filters.focusFilters?.[filterName]) {
-      dispatch({
-        type: actions.SET_FOCUS_MODE,
-        active: false,
-      });
-    }
-    dispatch({
-      type: actions.SET_FILTER,
-      filterName,
-      filterOption,
-    });
-  };
-}
-
-/** Set the query used to filter displayed annotations. */
-function setFilterQuery(query) {
-  return {
-    type: actions.SET_FILTER_QUERY,
-    query,
-  };
-}
-
-/**
- * Toggle whether or not a (user-)focus mode is applied, either inverting the
- * current active state or setting it to a target `active` state, if provided.
- *
- * @param {boolean} [active] - Optional `active` state for focus mode
- */
-function toggleFocusMode(active) {
-  return {
-    type: actions.SET_FOCUS_MODE,
-    active,
-  };
-}
-
-// Selectors
-
-function filterQuery(state) {
-  return state.query;
-}
-
-/**
- * Summary of focus state
- *
- * @type {(state: any) => FocusState}
- */
-const focusState = createSelector(
-  state => state.focusActive,
-  state => state.focusFilters,
-  (focusActive, focusFilters) => {
-    return {
-      active: focusActive,
-      configured: !!focusFilters?.user,
-      displayName: focusFilters?.user?.display || '',
-    };
-  }
-);
-
 /**
  * Get all currently-applied filters. If focus is active, will also return
  * `focusFilters`, though `filters` will supersede in the case of key collisions.
@@ -252,14 +124,6 @@ const getFilters = createSelector(
 );
 
 /**
- * Retrieve an applied filter by name/key
- */
-function getFilter(state, filterName) {
-  const filters = getFilters(state);
-  return filters[filterName];
-}
-
-/**
  * Retrieve the (string) values of all currently-applied filters.
  */
 const getFilterValues = createSelector(
@@ -274,34 +138,116 @@ const getFilterValues = createSelector(
   }
 );
 
-function getFocusFilters(state) {
-  return state.focusFilters;
-}
-
-/**
- * Are there currently any active (applied) filters?
- */
-function hasAppliedFilter(state) {
-  return !!(state.query || Object.keys(getFilters(state)).length);
-}
-
-export default storeModule({
-  init,
+export default createStoreModule(initialState, {
   namespace: 'filters',
-  update,
   actions: {
-    changeFocusModeUser,
-    setFilter,
-    setFilterQuery,
-    toggleFocusMode,
+    /**
+     * Change the focused user filter and activate focus
+     *
+     * @param {FocusUserConfig} user - The user to focus on
+     */
+    changeFocusModeUser(state, user) {
+      if (isValidFocusConfig({ user })) {
+        return {
+          focusActive: true,
+          focusFilters: focusFiltersFromConfig({ user }),
+        };
+      }
+      return {
+        focusActive: false,
+      };
+    },
+
+    /**
+     * @param {FilterKey} filterName
+     * @param {FilterOption} filterOption
+     */
+    setFilter(state, filterName, filterOption) {
+      // If there is a filter conflict with focusFilters, deactivate focus
+      // mode to prevent unintended collisions and let the new filter value
+      // take precedence.
+      let focusActive = state.focusActive;
+      if (state.focusFilters?.[filterName]) {
+        focusActive = false;
+      }
+
+      const updatedFilters = {
+        ...state.filters,
+        [filterName]: filterOption,
+      };
+      // If the filter's value is empty, remove the filter
+      if (filterOption?.value === '') {
+        delete updatedFilters[filterName];
+      }
+
+      return { filters: updatedFilters, focusActive };
+    },
+
+    /** Set the query used to filter displayed annotations. */
+    setFilterQuery(state, query) {
+      return { query };
+    },
+
+    /**
+     * Toggle whether or not a (user-)focus mode is applied, either inverting the
+     * current active state or setting it to a target `active` state, if provided.
+     *
+     * @param {boolean} [active] - Optional `active` state for focus mode
+     */
+    toggleFocusMode(state, active = !state.focusActive) {
+      return {
+        focusActive: active,
+      };
+    },
+  },
+  reducers: {
+    CLEAR_SELECTION() {
+      return {
+        filters: {},
+        focusActive: false,
+        query: null,
+      };
+    },
   },
   selectors: {
-    filterQuery,
-    focusState,
-    getFilter,
+    filterQuery(state) {
+      return state.query;
+    },
+
+    /**
+     * Summary of focus state.
+     */
+    focusState: createSelector(
+      state => state.focusActive,
+      state => state.focusFilters,
+      (focusActive, focusFilters) => {
+        return {
+          active: focusActive,
+          configured: !!focusFilters?.user,
+          displayName: focusFilters?.user?.display || '',
+        };
+      }
+    ),
+
+    /**
+     * Retrieve an applied filter by name/key
+     */
+    getFilter(state, filterName) {
+      return getFilters(state)[filterName];
+    },
+
     getFilters,
     getFilterValues,
-    getFocusFilters,
-    hasAppliedFilter,
+
+    getFocusFilters(state) {
+      return state.focusFilters;
+    },
+
+    /**
+     * Are there currently any active (applied) filters?
+     */
+    hasAppliedFilter(state) {
+      return !!(state.query || Object.keys(getFilters(state)).length);
+    },
   },
 });
