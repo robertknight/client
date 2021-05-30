@@ -1,8 +1,6 @@
-import * as util from '../util';
+import { createStoreModule } from '../create-store';
 
-import { storeModule } from '../create-store';
-
-function init(settings) {
+function initialState(settings) {
   return {
     /**
      * The ID of the direct-linked group.
@@ -42,120 +40,56 @@ function init(settings) {
   };
 }
 
-const update = {
-  UPDATE_DIRECT_LINKED_GROUP_FETCH_FAILED(state, action) {
-    return {
-      directLinkedGroupFetchFailed: action.directLinkedGroupFetchFailed,
-    };
-  },
-  UPDATE_DIRECT_LINKED_GROUP_ID(state, action) {
-    return {
-      directLinkedGroupId: action.directLinkedGroupId,
-    };
-  },
-  UPDATE_DIRECT_LINKED_ANNOTATION_ID(state, action) {
-    return {
-      directLinkedAnnotationId: action.directLinkedAnnotationId,
-    };
-  },
-  CLEAR_DIRECT_LINKED_IDS() {
-    return {
-      directLinkedAnnotationId: null,
-      directLinkedGroupId: null,
-    };
-  },
-  CLEAR_SELECTION: function () {
-    return {
-      directLinkedAnnotationId: null,
-      directLinkedGroupId: null,
-      directLinkedGroupFetchFailed: false,
-    };
-  },
-};
-
-const actions = util.actionTypes(update);
-
-/**
- * Set the direct linked group id.
- */
-function setDirectLinkedGroupId(groupId) {
-  return {
-    type: actions.UPDATE_DIRECT_LINKED_GROUP_ID,
-    directLinkedGroupId: groupId,
-  };
-}
-
-/**
- * Set the direct linked annotation's id.
- */
-function setDirectLinkedAnnotationId(annId) {
-  return {
-    type: actions.UPDATE_DIRECT_LINKED_ANNOTATION_ID,
-    directLinkedAnnotationId: annId,
-  };
-}
-
-/**
- * Set the direct linked group fetch failure to true.
- */
-function setDirectLinkedGroupFetchFailed() {
-  return {
-    type: actions.UPDATE_DIRECT_LINKED_GROUP_FETCH_FAILED,
-    directLinkedGroupFetchFailed: true,
-  };
-}
-
-/**
- * Clear the direct linked group fetch failure.
- */
-function clearDirectLinkedGroupFetchFailed() {
-  return {
-    type: actions.UPDATE_DIRECT_LINKED_GROUP_FETCH_FAILED,
-    directLinkedGroupFetchFailed: false,
-  };
-}
-
-/**
- * Clear the direct linked annotations and group IDs.
- *
- * This action indicates that the direct link has been "consumed" and should
- * not affect future group/annotation etc. fetches.
- */
-function clearDirectLinkedIds() {
-  return {
-    type: actions.CLEAR_DIRECT_LINKED_IDS,
-  };
-}
-
-/**
- * Selectors
- */
-function directLinkedAnnotationId(state) {
-  return state.directLinkedAnnotationId;
-}
-
-function directLinkedGroupId(state) {
-  return state.directLinkedGroupId;
-}
-
-function directLinkedGroupFetchFailed(state) {
-  return state.directLinkedGroupFetchFailed;
-}
-
-export default storeModule({
-  init,
+export default createStoreModule(initialState, {
   namespace: 'directLinked',
-  update,
   actions: {
-    setDirectLinkedGroupFetchFailed,
-    setDirectLinkedGroupId,
-    setDirectLinkedAnnotationId,
-    clearDirectLinkedGroupFetchFailed,
-    clearDirectLinkedIds,
+    clearDirectLinkedGroupFetchFailed() {
+      return { directLinkedGroupFetchFailed: false };
+    },
+
+    setDirectLinkedGroupFetchFailed() {
+      return { directLinkedGroupFetchFailed: true };
+    },
+
+    /** @param {string} id */
+    setDirectLinkedGroupId(state, id) {
+      return { directLinkedGroupId: id };
+    },
+    /** @param {string} id */
+    setDirectLinkedAnnotationId(state, id) {
+      return { directLinkedAnnotationId: id };
+    },
+
+    /**
+     * Clear the direct linked annotations and group IDs.
+     *
+     * This action indicates that the direct link has been "consumed" and should
+     * not affect future group/annotation etc. fetches.
+     */
+    clearDirectLinkedIds() {
+      return { directLinkedAnnotationId: null, directLinkedGroupId: null };
+    },
   },
+
+  reducers: {
+    CLEAR_SELECTION() {
+      return {
+        directLinkedAnnotationId: null,
+        directLinkedGroupId: null,
+        directLinkedGroupFetchFailed: false,
+      };
+    },
+  },
+
   selectors: {
-    directLinkedAnnotationId,
-    directLinkedGroupFetchFailed,
-    directLinkedGroupId,
+    directLinkedAnnotationId(state) {
+      return state.directLinkedAnnotationId;
+    },
+    directLinkedGroupFetchFailed(state) {
+      return state.directLinkedGroupFetchFailed;
+    },
+    directLinkedGroupId(state) {
+      return state.directLinkedGroupId;
+    },
   },
 });
