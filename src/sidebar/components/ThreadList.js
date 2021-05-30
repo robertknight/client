@@ -94,6 +94,8 @@ function ThreadList({ threads }) {
   const newAnnotationTag = (() => {
     // If multiple unsaved annotations exist, assume that the last one in the
     // list is the most recently created one.
+    // FIXME - `isHighlight` won't work due to the fact that the `drafts` store
+    // module stores only annotation IDs, not annotations.
     const newAnnotations = store
       .unsavedAnnotations()
       .filter(ann => !ann.id && !isHighlight(ann));
