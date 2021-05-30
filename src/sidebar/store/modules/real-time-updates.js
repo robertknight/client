@@ -9,82 +9,37 @@
 
 import { createSelector } from 'reselect';
 
-import { storeModule } from '../create-store';
-import { actionTypes } from '../util';
+import { createStoreModule } from '../create-store';
 
 import annotations from './annotations';
 import groups from './groups';
 import route from './route';
 
-function init() {
-  return {
-    // Map of ID -> updated annotation for updates that have been received over
-    // the WebSocket but not yet applied
-    pendingUpdates: {},
+const initialState = {
+  /**
+   * Map of ID -> updated annotation for updates that have been received over
+   * the WebSocket but not yet applied
+   *
+   * @type {Record<string, Annotation>}
+   */
+  pendingUpdates: {},
 
-    // Set of IDs of annotations which have been deleted but for which the
-    // deletion has not yet been applied
-    pendingDeletions: {},
-  };
-}
-
-const update = {
-  RECEIVE_REAL_TIME_UPDATES(state, action) {
-    return {
-      pendingUpdates: { ...action.pendingUpdates },
-      pendingDeletions: { ...action.pendingDeletions },
-    };
-  },
-
-  CLEAR_PENDING_UPDATES() {
-    return { pendingUpdates: {}, pendingDeletions: {} };
-  },
-
-  ADD_ANNOTATIONS(state, { annotations }) {
-    // Discard any pending updates which conflict with an annotation added
-    // locally or fetched via an API call.
-    //
-    // If there is a conflicting local update/remote delete then we keep
-    // the pending delete. The UI should prevent the user from editing an
-    // annotation that has been deleted on the server.
-    const pendingUpdates = { ...state.pendingUpdates };
-
-    annotations.forEach(ann => delete pendingUpdates[ann.id]);
-
-    return { pendingUpdates };
-  },
-
-  REMOVE_ANNOTATIONS(state, { annotationsToRemove }) {
-    // Discard any pending updates which conflict with an annotation removed
-    // locally.
-
-    const pendingUpdates = { ...state.pendingUpdates };
-    const pendingDeletions = { ...state.pendingDeletions };
-
-    annotationsToRemove.forEach(ann => {
-      delete pendingUpdates[ann.id];
-      delete pendingDeletions[ann.id];
-    });
-
-    return { pendingUpdates, pendingDeletions };
-  },
-
-  FOCUS_GROUP() {
-    // When switching groups we clear and re-fetch all annotations, so discard
-    // any pending updates.
-    return { pendingUpdates: {}, pendingDeletions: {} };
-  },
+  /**
+   * Set of IDs of annotations which have been deleted but for which the
+   * deletion has not yet been applied
+   *
+   * @type {Record<string, true>}
+   */
+  pendingDeletions: {},
 };
-
-const actions = actionTypes(update);
 
 /**
  * Record pending updates representing changes on the server that the client
  * has been notified about but has not yet applied.
  *
- * @param {Object} args
- * @param {Annotation[]} [args.updatedAnnotations]
- * @param {Annotation[]} [args.deletedAnnotations]
+ * @param {object} args
+ *   @param {Annotation[]} [args.updatedAnnotations]
+ *   @param {Annotation[]} [args.deletedAnnotations]
  */
 function receiveRealTimeUpdates({
   updatedAnnotations = [],
@@ -126,75 +81,110 @@ function receiveRealTimeUpdates({
       }
     });
     dispatch({
-      type: actions.RECEIVE_REAL_TIME_UPDATES,
+      type: `realTimeUpdates/receiveRealTimeUpdates`,
       pendingUpdates,
       pendingDeletions,
     });
   };
 }
 
-/**
- * Clear the queue of real-time updates which have been received but not applied.
- */
-function clearPendingUpdates() {
-  return {
-    type: actions.CLEAR_PENDING_UPDATES,
-  };
-}
-
-/**
- * Return added or updated annotations received via the WebSocket
- * which have not been applied to the local state.
- *
- * @return {Object.<string, Annotation>}
- */
-function pendingUpdates(state) {
-  return state.pendingUpdates;
-}
-
-/**
- * Return IDs of annotations which have been deleted on the server but not
- * yet removed from the local state.
- *
- * @return {Object.<string, Annotation>}
- */
-function pendingDeletions(state) {
-  return state.pendingDeletions;
-}
-
-/**
- * Return a total count of pending updates and deletions.
- *
- * @type {(state: any) => number}
- */
-const pendingUpdateCount = createSelector(
-  state => [state.pendingUpdates, state.pendingDeletions],
-  ([pendingUpdates, pendingDeletions]) =>
-    Object.keys(pendingUpdates).length + Object.keys(pendingDeletions).length
-);
-
-/**
- * Return true if an annotation has been deleted on the server but the deletion
- * has not yet been applied.
- *
- * @param {string} id
- */
-function hasPendingDeletion(state, id) {
-  return state.pendingDeletions.hasOwnProperty(id);
-}
-
-export default storeModule({
-  init,
+export default createStoreModule(initialState, {
   namespace: 'realTimeUpdates',
-  update,
+
   actions: {
-    receiveRealTimeUpdates,
-    clearPendingUpdates,
+    /**
+     * Clear the queue of real-time updates which have been received but not applied.
+     */
+    clearPendingUpdates() {
+      return { pendingUpdates: {}, pendingDeletions: {} };
+    },
   },
+
+  actionCreators: {
+    receiveRealTimeUpdates,
+  },
+
+  reducers: {
+    'realTimeUpdates/receiveRealTimeUpdates'(state, action) {
+      return {
+        pendingUpdates: { ...action.pendingUpdates },
+        pendingDeletions: { ...action.pendingDeletions },
+      };
+    },
+
+    ADD_ANNOTATIONS(state, { annotations }) {
+      // Discard any pending updates which conflict with an annotation added
+      // locally or fetched via an API call.
+      //
+      // If there is a conflicting local update/remote delete then we keep
+      // the pending delete. The UI should prevent the user from editing an
+      // annotation that has been deleted on the server.
+      const pendingUpdates = { ...state.pendingUpdates };
+
+      annotations.forEach(ann => delete pendingUpdates[ann.id]);
+
+      return { pendingUpdates };
+    },
+
+    REMOVE_ANNOTATIONS(state, { annotationsToRemove }) {
+      // Discard any pending updates which conflict with an annotation removed
+      // locally.
+
+      const pendingUpdates = { ...state.pendingUpdates };
+      const pendingDeletions = { ...state.pendingDeletions };
+
+      annotationsToRemove.forEach(ann => {
+        delete pendingUpdates[ann.id];
+        delete pendingDeletions[ann.id];
+      });
+
+      return { pendingUpdates, pendingDeletions };
+    },
+
+    FOCUS_GROUP() {
+      // When switching groups we clear and re-fetch all annotations, so discard
+      // any pending updates.
+      return { pendingUpdates: {}, pendingDeletions: {} };
+    },
+  },
+
   selectors: {
-    hasPendingDeletion,
-    pendingDeletions,
-    pendingUpdates,
-    pendingUpdateCount,
+    /**
+     * Return true if an annotation has been deleted on the server but the deletion
+     * has not yet been applied.
+     *
+     * @param {string} id
+     */
+    hasPendingDeletion(state, id) {
+      return state.pendingDeletions.hasOwnProperty(id);
+    },
+
+    /**
+     * Return IDs of annotations which have been deleted on the server but not
+     * yet removed from the local state.
+     */
+    pendingDeletions(state) {
+      return state.pendingDeletions;
+    },
+
+    /**
+     * Return added or updated annotations received via the WebSocket
+     * which have not been applied to the local state.
+     */
+    pendingUpdates(state) {
+      return state.pendingUpdates;
+    },
+
+    /**
+     * Return a total count of pending updates and deletions.
+     *
+     * @type {(state: typeof initialState) => number}
+     */
+    pendingUpdateCount: createSelector(
+      state => [state.pendingUpdates, state.pendingDeletions],
+      ([pendingUpdates, pendingDeletions]) =>
+        Object.keys(pendingUpdates).length +
+        Object.keys(pendingDeletions).length
+    ),
   },
 });
