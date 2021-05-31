@@ -234,7 +234,15 @@ function makeActionCreators(namespace, actions) {
 function makeReducers(namespace, actions) {
   const reducers = {};
   Object.keys(actions).forEach(name => {
-    reducers[`${namespace}/${name}`] = (state, action) => {
+    const actionType = `${namespace}/${name}`;
+    reducers[actionType] = (state, action) => {
+      if (!Array.isArray(action.payload)) {
+        // Action creators created by `makeActionCreators` always set the `payload`
+        // field, so this error indicates an action created via some other method.
+        throw new Error(
+          `Action "${actionType}" has a missing or non-array "payload" field`
+        );
+      }
       return actions[name](state, ...action.payload);
     };
   });
