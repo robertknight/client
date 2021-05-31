@@ -136,8 +136,8 @@ describe('sidebar/store/modules/filters', () => {
       });
     });
 
-    describe('CLEAR_SELECTION', () => {
-      it('responds to CLEAR_SELECTION by clearing filters and focus', () => {
+    describe('selection/clearSelection', () => {
+      it('responds to selection/clearSelection by clearing filters and focus', () => {
         store.changeFocusModeUser({
           username: 'testuser',
           displayName: 'Test User',

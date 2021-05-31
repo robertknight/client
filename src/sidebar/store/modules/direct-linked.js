@@ -72,7 +72,7 @@ export default createStoreModule(initialState, {
   },
 
   reducers: {
-    CLEAR_SELECTION() {
+    'selection/clearSelection'() {
       return {
         directLinkedAnnotationId: null,
         directLinkedGroupId: null,

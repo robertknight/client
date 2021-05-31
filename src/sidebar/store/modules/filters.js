@@ -201,7 +201,7 @@ export default createStoreModule(initialState, {
     },
   },
   reducers: {
-    CLEAR_SELECTION() {
+    'selection/clearSelection'() {
       return {
         filters: {},
         focusActive: false,
