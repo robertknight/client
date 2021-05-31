@@ -143,7 +143,7 @@ describe('sidebar/store/modules/selection', () => {
     });
   });
 
-  describe('CHANGE_FOCUS_MODE_USER', () => {
+  describe('filters/changeFocusModeUser', () => {
     it('clears selection', () => {
       store.selectAnnotations([1, 2, 3]);
       store.setForcedVisible(2, true);
@@ -158,7 +158,7 @@ describe('sidebar/store/modules/selection', () => {
     });
   });
 
-  describe('SET_FILTER', () => {
+  describe('filters/setFilter', () => {
     it('clears selection', () => {
       store.selectAnnotations([1, 2, 3]);
       store.setForcedVisible(2, true);
@@ -170,7 +170,7 @@ describe('sidebar/store/modules/selection', () => {
     });
   });
 
-  describe('SET_FILTER_QUERY', () => {
+  describe('filters/setFilterQuery', () => {
     it('clears selection', () => {
       store.selectAnnotations([1, 2, 3]);
       store.setForcedVisible(2, true);
@@ -182,7 +182,7 @@ describe('sidebar/store/modules/selection', () => {
     });
   });
 
-  describe('SET_FOCUS_MODE', () => {
+  describe('filters/toggleFocusMode', () => {
     it('clears selection', () => {
       store.selectAnnotations([1, 2, 3]);
       store.setForcedVisible(2, true);
