@@ -61,6 +61,7 @@ describe('FrameSyncService', () => {
         },
         connectFrame: sinon.stub(),
         destroyFrame: sinon.stub(),
+        updateFrame: sinon.stub(),
         findIDsForTags: sinon.stub(),
         focusAnnotations: sinon.stub(),
         frames: sinon.stub().returns([fixtures.framesListEntry]),
@@ -378,6 +379,24 @@ describe('FrameSyncService', () => {
       fakeBridge.emit('sidebarOpened');
 
       assert.calledWith(fakeStore.setSidebarOpened, true);
+    });
+  });
+
+  describe('on "documentInfoChanged" message', () => {
+    it('updates frame metadata in store', () => {
+      const frameInfo = {
+        frameIdentifier: null,
+        uri: 'https://example.com',
+        metadata: { title: 'Example page' },
+      };
+
+      fakeBridge.emit('documentInfoChanged', frameInfo);
+
+      assert.calledWith(fakeStore.updateFrame, {
+        id: frameInfo.frameIdentifier,
+        uri: frameInfo.uri,
+        metadata: frameInfo.metadata,
+      });
     });
   });
 

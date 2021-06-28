@@ -30,6 +30,32 @@ describe('sidebar/store/modules/frames', function () {
     });
   });
 
+  describe('#updateFrame', () => {
+    it('updates data for the matching frame', () => {
+      const frames = [
+        {
+          uri: 'https://example.com/top-level-frame',
+        },
+        {
+          uri: 'https://example.com/embedded-frame',
+          id: 'embed',
+        },
+      ];
+      frames.forEach(f => store.connectFrame(f));
+
+      const newFrames = [
+        {
+          ...frames[0],
+          uri: 'https://example.com/top-level-frame-2',
+        },
+        { ...frames[1], uri: 'https://example.com/embedded-frame-2' },
+      ];
+      newFrames.forEach(f => store.updateFrame(f));
+
+      assert.deepEqual(store.frames(), newFrames);
+    });
+  });
+
   describe('#updateFrameAnnotationFetchStatus', function () {
     it('updates the isAnnotationFetchComplete status of the frame', function () {
       const frame = {

@@ -32,6 +32,12 @@ const reducers = {
     return state.filter(f => f !== action.frame);
   },
 
+  UPDATE_FRAME: (state, action) => {
+    return state.map(frame =>
+      frame.id === action.frame.id ? action.frame : frame
+    );
+  },
+
   UPDATE_FRAME_ANNOTATION_FETCH_STATUS: function (state, action) {
     const frames = state.map(function (frame) {
       const match = frame.uri && frame.uri === action.uri;
@@ -56,6 +62,15 @@ const actions = util.actionTypes(reducers);
  */
 function connectFrame(frame) {
   return { type: actions.CONNECT_FRAME, frame: frame };
+}
+
+/**
+ * Update the metadata for a frame in the sidebar app.
+ *
+ * @param {Frame} frame
+ */
+function updateFrame(frame) {
+  return { type: actions.UPDATE_FRAME, frame };
 }
 
 /**
@@ -160,6 +175,7 @@ export default createStoreModule(initialState, {
   actionCreators: {
     connectFrame,
     destroyFrame,
+    updateFrame,
     updateFrameAnnotationFetchStatus,
   },
 

@@ -198,6 +198,14 @@ export class FrameSyncService {
         store.setSidebarOpened(true);
       });
 
+      bridge.on('documentInfoChanged', info => {
+        this._store.updateFrame({
+          id: info.frameIdentifier,
+          metadata: info.metadata,
+          uri: info.uri,
+        });
+      });
+
       // These invoke the matching methods by name on the Guests
       bridge.on('openSidebar', () => {
         bridge.call('openSidebar');
