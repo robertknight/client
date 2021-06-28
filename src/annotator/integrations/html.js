@@ -1,6 +1,8 @@
 import scrollIntoView from 'scroll-into-view';
+import { TinyEmitter } from 'tiny-emitter';
 
 import { anchor, describe } from '../anchoring/html';
+import { LocationObserver } from '../location-observer';
 
 import { HTMLMetadata } from './html-metadata';
 
@@ -17,17 +19,28 @@ import { HTMLMetadata } from './html-metadata';
  *
  * @implements {Integration}
  */
-export class HTMLIntegration {
+export class HTMLIntegration extends TinyEmitter {
   constructor(container = document.body) {
+    super();
+
     this.container = container;
     this.anchor = anchor;
     this.describe = describe;
 
     this._htmlMeta = new HTMLMetadata();
+
+    // Detect client-side URL changes triggered by the History API.
+    this._locationObserver = new LocationObserver(async () => {
+      // The `LocationObserver` callback gets passed the current `location.href`.
+      // The `uriChanged` event however should report a URI that matches what `uri()`
+      // returns, which may be different.
+      const uri = await this.uri();
+      this.emit('uriChanged', uri);
+    });
   }
 
   destroy() {
-    // There is nothing to do here yet.
+    this._locationObserver.disconnect();
   }
 
   contentContainer() {

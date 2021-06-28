@@ -5,6 +5,9 @@ describe('HTMLIntegration', () => {
   let fakeHTMLMetadata;
   let fakeScrollIntoView;
 
+  let LocationObserver;
+  let fakeLocationObserver;
+
   beforeEach(() => {
     fakeHTMLAnchoring = {
       anchor: sinon.stub(),
@@ -16,12 +19,18 @@ describe('HTMLIntegration', () => {
       uri: sinon.stub().returns('https://example.com/'),
     };
 
+    fakeLocationObserver = {
+      disconnect: sinon.stub(),
+    };
+    LocationObserver = sinon.stub().returns(fakeLocationObserver);
+
     fakeScrollIntoView = sinon.stub().yields();
 
     const HTMLMetadata = sinon.stub().returns(fakeHTMLMetadata);
     $imports.$mock({
       'scroll-into-view': fakeScrollIntoView,
       '../anchoring/html': fakeHTMLAnchoring,
+      '../location-observer': { LocationObserver },
       './html-metadata': { HTMLMetadata },
     });
   });
@@ -36,6 +45,18 @@ describe('HTMLIntegration', () => {
     assert.equal(integration.describe, fakeHTMLAnchoring.describe);
   });
 
+  it('emits `uriChanged` event when document URI changes', async () => {
+    const integration = new HTMLIntegration();
+    const uriChanged = sinon.stub();
+    integration.on('uriChanged', uriChanged);
+
+    assert.calledOnce(LocationObserver);
+    const locationChangedCallback = LocationObserver.args[0][0];
+
+    await locationChangedCallback();
+    assert.calledWith(uriChanged, fakeHTMLMetadata.uri());
+  });
+
   describe('#contentContainer', () => {
     it('returns body by default', () => {
       const integration = new HTMLIntegration();
@@ -44,8 +65,13 @@ describe('HTMLIntegration', () => {
   });
 
   describe('#destroy', () => {
-    it('does nothing', () => {
-      new HTMLIntegration().destroy();
+    it('stops observing URI changes', () => {
+      const integration = new HTMLIntegration();
+
+      integration.destroy();
+
+      assert.calledOnce(LocationObserver);
+      assert.calledOnce(fakeLocationObserver.disconnect);
     });
   });
 

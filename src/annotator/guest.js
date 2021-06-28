@@ -182,6 +182,14 @@ export default class Guest {
     this._listeners = new ListenerCollection();
     this._setupElementEvents();
 
+    // TODO: Watch for changes in `<head>` that may affect document metadata
+    // and notify sidebar via `documentInfoChanged` callback.
+    const notifyDocumentInfoChanged = async () => {
+      const info = await this.getDocumentInfo();
+      this.crossframe.call('documentInfoChanged', info);
+    };
+    this._integration.on('uriChanged', notifyDocumentInfoChanged);
+
     /**
      * Tags of currently focused annotations. This is used to set the focused
      * state correctly for new highlights if the associated annotation is already

@@ -1,3 +1,5 @@
+import { TinyEmitter } from 'tiny-emitter';
+
 import Guest from '../guest';
 import { EventBus } from '../util/emitter';
 import { $imports } from '../guest';
@@ -43,6 +45,7 @@ describe('Guest', () => {
 
   let PDFIntegration;
   let fakePDFIntegration;
+
   let guests;
 
   const createGuest = (config = {}) => {
@@ -81,7 +84,8 @@ describe('Guest', () => {
     };
     CrossFrame = sandbox.stub().returns(fakeCrossFrame);
 
-    fakeHTMLIntegration = {
+    fakeHTMLIntegration = new TinyEmitter();
+    Object.assign(fakeHTMLIntegration, {
       anchor: sinon.stub(),
       contentContainer: sinon.stub().returns({}),
       describe: sinon.stub(),
@@ -90,10 +94,11 @@ describe('Guest', () => {
       getMetadata: sinon.stub().resolves({ title: 'Test title' }),
       scrollToAnchor: sinon.stub().resolves(),
       uri: sinon.stub().resolves('https://example.com/test.html'),
-    };
+    });
     HTMLIntegration = sinon.stub().returns(fakeHTMLIntegration);
 
-    fakePDFIntegration = {
+    fakePDFIntegration = new TinyEmitter();
+    Object.assign(fakePDFIntegration, {
       contentContainer: sinon.stub().returns({}),
       destroy: sinon.stub(),
       fitSideBySide: sinon.stub().returns(false),
@@ -102,7 +107,7 @@ describe('Guest', () => {
         .resolves({ documentFingerprint: 'test-fingerprint' }),
       scrollToAnchor: sinon.stub().resolves(),
       uri: sinon.stub().resolves('https://example.com/test.pdf'),
-    };
+    });
     PDFIntegration = sinon.stub().returns(fakePDFIntegration);
 
     class FakeSelectionObserver {
@@ -672,6 +677,25 @@ describe('Guest', () => {
 
       assert.calledWith(fakeCrossFrame.call, 'openSidebar');
       assert.calledWith(fakeCrossFrame.call, 'showAnnotations', ['ann1']);
+    });
+  });
+
+  describe('when the document URL changes', () => {
+    it('notifies sidebar via a `documentInfoChanged` message', async () => {
+      const uri = 'https://example.com/new-url';
+      const metadata = { title: 'Example site' };
+      fakeHTMLIntegration.uri.resolves(uri);
+      fakeHTMLIntegration.getMetadata.resolves(metadata);
+      createGuest();
+
+      fakeHTMLIntegration.emit('uriChanged', uri);
+      await Promise.resolve();
+
+      assert.calledWith(fakeCrossFrame.call, 'documentInfoChanged', {
+        uri,
+        metadata,
+        frameIdentifier: null,
+      });
     });
   });
 

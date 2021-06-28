@@ -84,6 +84,14 @@
  */
 
 /**
+ * Subset of the `EventEmitter` interface implemented by various objects that
+ * can report events.
+ *
+ * @typedef EventSource
+ * @prop {(event: string, callback: (...args: any) => void) => void} on
+ */
+
+/**
  * Interface for document type/viewer integrations that handle all the details
  * of supporting a specific document type (web page, PDF, ebook, etc.).
  *
@@ -111,7 +119,7 @@
  *   This will only be called if the anchor has at least one highlight (ie.
  *   `anchor.highlights` is a non-empty array)
  *
- * @typedef {Destroyable & IntegrationBase} Integration
+ * @typedef {Destroyable & EventSource & IntegrationBase} Integration
  */
 
 /**
