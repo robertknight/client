@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Client-side navigation test</title>
+</head>
+<body>
+
+<h1>Client-side navigation tests</h1>
+<p>This page simulates a web application that updates the URL or document-metadata
+on the client side. This includes Single Page Applications where most or all
+navigations after the initial load are handled client-side, as well as websites
+such as GitHub which use <a href="https://github.com/turbolinks/turbolinks">Turbolinks</a>-like
+techniques to optimize page transitions.</p>
+
+<h2>Content</h2>
+<div id="content"></div>
+
+<h2>Navigation links</h2>
+<p>These links trigger client-side navigation using the <a
+href="https://developer.mozilla.org/en-US/docs/Web/API/History">History API</a>.
+After clicking them the client should update the loaded annotations to match the
+current URL.</p>
+
+<div><a href="/document/client-navigation" client-nav>Main route</a></div>
+<div><a href="/document/client-navigation/page2" client-nav>Second route</a></div>
+<div><a href="/document/client-navigation/page3" client-nav>Third route</a></div>
+
+<script>
+  const contentForRoute = {
+    '/document/client-navigation': 'Main route for the client navigation test',
+    '/document/client-navigation/page2': 'Second route for the client navigation test',
+    '/document/client-navigation/page3': 'Third route for the client navigation test',
+  };
+
+  const updateContent = () => {
+    const contentElement = document.querySelector('#content');
+    const content = contentForRoute[location.pathname];
+    if (!content) {
+      content = 'Route not found';
+    }
+    contentElement.textContent = content;
+  };
+
+  window.addEventListener('popstate', updateContent);
+
+  // Set content for initial URL.
+  updateContent();
+
+  // Handle links that trigger client-side navigation after initial page load.
+  document.querySelectorAll('a[client-nav]').forEach(link => {
+    link.addEventListener('click', e => {
+      e.preventDefault();
+      history.pushState({}, link.textContent, link.href);
+      updateContent();
+    });
+  });
+</script>
+{{{ hypothesisScript }}}
+</body>
+</html>
