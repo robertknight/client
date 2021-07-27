@@ -1,9 +1,8 @@
 import { default as Bridge, $imports } from '../bridge';
 
 class FakeRPC {
-  constructor(sourceFrame, destFrame, origin, methods) {
-    this.destFrame = destFrame;
-    this.sourceFrame = sourceFrame;
+  constructor(port, methods) {
+    this.port = port;
     this.origin = origin;
     this.methods = methods;
 
@@ -45,9 +44,7 @@ describe('shared/bridge', () => {
 
       const channel = createChannel(messageChannel.port1);
 
-      assert.equal(channel.sourceFrame, window);
-      assert.equal(channel.destFrame, messageChannel.port1);
-      assert.equal(channel.origin, '*');
+      assert.equal(channel.port, messageChannel.port1);
     });
 
     it('adds the channel to the `links` property', () => {

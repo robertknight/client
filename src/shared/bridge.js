@@ -38,12 +38,7 @@ export default class Bridge {
     const listeners = { connect: cb => cb(), ...this.channelListeners };
 
     // Set up a channel
-    const channel = new RPC(
-      window /* dummy */,
-      port,
-      '*' /* dummy */,
-      listeners
-    );
+    const channel = new RPC(port, listeners);
 
     let connected = false;
     const ready = () => {
