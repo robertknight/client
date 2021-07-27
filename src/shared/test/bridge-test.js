@@ -16,24 +16,17 @@ describe('shared/bridge', () => {
   const sandbox = sinon.createSandbox();
   let bridge;
   let createChannel;
-  let fakeWindow;
+
+  function createPort() {
+    const channel = new MessageChannel();
+    return channel.port1;
+  }
 
   beforeEach(() => {
     bridge = new Bridge();
 
-    createChannel = source => {
-      if (!source) {
-        source = {
-          source: fakeWindow,
-          origin: 'http://example.com',
-          token: 'TOKEN',
-        };
-      }
-      return bridge.createChannel(source);
-    };
-
-    fakeWindow = {
-      postMessage: sandbox.stub(),
+    createChannel = (port = createPort()) => {
+      return bridge.createChannel(port);
     };
 
     $imports.$mock({
@@ -47,39 +40,21 @@ describe('shared/bridge', () => {
   });
 
   describe('#createChannel', () => {
-    context('with a Window source', () => {
-      it('creates a new channel', () => {
-        const channel = createChannel();
-        assert.equal(channel.sourceFrame, window);
-        assert.equal(channel.destFrame, fakeWindow);
-        assert.equal(channel.origin, 'http://example.com');
-      });
+    it('creates a new channel', () => {
+      const messageChannel = new MessageChannel();
 
-      it('adds the channel to the `links` property', () => {
-        const channel = createChannel();
-        assert.isTrue(
-          bridge.links.some(registeredChannel => registeredChannel === channel)
-        );
-      });
+      const channel = createChannel(messageChannel.port1);
+
+      assert.equal(channel.sourceFrame, window);
+      assert.equal(channel.destFrame, messageChannel.port1);
+      assert.equal(channel.origin, '*');
     });
 
-    context('with a MessagePort source', () => {
-      it('creates a new channel', () => {
-        const messageChannel = new MessageChannel();
-
-        const channel = createChannel(messageChannel.port1);
-
-        assert.equal(channel.sourceFrame, window);
-        assert.equal(channel.destFrame, messageChannel.port1);
-        assert.equal(channel.origin, '*');
-      });
-
-      it('adds the channel to the `links` property', () => {
-        const channel = createChannel();
-        assert.isTrue(
-          bridge.links.some(registeredChannel => registeredChannel === channel)
-        );
-      });
+    it('adds the channel to the `links` property', () => {
+      const channel = createChannel();
+      assert.isTrue(
+        bridge.links.some(registeredChannel => registeredChannel === channel)
+      );
     });
 
     it('registers any existing listeners on the channel', () => {
@@ -114,11 +89,7 @@ describe('shared/bridge', () => {
 
     it('calls a callback when all channels return successfully', done => {
       const channel1 = createChannel();
-      const channel2 = bridge.createChannel({
-        source: fakeWindow,
-        origin: 'http://example.com',
-        token: 'NEKOT',
-      });
+      const channel2 = bridge.createChannel(createPort());
       channel1.call.yields(null, 'result1');
       channel2.call.yields(null, 'result2');
 
@@ -134,11 +105,7 @@ describe('shared/bridge', () => {
     it('calls a callback with an error when a channels fails', done => {
       const error = new Error('Uh oh');
       const channel1 = createChannel();
-      const channel2 = bridge.createChannel({
-        source: fakeWindow,
-        origin: 'http://example.com',
-        token: 'NEKOT',
-      });
+      const channel2 = bridge.createChannel(createPort());
       channel1.call.throws(error);
       channel2.call.yields(null, 'result2');
 
@@ -250,32 +217,6 @@ describe('shared/bridge', () => {
       channel.methods.connect(...connectCall.args.slice(1));
     };
 
-    it('runs callbacks when a Window channel connects with correct token', () => {
-      const onConnectCallback = sinon.stub();
-      bridge.onConnect(onConnectCallback);
-
-      const channel = createChannel();
-
-      runConnectHandler(channel);
-
-      assert.calledWith(onConnectCallback, channel);
-    });
-
-    it('does not run callback if a Window channel connects with wrong token', () => {
-      const onConnectCallback = sinon.stub();
-      bridge.onConnect(onConnectCallback);
-
-      const channel = createChannel();
-
-      // Simulate "connect" RPC call by Bridge instance in channel's destination frame.
-      const connectCall = channel.call
-        .getCalls()
-        .find(call => call.firstArg === 'connect');
-      channel.methods.connect('WRONG-TOKEN', connectCall.lastArg);
-
-      assert.notCalled(onConnectCallback);
-    });
-
     it('runs callbacks when a MessagePort channel connects', () => {
       const onConnectCallback = sinon.stub();
       bridge.onConnect(onConnectCallback);
@@ -317,16 +258,8 @@ describe('shared/bridge', () => {
 
   describe('#destroy', () =>
     it('destroys all opened channels', () => {
-      const channel1 = bridge.createChannel({
-        source: fakeWindow,
-        origin: 'http://example.com',
-        token: 'foo',
-      });
-      const channel2 = bridge.createChannel({
-        source: fakeWindow,
-        origin: 'http://example.com',
-        token: 'bar',
-      });
+      const channel1 = bridge.createChannel(createPort());
+      const channel2 = bridge.createChannel(createPort());
 
       bridge.destroy();
 
