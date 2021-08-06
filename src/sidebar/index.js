@@ -108,8 +108,6 @@ import LaunchErrorPanel from './components/LaunchErrorPanel';
 import { ServiceContext } from './service-context';
 
 // Services.
-import bridgeService from '../shared/bridge';
-
 import { AnnotationsService } from './services/annotations';
 import { APIService } from './services/api';
 import { APIRoutesService } from './services/api-routes';
@@ -152,7 +150,6 @@ function startApp(config, appEl) {
     .register('apiRoutes', APIRoutesService)
     .register('auth', AuthService)
     .register('autosaveService', AutosaveService)
-    .register('bridge', bridgeService)
     .register('features', FeaturesService)
     .register('frameSync', FrameSyncService)
     .register('groups', GroupsService)

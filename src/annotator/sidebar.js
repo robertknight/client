@@ -3,6 +3,7 @@ import Hammer from 'hammerjs';
 import annotationCounts from './annotation-counts';
 import sidebarTrigger from './sidebar-trigger';
 import { createSidebarConfig } from './config/sidebar';
+import Bridge from '../shared/bridge';
 import events from '../shared/bridge-events';
 import features from './features';
 
@@ -67,6 +68,8 @@ export default class Sidebar {
    */
   constructor(element, eventBus, guest, config = {}) {
     this._emitter = eventBus.createEmitter();
+
+    this._sidebarRPC = new Bridge();
 
     /**
      * The `<iframe>` element containing the sidebar application.
@@ -204,8 +207,9 @@ export default class Sidebar {
      */
     this.ready = new Promise(resolve => {
       this._listeners.add(window, 'message', event => {
-        const data = /** @type {MessageEvent} */ (event).data;
-        if (data?.type === 'hypothesisSidebarReady') {
+        const messageEvent = /** @type {MessageEvent} */ (event);
+        if (messageEvent.data?.type === 'hypothesisSidebarReady') {
+          this._sidebarRPC.createChannel(messageEvent.ports[0]);
           resolve();
         }
       });
@@ -225,22 +229,19 @@ export default class Sidebar {
   }
 
   _setupSidebarEvents() {
-    annotationCounts(document.body, this.guest.crossframe);
+    annotationCounts(document.body, this._sidebarRPC);
     sidebarTrigger(document.body, () => this.open());
-    features.init(this.guest.crossframe);
+    features.init(this._sidebarRPC);
 
-    this.guest.crossframe.on('openSidebar', () => this.open());
-    this.guest.crossframe.on('closeSidebar', () => this.close());
+    this._sidebarRPC.on('openSidebar', () => this.open());
+    this._sidebarRPC.on('closeSidebar', () => this.close());
 
     // Sidebar listens to the `openNotebook` event coming from the sidebar's
     // iframe and re-publishes it via the emitter to the Notebook
-    this.guest.crossframe.on(
-      'openNotebook',
-      (/** @type {string} */ groupId) => {
-        this.hide();
-        this._emitter.publish('openNotebook', groupId);
-      }
-    );
+    this._sidebarRPC.on('openNotebook', (/** @type {string} */ groupId) => {
+      this.hide();
+      this._emitter.publish('openNotebook', groupId);
+    });
     this._emitter.subscribe('closeNotebook', () => {
       this.show();
     });
@@ -254,7 +255,7 @@ export default class Sidebar {
     ];
     eventHandlers.forEach(([event, handler]) => {
       if (handler) {
-        this.guest.crossframe.on(event, () => handler());
+        this._sidebarRPC.on(event, () => handler());
       }
     });
   }
@@ -431,7 +432,7 @@ export default class Sidebar {
   }
 
   open() {
-    this.guest.crossframe.call('sidebarOpened');
+    this._sidebarRPC.call('sidebarOpened');
     this._emitter.publish('sidebarOpened');
 
     if (this.iframeContainer) {
@@ -470,7 +471,7 @@ export default class Sidebar {
    * @param {boolean} shouldShowHighlights
    */
   setAllVisibleHighlights(shouldShowHighlights) {
-    this.guest.crossframe.call('setVisibleHighlights', shouldShowHighlights);
+    this._sidebarRPC.call('setVisibleHighlights', shouldShowHighlights);
   }
 
   /**
