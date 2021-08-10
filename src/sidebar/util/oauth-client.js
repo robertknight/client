@@ -1,34 +1,15 @@
+import { fetchJSON } from './fetch';
 import * as random from './random';
 
 /**
  * An object holding the details of an access token from the tokenUrl endpoint.
+ *
  * @typedef {Object} TokenInfo
- * @property {string} accessToken  - The access token itself.
- * @property {number} expiresAt    - The date when the timestamp will expire.
- * @property {string} refreshToken - The refresh token that can be used to
- *                                   get a new access token.
+ * @prop {string} accessToken  - The access token itself.
+ * @prop {number} expiresAt    - The date when the timestamp will expire.
+ * @prop {string} refreshToken - The refresh token that can be used to
+ *                               get a new access token.
  */
-
-/**
- * Return a new TokenInfo object from the given tokenUrl endpoint response.
- * @param {Response} response - The HTTP response from a POST to the tokenUrl
- *                            endpoint.
- * @returns {Promise<TokenInfo>}
- */
-function tokenInfoFrom(response) {
-  return response.json().then(data => {
-    return {
-      accessToken: data.access_token,
-
-      // Set the expiry date to some time slightly before that implied by
-      // `expires_in` to account for the delay in the client receiving the
-      // response.
-      expiresAt: Date.now() + (data.expires_in - 10) * 1000,
-
-      refreshToken: data.refresh_token,
-    };
-  });
-}
 
 /**
  * Generate a short random string suitable for use as the "state" param in
@@ -77,17 +58,11 @@ export default class OAuthClient {
    * @param {string} code
    * @return {Promise<TokenInfo>}
    */
-  exchangeAuthCode(code) {
-    const data = {
+  async exchangeAuthCode(code) {
+    return this._getAccessToken({
       client_id: this.clientId,
       grant_type: 'authorization_code',
       code,
-    };
-    return this._formPost(this.tokenEndpoint, data).then(response => {
-      if (response.status !== 200) {
-        throw new Error('Authorization code exchange failed');
-      }
-      return tokenInfoFrom(response);
     });
   }
 
@@ -99,16 +74,10 @@ export default class OAuthClient {
    * @param {string} token
    * @return {Promise<TokenInfo>}
    */
-  exchangeGrantToken(token) {
-    const data = {
+  async exchangeGrantToken(token) {
+    return this._getAccessToken({
       grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer',
       assertion: token,
-    };
-    return this._formPost(this.tokenEndpoint, data).then(response => {
-      if (response.status !== 200) {
-        throw new Error('Failed to retrieve access token');
-      }
-      return tokenInfoFrom(response);
     });
   }
 
@@ -121,12 +90,9 @@ export default class OAuthClient {
    * @return {Promise<TokenInfo>}
    */
   refreshToken(refreshToken) {
-    const data = { grant_type: 'refresh_token', refresh_token: refreshToken };
-    return this._formPost(this.tokenEndpoint, data).then(response => {
-      if (response.status !== 200) {
-        throw new Error('Failed to refresh access token');
-      }
-      return tokenInfoFrom(response);
+    return this._getAccessToken({
+      grant_type: 'refresh_token',
+      refresh_token: refreshToken,
     });
   }
 
@@ -213,11 +179,32 @@ export default class OAuthClient {
     const headers = {
       'Content-Type': 'application/x-www-form-urlencoded',
     };
-    return fetch(url, {
+    return fetchJSON(url, {
       method: 'POST',
       headers,
       body: params.toString(),
     });
+  }
+
+  /**
+   * Fetch an OAuth access token.
+   *
+   * @param {Record<string, string>} data - Parameter dictionary
+   */
+  async _getAccessToken(data) {
+    // The request to `tokenEndpoint` returns an OAuth "Access Token Response".
+    // See https://datatracker.ietf.org/doc/html/rfc6749#section-4.1.4
+    const response = await this._formPost(this.tokenEndpoint, data);
+    return {
+      accessToken: response.access_token,
+
+      // Set the expiry date to some time slightly before that implied by
+      // `expires_in` to account for the delay in the client receiving the
+      // response.
+      expiresAt: Date.now() + (response.expires_in - 10) * 1000,
+
+      refreshToken: response.refresh_token,
+    };
   }
 
   /**
