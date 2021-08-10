@@ -57,18 +57,13 @@ export function init(config) {
       // Ignore transient network request failures. Some of these ought to be
       // caught and handled better but for now we are suppressing them to
       // improve the signal-to-noise ratio.
-      'Failed to fetch', // Chrome
-      'Fetch operation failed',
-      'NetworkError when attempting to fetch resource', // Firefox
+      'Network request failed',  // Failed `fetch` requests translated to NetworkError
 
       // Ignore network request failures due to empty JSON bodies.
       // TODO - Consider removing these once `fetch` callers have been changed
       // to handle `Response.json()` calls failing.
       'JSON.parse: unexpected end of data', // Firefox
       'Unexpected end of JSON input', // Opera Mobile
-
-      // Ignore network request cancellations
-      'AbortError: The operation was aborted.', // Firefox
 
       // Ignore an error that appears to come from CefSharp (embedded Chromium).
       // See https://forum.sentry.io/t/unhandledrejection-non-error-promise-rejection-captured-with-value/14062/20
