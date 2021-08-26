@@ -1,6 +1,5 @@
-import scrollIntoView from 'scroll-into-view';
-
 import { anchor, describe } from '../anchoring/html';
+import { scrollIntoView } from '../util/scroll';
 
 import { HTMLMetadata } from './html-metadata';
 
@@ -51,9 +50,7 @@ export class HTMLIntegration {
    * @param {Anchor} anchor
    */
   scrollToAnchor(anchor) {
-    const highlights = /** @type {Element[]} */ (anchor.highlights);
-    return new Promise(resolve => {
-      scrollIntoView(highlights[0], resolve);
-    });
+    const highlights = /** @type {HTMLElement[]} */ (anchor.highlights);
+    return scrollIntoView(highlights[0]);
   }
 }
