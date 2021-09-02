@@ -46,7 +46,25 @@
  */
 
 /**
- * @typedef {TextQuoteSelector | TextPositionSelector | RangeSelector} Selector
+ * @typedef PDFRect
+ * @prop {number} page
+ * @prop {number} x1
+ * @prop {number} x2
+ * @prop {number} y1
+ * @prop {number} y2
+ */
+
+/**
+ * @typedef PDFRegionSelector
+ * @prop {'PDFRegionSelector'} type
+ * @prop {PDFRect[]} region
+ */
+
+/**
+ * @typedef {TextQuoteSelector
+ *  | TextPositionSelector
+ *  | RangeSelector
+ *  | PDFRegionSelector} Selector
  */
 
 /**

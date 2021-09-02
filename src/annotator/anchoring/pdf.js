@@ -7,6 +7,7 @@ import { TextPosition, TextRange } from './text-range';
 import { TextQuoteAnchor } from './types';
 
 /**
+ * @typedef {import('../../types/api').PDFRegionSelector} PDFRegionSelector
  * @typedef {import('../../types/api').TextPositionSelector} TextPositionSelector
  * @typedef {import('../../types/api').TextQuoteSelector} TextQuoteSelector
  * @typedef {import('../../types/api').Selector} Selector
@@ -502,16 +503,141 @@ async function anchorQuote(quoteSelector, positionHint) {
 }
 
 /**
+ * Return true if an element intersects a given rect in client coordinates.
+ *
+ * @param {Element} element
+ * @param {number} x1
+ * @param {number} y1
+ * @param {number} x2
+ * @param {number} y2
+ */
+function intersects(element, x1, y1, x2, y2) {
+  const rect = element.getBoundingClientRect();
+
+  const xmin = x1 < x2 ? x1 : x2;
+  const xmax = x1 < x2 ? x2 : x1;
+  const ymin = y1 < y2 ? y1 : y2;
+  const ymax = y1 < y2 ? y2 : y1;
+
+  return (
+    rect.left < xmax &&
+    rect.right < xmin &&
+    rect.top < ymax &&
+    rect.bottom > ymin
+  );
+}
+
+/**
+ * Anchor a PDF region to a text range.
+ *
+ * The returned range will include all text nodes in the page's text layer
+ * which intersect the region.
+ *
+ * @param {PDFRegionSelector} selector
+ * @return {Promise<Range>}
+ */
+async function anchorPDFRegionSelector(selector) {
+  const { region } = selector;
+  if (region.length === 0) {
+    throw new Error('Invalid PDF region selector');
+  }
+
+  const viewer = getPdfViewer();
+  const pageNumber = region[0].page;
+  if (pageNumber < 1 || pageNumber > viewer.pagesCount) {
+    throw new Error('Region selector page number is invalid');
+  }
+
+  const pageIndex = pageNumber - 1;
+  const pageView = await getPageView(pageIndex);
+
+  const pageContainer = document.querySelector(
+    `.page[data-page-number="${pageNumber}"]`
+  );
+  if (!pageContainer) {
+    throw new Error('Page not found');
+  }
+
+  const textSpans = Array.from(
+    pageContainer.querySelectorAll('.textLayer > span')
+  );
+
+  let firstSpanIndex;
+  let lastSpanIndex;
+
+  for (let rect of region) {
+    if (rect.page !== pageNumber) {
+      // Ignore any rects which are on a different page to the first one, as we
+      // currently only support anchors that all lie within a single page.
+      continue;
+    }
+
+    const [x1, y1, x2, y2] = pageView.viewport.convertToViewportRectangle([
+      rect.x1,
+      rect.y1,
+      rect.x2,
+      rect.y2,
+    ]);
+
+    const rectFirstSpanIndex = textSpans.findIndex(ts =>
+      intersects(ts, x1, y1, x2, y2)
+    );
+    if (rectFirstSpanIndex < 0) {
+      continue;
+    }
+
+    let rectLastSpanIndex = rectFirstSpanIndex;
+    while (
+      rectLastSpanIndex < textSpans.length - 1 &&
+      intersects(textSpans[rectLastSpanIndex], x1, y1, x2, y2)
+    ) {
+      ++rectLastSpanIndex;
+    }
+
+    if (firstSpanIndex === undefined || lastSpanIndex === undefined) {
+      firstSpanIndex = rectFirstSpanIndex;
+      lastSpanIndex = rectLastSpanIndex;
+    } else {
+      firstSpanIndex = Math.min(firstSpanIndex, rectFirstSpanIndex);
+      lastSpanIndex = Math.max(lastSpanIndex, rectLastSpanIndex);
+    }
+  }
+
+  if (firstSpanIndex === undefined || lastSpanIndex === undefined) {
+    throw new Error('Unable to map region selector to text range');
+  }
+
+  const range = new Range();
+  range.setStartBefore(textSpans[firstSpanIndex]);
+  range.setEndAfter(textSpans[lastSpanIndex]);
+  return range;
+}
+
+/**
  * Anchor a set of selectors to a DOM Range.
  *
- * `selectors` must include a `TextQuoteSelector` and may include other selector
- * types.
+ * `selectors` must include either a `TextQuoteSelector` or a `PDFRegionSelector`
+ * and may include other selector types.
  *
  * @param {HTMLElement} root
  * @param {Selector[]} selectors
  * @return {Promise<Range>}
  */
 export async function anchor(root, selectors) {
+  const region = /** @type {PDFRegionSelector|undefined} */ (
+    selectors.find(s => s.type === 'PDFRegionSelector')
+  );
+  if (region) {
+    // TODO - Handle the case where the text layer is not currently rendered.
+    // In this case we should anchor to the placeholder.
+    try {
+      const range = await anchorPDFRegionSelector(region);
+      return range;
+    } catch {
+      // Fallback to other selector types.
+    }
+  }
+
   const quote = /** @type {TextQuoteSelector|undefined} */ (
     selectors.find(s => s.type === 'TextQuoteSelector')
   );
@@ -569,6 +695,100 @@ export async function anchor(root, selectors) {
 }
 
 /**
+ * Return true if viewport-relative coordinates (x, y) are contained within an element.
+ *
+ * @param {Element} element
+ * @param {number} x
+ * @param {number} y
+ */
+function containsPoint(element, x, y) {
+  const rect = element.getBoundingClientRect();
+  return x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom;
+}
+
+/**
+ * Create a serializable representation of the region of a PDF covered by
+ * a DOM range.
+ *
+ * Unlike text position and quote selectors, where values can be affected by
+ * the viewer's text extraction algorithms, this representation does not
+ * depend on implementation details of the viewer.
+ *
+ * @param {Range} range
+ * @return {Promise<PDFRegionSelector>}
+ */
+async function generatePDFRegionSelector(range) {
+  // Get viewport-relative coordinates of rects in `range` and convert to
+  // page index + canvas-relative rect. We assume that each rect is contained
+  // only within a single page.
+  const clientRects = range.getClientRects();
+  const pageContainers = Array.from(document.querySelectorAll('.page'));
+  const pageRects = [];
+  for (let rect of clientRects) {
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.top / 2;
+
+    const pageContainer = pageContainers.find(container =>
+      containsPoint(container, centerX, centerY)
+    );
+    if (!pageContainer) {
+      continue;
+    }
+
+    const pageCanvas = pageContainer.querySelector('canvas');
+    if (!pageCanvas) {
+      continue;
+    }
+
+    const pageIndex = pageContainers.indexOf(pageContainer);
+    const pageRect = {
+      left: rect.left - pageCanvas.clientLeft,
+      top: rect.top - pageCanvas.clientTop,
+      right: rect.right - pageCanvas.clientLeft,
+      bottom: rect.bottom - pageCanvas.clientTop,
+    };
+
+    pageRects.push({
+      pageIndex,
+      rect: pageRect,
+    });
+  }
+
+  /** @type {Map<number, PDFPageView>} */
+  const pageViewCache = new Map();
+
+  // Convert page canvas-relative coordinates to PDF page coordinates.
+  const region = [];
+
+  for (let { pageIndex, rect } of pageRects) {
+    let pageView = pageViewCache.get(pageIndex);
+    if (!pageView) {
+      pageView = await getPageView(pageIndex);
+      pageViewCache.set(pageIndex, pageView);
+    }
+
+    const [x1, y1] = pageView.viewport.convertToPdfPoint(rect.left, rect.top);
+    const [x2, y2] = pageView.viewport.convertToPdfPoint(
+      rect.right,
+      rect.bottom
+    );
+
+    region.push({
+      page: pageIndex + 1,
+      x1,
+      x2,
+      y1,
+      y2,
+    });
+  }
+
+  return {
+    type: 'PDFRegionSelector',
+    region,
+  };
+}
+
+/**
  * Convert a DOM Range object into a set of selectors.
  *
  * Converts a DOM `Range` object into a `[position, quote]` tuple of selectors
@@ -622,8 +842,9 @@ export async function describe(root, range) {
   };
 
   const quote = TextQuoteAnchor.fromRange(root, range).toSelector();
+  const region = await generatePDFRegionSelector(range);
 
-  return [position, quote];
+  return [position, quote, region];
 }
 
 /**

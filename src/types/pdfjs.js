@@ -81,12 +81,21 @@
  * @prop {(o?: GetTextContentParameters) => Promise<TextContent>} getTextContent
  */
 
+/** @typedef {[number, number, number, number]} Coords */
+
+/**
+ * @typedef PageViewport
+ * @prop {(x: number, y: number) => [number, number]} convertToPdfPoint
+ * @prop {(coords: Coords) => Coords} convertToViewportRectangle
+ */
+
 /**
  * @typedef PDFPageView
  * @prop {HTMLElement} div - Container element for the PDF page
  * @prop {PDFPageProxy} pdfPage
  * @prop {TextLayer|null} textLayer
  * @prop {number} renderingState - See `RenderingStates` enum in src/annotator/anchoring/pdf.js
+ * @prop {PageViewport} viewport
  */
 
 /**
