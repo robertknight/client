@@ -140,18 +140,45 @@ describe('annotator/anchoring/pdf', () => {
       assert.equal(positionSelector.end, expectedPos + quote.length);
     });
 
-    it('returns a quote selector with the correct quote', () => {
-      viewer.pdfViewer.setCurrentPage(2);
-      const range = findText(container, 'Netherfield Park');
-      return pdfAnchoring.describe(container, range).then(selectors => {
-        const quote = selectors[1];
+    [
+      // Selection at start of document. Prefix should be empty.
+      {
+        page: 0,
+        selection: 'Pride And Prejudice',
+        prefix: '',
+        suffix: ' And Zombies       By Jane Auste',
+      },
 
-        assert.deepEqual(quote, {
-          type: 'TextQuoteSelector',
-          exact: 'Netherfield Park',
-          prefix: 'im one day, "have you heard that',
-          suffix: ' is occupied again?" ',
-        });
+      // Selection at start of middle page.
+      {
+        page: 1,
+        selection: 'IT IS A TRUTH',
+        prefix: 'e Austen and Seth Grahame-Smith ',
+        suffix: ' universally acknowledged that a',
+      },
+
+      // Selection in middle of page.
+      {
+        page: 2,
+        selection: 'Netherfield Park',
+        prefix: 'im one day, "have you heard that',
+        suffix: ' is occupied again?" NODE ANODE ',
+      },
+
+      // Selection at end of document. Suffix should be empty.
+      {
+        page: 3,
+        selection: 'NODE C',
+        prefix: 'is occupied again?" NODE ANODE B',
+        suffix: '',
+      },
+    ].forEach(({ page, selection, prefix, suffix }) => {
+      it('returns expected quote selector', async () => {
+        viewer.pdfViewer.setCurrentPage(page);
+        const range = findText(container, selection);
+        const [, quote] = await pdfAnchoring.describe(container, range);
+        assert.equal(quote.prefix, prefix);
+        assert.equal(quote.suffix, suffix);
       });
     });
 

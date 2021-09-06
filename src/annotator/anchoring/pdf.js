@@ -566,7 +566,33 @@ export async function describe(root, range) {
     end: pageOffset + endPos.offset,
   };
 
-  const quote = TextQuoteAnchor.fromRange(root, range).toSelector();
+  const viewer = getPdfViewer();
+
+  /** @param {number} page */
+  const getContent = page =>
+    page >= 0 && page < viewer.pagesCount ? getPageTextContent(page) : '';
+
+  const prevPageText = await getContent(startPageIndex - 1);
+  const currentPageText = await getContent(startPageIndex);
+  const nextPageText = await getContent(startPageIndex + 1);
+
+  const nearbyText = prevPageText + currentPageText + nextPageText;
+  const startOffset = prevPageText.length + startPos.offset;
+  const endOffset = startOffset + (endPos.offset - startPos.offset);
+
+  // This value matches what we use in HTML documents. See `TextQuoteAnchor.fromRange`.
+  const contextLength = 32;
+
+  /** @type {TextQuoteSelector} */
+  const quote = {
+    type: 'TextQuoteSelector',
+    exact: nearbyText.slice(startOffset, endOffset),
+    prefix: nearbyText.slice(
+      Math.max(0, startOffset - contextLength),
+      startOffset
+    ),
+    suffix: nearbyText.slice(endOffset, endOffset + contextLength),
+  };
 
   return [position, quote];
 }
