@@ -30,7 +30,7 @@ import { normalizeURI } from './util/url';
 /**
  * HTML element created by the highlighter with an associated annotation.
  *
- * @typedef {HTMLElement & { _annotation?: AnnotationData }} AnnotationHighlight
+ * @typedef {HTMLElement & { _annotations?: AnnotationData[] }} AnnotationHighlight
  */
 
 /**
@@ -43,11 +43,13 @@ function annotationsForSelection() {
   const range = selection.getRangeAt(0);
   const items = rangeUtil.itemsForRange(
     range,
-
-    // nb. Only non-nullish items are returned by `itemsForRange`.
-    node => /** @type {AnnotationHighlight} */ (node)._annotation
+    node => /** @type {AnnotationHighlight} */ (node)._annotations
   );
-  return /** @type {AnnotationData[]} */ (items);
+  const annotations = [];
+  for (let item of items) {
+    annotations.push(...item);
+  }
+  return annotations;
 }
 
 /**
@@ -58,10 +60,14 @@ function annotationsForSelection() {
  * @return {AnnotationData[]}
  */
 function annotationsAt(node) {
-  const items = getHighlightsContainingNode(node)
-    .map(h => /** @type {AnnotationHighlight} */ (h)._annotation)
-    .filter(ann => ann !== undefined);
-  return /** @type {AnnotationData[]} */ (items);
+  const annotations = [];
+  for (let highlight of getHighlightsContainingNode(node)) {
+    const highlight_ = /** @type {AnnotationHighlight} */ (highlight);
+    if (highlight_._annotations) {
+      annotations.push(...highlight_._annotations);
+    }
+  }
+  return annotations;
 }
 
 /**
@@ -293,12 +299,21 @@ export default class Guest {
       this._focusedAnnotations.clear();
       tags.forEach(tag => this._focusedAnnotations.add(tag));
 
+      const focusedHighlights = new Set();
+      const allHighlights = new Set();
+
       for (let anchor of this.anchors) {
         if (anchor.highlights) {
-          const toggle = tags.includes(anchor.annotation.$tag);
-          setHighlightsFocused(anchor.highlights, toggle);
+          anchor.highlights.forEach(h => allHighlights.add(h));
+          if (tags.includes(anchor.annotation.$tag)) {
+            anchor.highlights.forEach(h => focusedHighlights.add(h));
+            setHighlightsFocused(anchor.highlights, true);
+          }
         }
       }
+
+      const unfocused = [...allHighlights].filter(h => !focusedHighlights.has(h));
+      setHighlightsFocused(unfocused, false);
     });
 
     this.crossframe.on('scrollToAnnotation', tag => {
@@ -417,7 +432,10 @@ export default class Guest {
         highlightRange(range)
       );
       highlights.forEach(h => {
-        h._annotation = anchor.annotation;
+        if (!h._annotations) {
+          h._annotations = [];
+        }
+        h._annotations.push(anchor.annotation);
       });
       anchor.highlights = highlights;
 

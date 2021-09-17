@@ -131,6 +131,7 @@ function drawPDFHighlights(canvasEl, highlightEls) {
  * Additional properties added to text highlight HTML elements.
  *
  * @typedef HighlightProps
+ * @prop {number} [refCount] - Number of annotations sharing this highlight
  * @prop {SVGElement} [svgHighlight]
  */
 
@@ -203,6 +204,22 @@ function wholeTextNodesInRange(range) {
   return textNodes;
 }
 
+/** @param {HighlightElement} highlight */
+function incRefCount(highlight) {
+  if (!highlight.refCount) {
+    highlight.refCount = 0;
+  }
+  return ++highlight.refCount;
+}
+
+/** @param {HighlightElement} highlight */
+function decRefCount(highlight) {
+  if (!highlight.refCount) {
+    throw new Error('Tried to decrement zero ref count');
+  }
+  return --highlight.refCount;
+}
+
 /**
  * Wraps the text nodes in a given range with `<hypothesis-highlight>` elements
  * that create a highlight effect.
@@ -256,6 +273,19 @@ export function highlightRange(range, cssClass = 'hypothesis-highlight') {
   // Wrap each text node span with a `<hypothesis-highlight>` element.
   const highlights = [];
   textNodeSpans.forEach(nodes => {
+    // If these nodes already have a parent highlight which contains exactly
+    // these nodes, reuse the existing highlight rather than creating a new one.
+    const firstParent = nodes[0].parentElement;
+    if (
+      firstParent?.matches('hypothesis-highlight') &&
+      firstParent.childNodes.length === nodes.length &&
+      nodes.every((n, i) => firstParent.childNodes[i] === n)
+    ) {
+      incRefCount(firstParent);
+      highlights.push(firstParent);
+      return;
+    }
+
     // A custom element name is used here rather than `<span>` to reduce the
     // likelihood of highlights being hidden by page styling.
 
@@ -274,6 +304,7 @@ export function highlightRange(range, cssClass = 'hypothesis-highlight') {
     nodes[0].parentNode.replaceChild(highlightEl, nodes[0]);
     nodes.forEach(node => highlightEl.appendChild(node));
 
+    incRefCount(highlightEl);
     highlights.push(highlightEl);
   });
 
@@ -375,6 +406,10 @@ export function removeAllHighlights(root) {
  */
 export function removeHighlights(highlights) {
   for (let h of highlights) {
+    if (decRefCount(h) > 0) {
+      continue;
+    }
+
     if (h.parentNode) {
       const children = Array.from(h.childNodes);
       replaceWith(h, children);

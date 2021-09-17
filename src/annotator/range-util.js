@@ -134,7 +134,7 @@ export function selectionFocusRect(selection) {
  * @template T
  * @param {Range} range
  * @param {(n: Node) => T} itemForNode - Callback returning the item for a given node
- * @return {T[]} items
+ * @return {NonNullable<T>[]} items
  */
 export function itemsForRange(range, itemForNode) {
   const checkedNodes = new Set();
