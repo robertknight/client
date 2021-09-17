@@ -1,6 +1,7 @@
 import { render } from 'preact';
 
 import {
+  flushPDFHighlights,
   getBoundingClientRect,
   getHighlightsContainingNode,
   highlightRange,
@@ -47,26 +48,34 @@ function PdfPage({ showPlaceholder = false }) {
  *
  * @param {HTMLElement} pageContainer - HTML element into which `PdfPage`
  *   component has been rendered
+ * @param {boolean} flush - Whether to immediately flush deferred highlight rendering
  * @return {HTMLElement} - `<hypothesis-highlight>` element
  */
-function highlightPdfRange(pageContainer) {
+function highlightPdfRange(pageContainer, flush = true) {
   const textSpan = pageContainer.querySelector('.testText');
   const range = new Range();
   range.setStartBefore(textSpan.childNodes[0]);
   range.setEndAfter(textSpan.childNodes[0]);
-  return highlightRange(range);
+  const highlights = highlightRange(range);
+
+  if (flush) {
+    flushPDFHighlights();
+  }
+
+  return highlights;
 }
 
 /**
  * Render a fake PDF.js page (`PdfPage`) and return its container.
  *
+ * @param {boolean} [flush] - Whether to flush deferred highlight rendering
  * @return {HTMLElement}
  */
-function createPdfPageWithHighlight() {
+function createPdfPageWithHighlight(flush) {
   const container = document.createElement('div');
   render(<PdfPage />, container);
 
-  highlightPdfRange(container);
+  highlightPdfRange(container, flush);
 
   return container;
 }
@@ -86,7 +95,7 @@ describe('annotator/highlighter', () => {
       assert.equal(result.length, 1);
       assert.strictEqual(el.childNodes[0], result[0]);
       assert.equal(result[0].nodeName, 'HYPOTHESIS-HIGHLIGHT');
-      assert.isTrue(result[0].classList.contains('hypothesis-highlight'));
+      assert.equal(result[0].className, 'hypothesis-highlight');
     });
 
     const testText = 'one two three';
@@ -244,6 +253,15 @@ describe('annotator/highlighter', () => {
     });
 
     context('when the highlighted text is part of a PDF.js text layer', () => {
+      let sandbox;
+      beforeEach(() => {
+        sandbox = sinon.createSandbox();
+      });
+
+      afterEach(() => {
+        sandbox.restore();
+      });
+
       it("removes the highlight element's background color", () => {
         const page = createPdfPageWithHighlight();
         const highlight = page.querySelector('hypothesis-highlight');
@@ -262,6 +280,26 @@ describe('annotator/highlighter', () => {
         // Check that an SVG graphic element was created for the highlight.
         const highlight = page.querySelector('hypothesis-highlight');
         const svgRect = page.querySelector('rect');
+        assert.ok(svgRect);
+        assert.equal(highlight.svgHighlight, svgRect);
+      });
+
+      it('defers SVG highlight rendering', () => {
+        sandbox.stub(window, 'requestAnimationFrame').returns(1);
+
+        const page = createPdfPageWithHighlight(false /* flush */);
+        const highlight = page.querySelector('hypothesis-highlight');
+
+        // Rendering of highlights is initially deferred.
+        assert.notOk(page.querySelector('svg > rect'));
+        assert.notOk(highlight.svgHighlight);
+
+        // Flush deferred rendering. In other tests we use `flushPDFHighlights`
+        // but here we want to test the scheduling mechanism, so we stub `requestAnimationFrame`.
+        assert.calledOnce(window.requestAnimationFrame);
+        window.requestAnimationFrame.lastCall.callback();
+
+        const svgRect = page.querySelector('svg > rect');
         assert.ok(svgRect);
         assert.equal(highlight.svgHighlight, svgRect);
       });
@@ -398,6 +436,20 @@ describe('annotator/highlighter', () => {
       assert.equal(page.querySelectorAll('rect').length, 1);
 
       removeHighlights([highlight]);
+
+      assert.equal(page.querySelectorAll('rect').length, 0);
+    });
+
+    it('cancels any deferred SVG rendering for the highlight', () => {
+      const page = createPdfPageWithHighlight(false /* flush */);
+      const highlight = page.querySelector('hypothesis-highlight');
+
+      // Highlight rendering should be deferred.
+      assert.notOk(highlight.svgHighlight);
+      assert.equal(page.querySelectorAll('rect').length, 0);
+
+      removeHighlights([highlight]);
+      flushPDFHighlights();
 
       assert.equal(page.querySelectorAll('rect').length, 0);
     });

@@ -44,22 +44,19 @@ function getPdfCanvas(highlightEl) {
 /**
  * Draw highlights in an SVG layer overlaid on top of a PDF.js canvas.
  *
+ * All of the highlights passed in a batch to `drawPDFHighlights` must be
+ * in the same page.
+ *
  * The created SVG elements are stored in the `svgHighlight` property of
  * each `HighlightElement`.
  *
+ * @param {HTMLCanvasElement} canvasEl
  * @param {HighlightElement[]} highlightEls -
- *   An element that wraps the highlighted text in the transparent text layer
+ *   Elements that wrap the highlighted text in the transparent text layer
  *   above the PDF.
  */
-function drawHighlightsAbovePdfCanvas(highlightEls) {
-  if (highlightEls.length === 0) {
-    return;
-  }
-
-  // Get the <canvas> for the PDF page containing the highlight. We assume all
-  // the highlights are on the same page.
-  const canvasEl = getPdfCanvas(highlightEls[0]);
-  if (!canvasEl || !canvasEl.parentElement) {
+function drawPDFHighlights(canvasEl, highlightEls) {
+  if (!canvasEl.parentElement) {
     return;
   }
 
@@ -120,9 +117,6 @@ function drawHighlightsAbovePdfCanvas(highlightEls) {
     } else {
       rect.setAttribute('class', 'hypothesis-svg-highlight is-opaque');
     }
-
-    // Make the highlight in the text layer transparent.
-    highlightEl.classList.add('is-transparent');
 
     // Associate SVG element with highlight for use by `removeHighlights`.
     highlightEl.svgHighlight = rect;
@@ -210,19 +204,29 @@ function wholeTextNodesInRange(range) {
 }
 
 /**
- * Wraps the DOM Nodes within the provided range with a highlight
- * element of the specified class and returns the highlight Elements.
+ * Wraps the text nodes in a given range with `<hypothesis-highlight>` elements
+ * that create a highlight effect.
+ *
+ * In PDFs the text nodes are in a transparent layer above the visible PDF.
+ * The visible highlight is created by an SVG that covers the same area. This
+ * allows more control over the blending of the highlight with the rendered
+ * text. The rendering of these SVG highlights is deferred for performance reasons.
+ * {@see flushPDFHighlights} can be used to synchronously perform this rendering.
  *
  * @param {Range} range - Range to be highlighted
  * @param {string} cssClass - A CSS class to use for the highlight
- * @return {HighlightElement[]} - Elements wrapping text in `normedRange` to add a highlight effect
+ * @return {HighlightElement[]} - The generated `<hypothesis-highlight>` elements
  */
 export function highlightRange(range, cssClass = 'hypothesis-highlight') {
   const textNodes = wholeTextNodesInRange(range);
 
-  // Check if this range refers to a placeholder for not-yet-rendered content in
-  // a PDF. These highlights should be invisible.
-  const inPlaceholder = textNodes.length > 0 && isInPlaceholder(textNodes[0]);
+  // Is this text range in the text layer of a PDF?
+  const inPDF =
+    textNodes[0]?.parentElement &&
+    getPdfCanvas(textNodes[0].parentElement) !== null;
+
+  // Does range refer to a placeholder for a not-yet-rendered page in a PDF?
+  const inPlaceholder = inPDF && isInPlaceholder(textNodes[0]);
 
   // Group text nodes into spans of adjacent nodes. If a group of text nodes are
   // adjacent, we only need to create one highlight element for the group.
@@ -259,26 +263,85 @@ export function highlightRange(range, cssClass = 'hypothesis-highlight') {
     const highlightEl = document.createElement('hypothesis-highlight');
     highlightEl.className = cssClass;
 
+    // Draw associated SVG highlight if this is in a visible PDF page.
+    // This involves measuring the highlight, so rendering is deferred to
+    // minimize reflows when drawing many highlights.
+    if (inPDF && !inPlaceholder) {
+      highlightEl.classList.add('is-transparent');
+      schedulePDFHighlightRendering(highlightEl);
+    }
+
     nodes[0].parentNode.replaceChild(highlightEl, nodes[0]);
     nodes.forEach(node => highlightEl.appendChild(node));
 
     highlights.push(highlightEl);
   });
 
-  // For PDF highlights, create the highlight effect by using an SVG placed
-  // above the page's canvas rather than CSS `background-color` on the highlight
-  // element. This enables more control over blending of the highlight with the
-  // content below.
-  //
-  // Drawing these SVG highlights involves measuring the `<hypothesis-highlight>`
-  // elements, so we create them only after those elements have all been created
-  // to reduce the number of forced reflows. We also skip creating them for
-  // unrendered pages for performance reasons.
-  if (!inPlaceholder) {
-    drawHighlightsAbovePdfCanvas(highlights);
+  return highlights;
+}
+
+/**
+ * Timer ID for deferred SVG highlight rendering in PDFs.
+ *
+ * @type {number|null}
+ */
+let pendingPDFHighlightRender = null;
+
+/**
+ * Highlights pending deferred SVG highlight rendering.
+ *
+ * @type {Set<HighlightElement>}
+ */
+const pendingPDFHighlights = new Set();
+
+/**
+ * Schedule deferred rendering of SVG highlights in a PDF.
+ *
+ * @param {HighlightElement} highlight
+ */
+function schedulePDFHighlightRendering(highlight) {
+  pendingPDFHighlights.add(highlight);
+  if (pendingPDFHighlightRender) {
+    return;
+  }
+  pendingPDFHighlightRender = requestAnimationFrame(() => {
+    flushPDFHighlights();
+  });
+}
+
+/**
+ * Perform deferred rendering of SVG highlights in a PDF.
+ *
+ * This flushes the queue populated by `schedulePDFHighlightRendering`. This
+ * function is normally called automatically but is exported for use in tests.
+ */
+export function flushPDFHighlights() {
+  if (pendingPDFHighlightRender) {
+    cancelAnimationFrame(pendingPDFHighlightRender);
+    pendingPDFHighlightRender = null;
   }
 
-  return highlights;
+  /** @type {Map<HTMLCanvasElement, HighlightElement[]>} */
+  const highlightsGroupedByPage = new Map();
+
+  for (let highlight of pendingPDFHighlights) {
+    const canvas = getPdfCanvas(highlight);
+    if (!canvas) {
+      continue;
+    }
+    let pageHighlights = highlightsGroupedByPage.get(canvas);
+    if (!pageHighlights) {
+      pageHighlights = [];
+      highlightsGroupedByPage.set(canvas, pageHighlights);
+    }
+    pageHighlights.push(highlight);
+  }
+
+  for (let [pageCanvas, highlights] of highlightsGroupedByPage) {
+    drawPDFHighlights(pageCanvas, highlights);
+  }
+
+  pendingPDFHighlights.clear();
 }
 
 /**
@@ -320,6 +383,7 @@ export function removeHighlights(highlights) {
     if (h.svgHighlight) {
       h.svgHighlight.remove();
     }
+    pendingPDFHighlights.delete(h);
   }
 }
 
