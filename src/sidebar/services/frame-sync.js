@@ -121,15 +121,6 @@ export class FrameSyncService {
       );
     };
 
-    /** @param {string|null} frameIdentifier */
-    const destroyFrame = frameIdentifier => {
-      const frames = store.frames();
-      const frameToDestroy = frames.find(frame => frame.id === frameIdentifier);
-      if (frameToDestroy) {
-        store.destroyFrame(frameToDestroy);
-      }
-    };
-
     /**
      * Listen for messages coming in from connected frames and add new annotations
      * to the sidebar.
@@ -153,10 +144,6 @@ export class FrameSyncService {
         // Create the new annotation in the sidebar.
         annotationsService.create(annot);
       });
-
-      bridge.on('destroyFrame', frameIdentifier =>
-        destroyFrame(frameIdentifier)
-      );
 
       // Map of annotation tag to anchoring status
       // ('anchored'|'orphan'|'timeout').
@@ -223,7 +210,7 @@ export class FrameSyncService {
      */
     const addFrame = channel => {
       channel.call('getDocumentInfo', (err, info) => {
-        if (err) {
+        if (err || !info.uri) {
           channel.destroy();
           return;
         }
@@ -244,17 +231,30 @@ export class FrameSyncService {
     // the guest. Communication with the host currently relies on the host
     // frame also always being a guest frame.
     this._window.addEventListener('message', e => {
-      if (e.data?.type !== 'hypothesisGuestReady') {
-        return;
+      switch (e.data?.type) {
+        case 'hypothesisGuestReady':
+          {
+            if (e.ports.length === 0) {
+              console.warn(
+                'Ignoring `hypothesisGuestReady` message without a MessagePort'
+              );
+              return;
+            }
+            const port = e.ports[0];
+            this._bridge.createChannel(port);
+          }
+          break;
+        case 'hypothesisGuestDestroyed':
+          {
+            const frameToDestroy = this._store
+              .frames()
+              .find(frame => frame.id === e.data.frameIdentifier);
+            if (frameToDestroy) {
+              this._store.destroyFrame(frameToDestroy);
+            }
+          }
+          break;
       }
-      if (e.ports.length === 0) {
-        console.warn(
-          'Ignoring `hypothesisGuestReady` message without a MessagePort'
-        );
-        return;
-      }
-      const port = e.ports[0];
-      this._bridge.createChannel(port);
     });
 
     // Notify host frame that it is ready for guests to connect to it.

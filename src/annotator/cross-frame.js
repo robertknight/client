@@ -1,6 +1,5 @@
 import { Bridge } from '../shared/bridge';
 import { AnnotationSync } from './annotation-sync';
-import { HypothesisInjector } from './hypothesis-injector';
 
 /**
  * @typedef {import('../shared/port-rpc').PortRPC} RPC
@@ -24,16 +23,12 @@ export class CrossFrame {
   /**
    * @param {Element} element
    * @param {EventBus} eventBus - Event bus for communicating with the annotator code (eg. the Guest)
-   * @param {Record<string, any>} config
+   * @param {string} frameIdentifier
    */
-  constructor(element, eventBus, config) {
+  constructor(element, eventBus, frameIdentifier) {
     this._bridge = new Bridge();
     this._annotationSync = new AnnotationSync(eventBus, this._bridge);
-    this._hypothesisInjector = new HypothesisInjector(
-      element,
-      this._bridge,
-      config
-    );
+    this._frameIdentifier = frameIdentifier;
   }
 
   /**
@@ -54,15 +49,35 @@ export class CrossFrame {
       [channel.port2]
     );
     this._bridge.createChannel(channel.port1);
+
+    // Set up callback to notify sidebar when guest is destroyed.
+    //
+    // Ideally this notification would be delivered via the MessageChannel created
+    // above. However there is a bug in Safari where such channels are unreliable
+    // while the window is being unloaded. See https://bugs.webkit.org/show_bug.cgi?id=231167.
+    const notifyFrameDestroyed = () => {
+      frame.postMessage(
+        {
+          type: 'hypothesisGuestDestroyed',
+          frameIdentifier: this._frameIdentifier,
+        },
+        origin
+      );
+    };
+    this._notifyFrameDestroyed = notifyFrameDestroyed;
+
+    // Notify the sidebar if the guest frame is unloaded without the guest being
+    // explicitly destroyed.
+    window.addEventListener('unload', () => notifyFrameDestroyed());
   }
 
   /**
    * Remove the connection between the sidebar and annotator.
    */
   destroy() {
+    this._notifyFrameDestroyed?.();
     this._bridge.destroy();
     this._annotationSync.destroy();
-    this._hypothesisInjector.destroy();
   }
 
   /**

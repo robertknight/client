@@ -5,7 +5,7 @@ export const DEBOUNCE_WAIT = 40;
 /** @typedef {(frame: HTMLIFrameElement) => void} FrameCallback */
 
 /**
- * FrameObserver detects iframes added and deleted from the document.
+ * FrameObserver detects iframes added to the document.
  *
  * To enable annotation, an iframe must be opted-in by adding the
  * `enable-annotation` attribute.
@@ -19,12 +19,10 @@ export class FrameObserver {
    * @param {Element} element - root of the DOM subtree to watch for the addition
    *   and removal of annotatable iframes
    * @param {FrameCallback} onFrameAdded - callback fired when an annotatable iframe is added
-   * @param {FrameCallback} onFrameRemoved - callback triggered when the annotatable iframe is removed
    */
-  constructor(element, onFrameAdded, onFrameRemoved) {
+  constructor(element, onFrameAdded) {
     this._element = element;
     this._onFrameAdded = onFrameAdded;
-    this._onFrameRemoved = onFrameRemoved;
     /** @type {Set<HTMLIFrameElement>} */
     this._annotatableFrames = new Set();
     this._isDisconnected = false;
@@ -53,16 +51,9 @@ export class FrameObserver {
   async _addFrame(frame) {
     this._annotatableFrames.add(frame);
     try {
-      await onDocumentReady(frame);
       if (this._isDisconnected) {
         return;
       }
-      const frameWindow = frame.contentWindow;
-      // @ts-expect-error
-      // This line raises an exception if the iframe is from a different origin
-      frameWindow.addEventListener('unload', () => {
-        this._removeFrame(frame);
-      });
       this._onFrameAdded(frame);
     } catch (e) {
       console.warn(
@@ -76,7 +67,6 @@ export class FrameObserver {
    */
   _removeFrame(frame) {
     this._annotatableFrames.delete(frame);
-    this._onFrameRemoved(frame);
   }
 
   _discoverFrames() {
@@ -91,53 +81,5 @@ export class FrameObserver {
         this._addFrame(frame);
       }
     }
-
-    for (let frame of this._annotatableFrames) {
-      if (!frames.has(frame)) {
-        this._removeFrame(frame);
-      }
-    }
   }
-}
-
-/**
- * Resolves a Promise when the iframe's document is ready (loaded and parsed)
- *
- * @param {HTMLIFrameElement} frame
- * @return {Promise<void>}
- * @throws {Error} if trying to access a document from a cross-origin iframe
- */
-export function onDocumentReady(frame) {
-  return new Promise(resolve => {
-    // @ts-expect-error
-    const frameDocument = frame.contentWindow.document;
-    const { readyState, location } = frameDocument;
-
-    // Web browsers initially load a blank document before the final document.
-    // This blank document is (1) accessible, (2) has an empty body and head,
-    // and (3) has a 'complete' readyState, on Chrome and Safari, and an
-    // 'uninitialized' readyState on Firefox. If a blank document is detected and
-    // there is a 'src' attribute, it is expected that the blank document will be
-    // replaced by the final document.
-    if (
-      location.href === 'about:blank' &&
-      frame.hasAttribute('src') &&
-      frame.src !== 'about:blank'
-    ) {
-      // Unfortunately, listening for 'DOMContentLoaded' on the iframeDocument
-      // doesn't work. Instead, we need to wait for a 'load' event to be triggered.
-      frame.addEventListener('load', () => {
-        resolve();
-      });
-      return;
-    }
-
-    if (readyState === 'loading') {
-      frameDocument.addEventListener('DOMContentLoaded', () => resolve());
-      return;
-    }
-
-    // State is 'interactive' or 'complete';
-    resolve();
-  });
 }

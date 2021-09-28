@@ -11,6 +11,8 @@ import {
   setHighlightsFocused,
   setHighlightsVisible,
 } from './highlighter';
+import { FrameObserver } from './frame-observer';
+import { HypothesisInjector } from './hypothesis-injector';
 import { createIntegration } from './integrations';
 import * as rangeUtil from './range-util';
 import { SelectionObserver } from './selection-observer';
@@ -152,20 +154,29 @@ export default class Guest {
      */
     this.anchors = [];
 
-    /**
-     * Integration that handles document-type specific functionality in the
-     * guest.
-     */
-    this._integration = createIntegration(this);
-
     // Set the frame identifier if it's available.
     // The "top" guest instance will have this as null since it's in a top frame not a sub frame
     this._frameIdentifier = config.subFrameIdentifier || null;
 
     // Setup connection to sidebar.
-    this.crossframe = new CrossFrame(this.element, eventBus, config);
+    this.crossframe = new CrossFrame(
+      this.element,
+      eventBus,
+      this._frameIdentifier
+    );
     this.crossframe.onConnect(() => this._setupInitialState(config));
     this._connectSidebarEvents();
+
+    this._hypothesisInjector = new HypothesisInjector(config);
+    this._frameObserver = new FrameObserver(this.element, frame =>
+      this.injectClient(frame)
+    );
+
+    /**
+     * Integration that handles document-type specific functionality in the
+     * guest.
+     */
+    this._integration = createIntegration(this);
 
     this._sideBySideActive = false;
 
@@ -184,6 +195,15 @@ export default class Guest {
      * @type {Set<string>}
      */
     this._focusedAnnotations = new Set();
+  }
+
+  /**
+   * Enable annotation of a same-origin iframe by injecting the client into it.
+   *
+   * @param {HTMLIFrameElement} frame
+   */
+  injectClient(frame) {
+    this._hypothesisInjector.injectClient(frame);
   }
 
   // Add DOM event listeners for clicks, taps etc. on the document and
@@ -249,8 +269,10 @@ export default class Guest {
       this._integration.getMetadata(),
     ]);
 
+    console.log('getDocumentInfo uri', uri);
+
     return {
-      uri: normalizeURI(uri),
+      uri: uri ? normalizeURI(uri) : '',
       metadata,
       frameIdentifier: this._frameIdentifier,
     };
@@ -338,6 +360,7 @@ export default class Guest {
   }
 
   destroy() {
+    this._frameObserver.disconnect();
     this._listeners.removeAll();
 
     this._selectionObserver.disconnect();

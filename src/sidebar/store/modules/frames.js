@@ -105,7 +105,7 @@ const mainFrame = createSelector(
 
   // Sub-frames will all have a "frame identifier" set. The main frame is the
   // one with a `null` id.
-  frames => frames.find(f => !f.id) || null
+  frames => frames.find(f => !f.id) ?? frames[0] ?? null
 );
 
 /**
