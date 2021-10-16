@@ -44,7 +44,9 @@ describe('NotebookModal', () => {
     assert.isFalse(outer.exists());
     assert.isFalse(wrapper.find('iframe').exists());
 
-    emitter.publish('openNotebook', 'myGroup');
+    act(() => {
+      emitter.publish('openNotebook', 'myGroup');
+    });
     wrapper.update();
 
     outer = wrapper.find('.NotebookModal__outer');
@@ -60,7 +62,9 @@ describe('NotebookModal', () => {
   it('creates a new iframe element on every "openNotebook" event', () => {
     const wrapper = createComponent();
 
-    emitter.publish('openNotebook', '1');
+    act(() => {
+      emitter.publish('openNotebook', '1');
+    });
     wrapper.update();
 
     const iframe1 = wrapper.find('iframe');
@@ -69,7 +73,9 @@ describe('NotebookModal', () => {
       `/notebook#config=${encodeURIComponent('{"group":"1"}')}`
     );
 
-    emitter.publish('openNotebook', '1');
+    act(() => {
+      emitter.publish('openNotebook', '1');
+    });
     wrapper.update();
 
     const iframe2 = wrapper.find('iframe');
@@ -79,7 +85,9 @@ describe('NotebookModal', () => {
     );
     assert.notEqual(iframe1.getDOMNode(), iframe2.getDOMNode());
 
-    emitter.publish('openNotebook', '2');
+    act(() => {
+      emitter.publish('openNotebook', '2');
+    });
     wrapper.update();
 
     const iframe3 = wrapper.find('iframe');
@@ -101,7 +109,9 @@ describe('NotebookModal', () => {
   it('hides modal on closing', () => {
     const wrapper = createComponent();
 
-    emitter.publish('openNotebook', 'myGroup');
+    act(() => {
+      emitter.publish('openNotebook', 'myGroup');
+    });
     wrapper.update();
 
     let outer = wrapper.find('.NotebookModal__outer');
