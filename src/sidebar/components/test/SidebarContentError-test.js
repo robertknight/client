@@ -37,8 +37,7 @@ describe('SidebarContentError', () => {
   const findButtonByText = (wrapper, text) => {
     return wrapper
       .find('LabeledButton')
-      .filterWhere(button => button.text() === text)
-      .at(0);
+      .filterWhere(button => button.text() === text);
   };
 
   it('should provide a button to clear the selection (show all annotations)', () => {
