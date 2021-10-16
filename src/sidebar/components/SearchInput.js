@@ -87,7 +87,7 @@ export default function SearchInput({ alwaysExpanded, query, onSearch }) {
       )}
 
       {isLoading && (
-        <div style="margin:0.5em 0">
+        <div style={{ margin: '0.5em 0' }}>
           <Spinner size="small" />
         </div>
       )}
