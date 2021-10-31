@@ -7,6 +7,7 @@ import replace from '@rollup/plugin-replace';
 import { string } from 'rollup-plugin-string';
 import { terser } from 'rollup-plugin-terser';
 import virtual from '@rollup/plugin-virtual';
+import { cacheBuild } from 'rollup-cache';
 
 const isProd = process.env.NODE_ENV === 'production';
 const prodPlugins = [];
@@ -22,7 +23,13 @@ if (isProd) {
 }
 
 function bundleConfig({ name, entry, format = 'es' }) {
-  return {
+  const cacheConfig = {
+    name,
+    cacheDir: 'build/cache',
+    dependencies: ['rollup.config.mjs'],
+  };
+
+  return cacheBuild(cacheConfig, {
     input: {
       [name]: entry,
     },
@@ -63,7 +70,7 @@ function bundleConfig({ name, entry, format = 'es' }) {
       }),
       ...prodPlugins,
     ],
-  };
+  });
 }
 
 export default [

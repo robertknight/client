@@ -39,6 +39,17 @@ module.exports = function (config) {
       // Sourcemaps for test bundles.
       { pattern: '../build/scripts/*.js.map', included: false },
 
+      // NPM bundles.
+      {
+        pattern: '../build/scripts/npm/**/*.js',
+        type: 'module',
+        included: false,
+      },
+      {
+        pattern: '../build/scripts/npm/**/*.js.map',
+        included: false,
+      },
+
       // CSS bundles, relied upon by accessibility tests (eg. for color-contrast
       // checks).
       {
