@@ -187,6 +187,20 @@ export function createStore(modules, initArgs = [], middleware = []) {
   return store;
 }
 
+/**
+ * Helper for creating an action which checks that the type of the action's
+ * payload is compatible with what the reducer expects.
+ *
+ * @template {ReducerMap<any>} Reducers
+ * @template {keyof Reducers} Type
+ * @param {Reducers} reducers
+ * @param {Type} type
+ * @param {Parameters<Reducers[Type]>[1]} payload
+ */
+export function makeAction(reducers, type, payload) {
+  return { type, ...payload };
+}
+
 // The properties of the `config` argument to `createStoreModule` below are
 // declared inline due to https://github.com/microsoft/TypeScript/issues/43403.
 

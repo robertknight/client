@@ -103,35 +103,59 @@ const resetSelection = () => {
 };
 
 const reducers = {
-  CLEAR_SELECTION: function () {
+  CLEAR_SELECTION() {
     return resetSelection();
   },
 
-  SELECT_ANNOTATIONS: function (state, action) {
+  /**
+   * @param {State} state
+   * @param {{ selection: Record<string, boolean> }} action
+   */
+  SELECT_ANNOTATIONS(state, action) {
     return { selected: action.selection };
   },
 
-  SELECT_TAB: function (state, action) {
+  /**
+   * @param {State} state
+   * @param {{ tab: TabName }} action
+   */
+  SELECT_TAB(state, action) {
     return setTab(action.tab, state.selectedTab);
   },
 
-  SET_EXPANDED: function (state, action) {
+  /**
+   * @param {State} state
+   * @param {{ id: string, expanded: boolean }} action
+   */
+  SET_EXPANDED(state, action) {
     const newExpanded = { ...state.expanded };
     newExpanded[action.id] = action.expanded;
     return { expanded: newExpanded };
   },
 
-  SET_FORCED_VISIBLE: function (state, action) {
+  /**
+   * @param {State} state
+   * @param {{ id: string, visible: boolean }} action
+   */
+  SET_FORCED_VISIBLE(state, action) {
     return {
       forcedVisible: { ...state.forcedVisible, [action.id]: action.visible },
     };
   },
 
-  SET_SORT_KEY: function (state, action) {
+  /**
+   * @param {State} state
+   * @param {{ key: string }} action
+   */
+  SET_SORT_KEY(state, action) {
     return { sortKey: action.key };
   },
 
-  TOGGLE_SELECTED_ANNOTATIONS: function (state, action) {
+  /**
+   * @param {State} state
+   * @param {{ toggleIds: string[] }} action
+   */
+  TOGGLE_SELECTED_ANNOTATIONS(state, action) {
     const selection = { ...state.selected };
     action.toggleIds.forEach(id => {
       selection[id] = !selection[id];
@@ -145,6 +169,9 @@ const reducers = {
    * Automatically select the Page Notes tab, for convenience, if all of the
    * top-level annotations in `action.annotations` are Page Notes and the
    * previous annotation count was 0 (i.e. collection empty).
+   *
+   * @param {State} state
+   * @param {{ annotations: Annotation[], currentAnnotationCount: number }} action
    */
   ADD_ANNOTATIONS(state, action) {
     const topLevelAnnotations = action.annotations.filter(
@@ -159,22 +186,26 @@ const reducers = {
     return {};
   },
 
-  CHANGE_FOCUS_MODE_USER: function () {
+  CHANGE_FOCUS_MODE_USER() {
     return resetSelection();
   },
 
-  SET_FILTER: function () {
+  SET_FILTER() {
     return { ...resetSelection(), expanded: {} };
   },
 
-  SET_FILTER_QUERY: function () {
+  SET_FILTER_QUERY() {
     return { ...resetSelection(), expanded: {} };
   },
 
-  SET_FOCUS_MODE: function () {
+  SET_FOCUS_MODE() {
     return resetSelection();
   },
 
+  /**
+   * @param {State} state
+   * @param {{ annotationsToRemove: Array<{ id?: string, $tag?: string }>, remainingAnnotations: Annotation[] }} action
+   */
   REMOVE_ANNOTATIONS: function (state, action) {
     let newTab = state.selectedTab;
     // If the orphans tab is selected but no remaining annotations are orphans,

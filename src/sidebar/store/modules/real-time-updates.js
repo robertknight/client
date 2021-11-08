@@ -38,6 +38,10 @@ const initialState = {
 /** @typedef {typeof initialState} State */
 
 const reducers = {
+  /**
+   * @param {State} state
+   * @param {{ pendingUpdates: Record<string, Annotation>, pendingDeletions: Record<string, boolean> }} action
+   */
   RECEIVE_REAL_TIME_UPDATES(state, action) {
     return {
       pendingUpdates: { ...action.pendingUpdates },
@@ -49,6 +53,10 @@ const reducers = {
     return { pendingUpdates: {}, pendingDeletions: {} };
   },
 
+  /**
+   * @param {State} state
+   * @param {{ annotations: Annotation[] }} action
+   */
   ADD_ANNOTATIONS(state, { annotations }) {
     // Discard any pending updates which conflict with an annotation added
     // locally or fetched via an API call.
@@ -58,11 +66,19 @@ const reducers = {
     // annotation that has been deleted on the server.
     const pendingUpdates = { ...state.pendingUpdates };
 
-    annotations.forEach(ann => delete pendingUpdates[ann.id]);
+    annotations.forEach(ann => {
+      if (ann.id) {
+        delete pendingUpdates[ann.id];
+      }
+    });
 
     return { pendingUpdates };
   },
 
+  /**
+   * @param {State} state
+   * @param {{ annotationsToRemove: Array<{ id: string }> }} action
+   */
   REMOVE_ANNOTATIONS(state, { annotationsToRemove }) {
     // Discard any pending updates which conflict with an annotation removed
     // locally.
@@ -155,7 +171,7 @@ function clearPendingUpdates() {
  * Return added or updated annotations received via the WebSocket
  * which have not been applied to the local state.
  *
- * @return {Record<string, Annotation>}
+ * @param {State} state
  */
 function pendingUpdates(state) {
   return state.pendingUpdates;
@@ -165,7 +181,7 @@ function pendingUpdates(state) {
  * Return IDs of annotations which have been deleted on the server but not
  * yet removed from the local state.
  *
- * @return {Record<string, Annotation>}
+ * @param {State} state
  */
 function pendingDeletions(state) {
   return state.pendingDeletions;
@@ -173,8 +189,6 @@ function pendingDeletions(state) {
 
 /**
  * Return a total count of pending updates and deletions.
- *
- * @type {(state: any) => number}
  */
 const pendingUpdateCount = createSelector(
   /** @param {State} state */
@@ -187,6 +201,7 @@ const pendingUpdateCount = createSelector(
  * Return true if an annotation has been deleted on the server but the deletion
  * has not yet been applied.
  *
+ * @param {State} state
  * @param {string} id
  */
 function hasPendingDeletion(state, id) {

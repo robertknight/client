@@ -1,6 +1,4 @@
-import * as util from '../util';
-
-import { createStoreModule } from '../create-store';
+import { createStoreModule, makeAction } from '../create-store';
 
 /**
  * A store module for managing client-side user-convenience defaults.
@@ -21,16 +19,25 @@ const initialState = {
   focusedGroup: /** @type {string|null} */ (null),
 };
 
+/** @typedef {typeof initialState} State */
+
 const reducers = {
-  SET_DEFAULT: function (state, action) {
+  /**
+   * @template {keyof State} Key
+   * @param {State} state
+   * @param {{ defaultKey: Key, value: typeof initialState[Key] }} action
+   */
+  SET_DEFAULT(state, action) {
     return { [action.defaultKey]: action.value };
   },
 };
 
-const actions = util.actionTypes(reducers);
-
+/**
+ * @param {keyof initialState} defaultKey
+ * @param {typeof initialState[defaultKey]} value
+ */
 function setDefault(defaultKey, value) {
-  return { type: actions.SET_DEFAULT, defaultKey, value };
+  return makeAction(reducers, 'SET_DEFAULT', { defaultKey, value });
 }
 
 /** Selectors */
@@ -38,6 +45,8 @@ function setDefault(defaultKey, value) {
 /**
  * Retrieve the state's current value for `defaultKey`.
  *
+ * @param {State} state
+ * @param {keyof initialState} defaultKey
  * @return {string|null} - The current value for `defaultKey` or `undefined` if it is not
  *               present
  */
@@ -45,6 +54,7 @@ function getDefault(state, defaultKey) {
   return state[defaultKey];
 }
 
+/** @param {State} state */
 function getDefaults(state) {
   return state;
 }

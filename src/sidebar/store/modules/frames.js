@@ -27,15 +27,27 @@ const initialState = [];
 /** @typedef {typeof initialState} State */
 
 const reducers = {
-  CONNECT_FRAME: function (state, action) {
+  /**
+   * @param {State} state
+   * @param {{ frame: Frame }} action
+   */
+  CONNECT_FRAME(state, action) {
     return [...state, action.frame];
   },
 
-  DESTROY_FRAME: function (state, action) {
+  /**
+   * @param {State} state
+   * @param {{ frame: Frame }} action
+   */
+  DESTROY_FRAME(state, action) {
     return state.filter(f => f !== action.frame);
   },
 
-  UPDATE_FRAME_ANNOTATION_FETCH_STATUS: function (state, action) {
+  /**
+   * @param {State} state
+   * @param {{ uri: string, isAnnotationFetchComplete: boolean }} action
+   */
+  UPDATE_FRAME_ANNOTATION_FETCH_STATUS(state, action) {
     const frames = state.map(frame => {
       const match = frame.uri && frame.uri === action.uri;
       if (match) {
@@ -87,7 +99,7 @@ function updateFrameAnnotationFetchStatus(uri, isFetchComplete) {
 /**
  * Return the list of frames currently connected to the sidebar app.
  *
- * @return {Frame[]}
+ * @param {State} state
  */
 function frames(state) {
   return state;

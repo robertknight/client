@@ -35,14 +35,18 @@ const initialState = {
 /** @typedef {typeof initialState} State */
 
 const reducers = {
-  FILTER_GROUPS(state, action) {
-    if (!action.filteredGroupIds?.length) {
+  /**
+   * @param {State} state
+   * @param {{ filteredGroupIds?: string[] }} action
+   */
+  FILTER_GROUPS(state, { filteredGroupIds }) {
+    if (!filteredGroupIds?.length) {
       return {
         filteredGroupIds: null,
       };
     }
     const filteredGroups = state.groups.filter(g =>
-      action.filteredGroupIds.includes(g.id)
+      filteredGroupIds.includes(g.id)
     );
     if (!filteredGroups.length) {
       // If there are no matches in the full set of groups for any of the
@@ -53,15 +57,19 @@ const reducers = {
     }
     // Ensure we have a focused group that is in the set of filtered groups
     let focusedGroupId = state.focusedGroupId;
-    if (!focusedGroupId || !action.filteredGroupIds.includes(focusedGroupId)) {
+    if (!focusedGroupId || !filteredGroupIds.includes(focusedGroupId)) {
       focusedGroupId = filteredGroups[0].id;
     }
     return {
-      filteredGroupIds: action.filteredGroupIds,
+      filteredGroupIds,
       focusedGroupId,
     };
   },
 
+  /**
+   * @param {State} state
+   * @param {{ id: string }} action
+   */
   FOCUS_GROUP(state, action) {
     const group = state.groups.find(g => g.id === action.id);
     if (!group) {
@@ -73,6 +81,10 @@ const reducers = {
     return { focusedGroupId: action.id };
   },
 
+  /**
+   * @param {State} state
+   * @param {{ groups: Group[] }} action
+   */
   LOAD_GROUPS(state, action) {
     const groups = action.groups;
     let focusedGroupId = state.focusedGroupId;

@@ -43,11 +43,14 @@ export class PersistedDefaultsService {
     };
 
     // Read persisted defaults into the store
-    Object.keys(DEFAULT_KEYS).forEach(defaultKey => {
+    const keys = /** @type {Array<keyof DEFAULT_KEYS>} */ (
+      Object.keys(DEFAULT_KEYS)
+    );
+    for (let key of keys) {
       // `localStorage.getItem` will return `null` for a non-existent key
-      const defaultValue = this._storage.getItem(DEFAULT_KEYS[defaultKey]);
-      this._store.setDefault(defaultKey, defaultValue);
-    });
+      const defaultValue = this._storage.getItem(DEFAULT_KEYS[key]);
+      this._store.setDefault(key, defaultValue);
+    }
 
     // Listen for changes to those defaults from the store and persist them
     watch(

@@ -20,8 +20,7 @@ import { createSelector } from 'reselect';
 import * as metadata from '../../helpers/annotation-metadata';
 import { isSaved } from '../../helpers/annotation-metadata';
 import { countIf, toTrueMap, trueKeys } from '../../util/collections';
-import * as util from '../util';
-import { createStoreModule } from '../create-store';
+import { createStoreModule, makeAction } from '../create-store';
 
 import { routeModule } from './route';
 
@@ -125,7 +124,10 @@ const initialState = {
 /** @typedef {typeof initialState} State */
 
 const reducers = {
-  /** @param {State} state */
+  /**
+   * @param {State} state
+   * @param {{ annotations: Annotation[], currentAnnotationCount: number }} action
+   */
   ADD_ANNOTATIONS(state, action) {
     const updatedIDs = {};
     const updatedTags = {};
@@ -176,12 +178,18 @@ const reducers = {
     return { annotations: [], focused: {}, highlighted: {} };
   },
 
-  /** @param {State} state */
+  /**
+   * @param {State} state
+   * @param {{ focusedTags: string[] }} action
+   */
   FOCUS_ANNOTATIONS(state, action) {
     return { focused: toTrueMap(action.focusedTags) };
   },
 
-  /** @param {State} state */
+  /**
+   * @param {State} state
+   * @param {{ id: string }} action
+   */
   HIDE_ANNOTATION(state, action) {
     const anns = state.annotations.map(ann => {
       if (ann.id !== action.id) {
@@ -192,19 +200,28 @@ const reducers = {
     return { annotations: anns };
   },
 
-  /** @param {State} state */
+  /**
+   * @param {State} state
+   * @param {{ highlighted: Record<string, boolean> }} action
+   */
   HIGHLIGHT_ANNOTATIONS(state, action) {
     return { highlighted: action.highlighted };
   },
 
-  /** @param {State} state */
+  /**
+   * @param {State} state
+   * @param {{ remainingAnnotations: Annotation[], annotationsToRemove: AnnotationStub[] }} action
+   */
   REMOVE_ANNOTATIONS(state, action) {
     return {
       annotations: [...action.remainingAnnotations],
     };
   },
 
-  /** @param {State} state */
+  /**
+   * @param {State} state
+   * @param {{ id: string }} action
+   */
   UNHIDE_ANNOTATION(state, action) {
     const anns = state.annotations.map(ann => {
       if (ann.id !== action.id) {
@@ -215,7 +232,10 @@ const reducers = {
     return { annotations: anns };
   },
 
-  /** @param {State} state */
+  /**
+   * @param {State} state
+   * @param {{ statusUpdates: Record<string, 'anchored'|'orphan'|'timeout'> }} action
+   */
   UPDATE_ANCHOR_STATUS(state, action) {
     const annotations = state.annotations.map(annot => {
       if (!action.statusUpdates.hasOwnProperty(annot.$tag)) {
@@ -232,7 +252,10 @@ const reducers = {
     return { annotations };
   },
 
-  /** @param {State} state */
+  /**
+   * @param {State} state
+   * @param {{ id: string, isFlagged: boolean }} action
+   */
   UPDATE_FLAG_STATUS(state, action) {
     const annotations = state.annotations.map(annot => {
       const match = annot.id && annot.id === action.id;
@@ -260,8 +283,6 @@ const reducers = {
   },
 };
 
-const actions = util.actionTypes(reducers);
-
 /* Action creators */
 
 /**
@@ -277,11 +298,12 @@ function addAnnotations(annotations) {
       );
     });
 
-    dispatch({
-      type: actions.ADD_ANNOTATIONS,
-      annotations,
-      currentAnnotationCount: getState().annotations.annotations.length,
-    });
+    dispatch(
+      makeAction(reducers, 'ADD_ANNOTATIONS', {
+        annotations,
+        currentAnnotationCount: getState().annotations.annotations.length,
+      })
+    );
 
     // If we're not in the sidebar, we're done here.
     // FIXME Split the annotation-adding from the anchoring code; possibly
@@ -322,7 +344,7 @@ function addAnnotations(annotations) {
 
 /** Set the currently displayed annotations to the empty set. */
 function clearAnnotations() {
-  return { type: actions.CLEAR_ANNOTATIONS };
+  return makeAction(reducers, 'CLEAR_ANNOTATIONS', undefined);
 }
 
 /**
@@ -333,10 +355,7 @@ function clearAnnotations() {
  * @param {string[]} tags - Identifiers of annotations to focus
  */
 function focusAnnotations(tags) {
-  return {
-    type: actions.FOCUS_ANNOTATIONS,
-    focusedTags: tags,
-  };
+  return makeAction(reducers, 'FOCUS_ANNOTATIONS', { focusedTags: tags });
 }
 
 /**
@@ -348,10 +367,7 @@ function focusAnnotations(tags) {
  * @param {string} id
  */
 function hideAnnotation(id) {
-  return {
-    type: actions.HIDE_ANNOTATION,
-    id,
-  };
+  return makeAction(reducers, 'HIDE_ANNOTATION', { id });
 }
 
 /**
@@ -365,10 +381,9 @@ function hideAnnotation(id) {
  * @param {string[]} ids - annotations to highlight
  */
 function highlightAnnotations(ids) {
-  return {
-    type: actions.HIGHLIGHT_ANNOTATIONS,
+  return makeAction(reducers, 'HIGHLIGHT_ANNOTATIONS', {
     highlighted: toTrueMap(ids),
-  };
+  });
 }
 
 /**
@@ -384,11 +399,12 @@ export function removeAnnotations(annotations) {
       getState().annotations.annotations,
       annotations
     );
-    dispatch({
-      type: actions.REMOVE_ANNOTATIONS,
-      annotationsToRemove: annotations,
-      remainingAnnotations,
-    });
+    dispatch(
+      makeAction(reducers, 'REMOVE_ANNOTATIONS', {
+        annotationsToRemove: annotations,
+        remainingAnnotations,
+      })
+    );
   };
 }
 
@@ -401,10 +417,7 @@ export function removeAnnotations(annotations) {
  * @param {string} id
  */
 function unhideAnnotation(id) {
-  return {
-    type: actions.UNHIDE_ANNOTATION,
-    id,
-  };
+  return makeAction(reducers, 'UNHIDE_ANNOTATION', { id });
 }
 
 /**
@@ -414,10 +427,7 @@ function unhideAnnotation(id) {
  *        map of annotation tag to orphan status
  */
 function updateAnchorStatus(statusUpdates) {
-  return {
-    type: actions.UPDATE_ANCHOR_STATUS,
-    statusUpdates,
-  };
+  return makeAction(reducers, 'UPDATE_ANCHOR_STATUS', { statusUpdates });
 }
 
 /**
@@ -426,14 +436,9 @@ function updateAnchorStatus(statusUpdates) {
  * @param {string} id - Annotation ID
  * @param {boolean} isFlagged - The flagged status of the annotation. True if
  *        the user has flagged the annotation.
- *
  */
 function updateFlagStatus(id, isFlagged) {
-  return {
-    type: actions.UPDATE_FLAG_STATUS,
-    id,
-    isFlagged,
-  };
+  return makeAction(reducers, 'UPDATE_FLAG_STATUS', { id, isFlagged });
 }
 
 /* Selectors */
@@ -486,6 +491,7 @@ function findAnnotationByID(state, id) {
  * @param {string[]} tags - Local tags of annotations to look up
  */
 function findIDsForTags(state, tags) {
+  /** @type {string[]} */
   const ids = [];
   tags.forEach(tag => {
     const annot = findByTag(state.annotations, tag);
