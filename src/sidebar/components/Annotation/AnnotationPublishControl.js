@@ -58,6 +58,7 @@ function AnnotationPublishControl({
     }
   };
 
+  /** @param {'shared'|'private'} level */
   const onSetPrivacy = level => {
     store.createDraft(annotation, { ...draft, isPrivate: level === 'private' });
     // Persist this as privacy default for future annotations unless this is a reply

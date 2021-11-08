@@ -86,7 +86,9 @@ function ThreadList({ threads }) {
   }, []);
 
   // Map of thread ID to measured height of thread.
-  const [threadHeights, setThreadHeights] = useState({});
+  const [threadHeights, setThreadHeights] = useState(
+    /** @type {Record<string, number>} */ ({})
+  );
 
   // ID of thread to scroll to after the next render. If the thread is not
   // present, the value persists until it can be "consumed".
@@ -150,6 +152,7 @@ function ThreadList({ threads }) {
     // Clear `scrollToId` so we don't scroll again after the next render.
     setScrollToId(null);
 
+    /** @param {Thread} thread */
     const getThreadHeight = thread =>
       threadHeights[thread.id] || THREAD_DIMENSION_DEFAULTS.defaultHeight;
 
@@ -165,6 +168,7 @@ function ThreadList({ threads }) {
   // heights of thread cards and update `threadHeights` state if there are changes.
   useEffect(() => {
     setThreadHeights(prevHeights => {
+      /** @type {Record<string, number>} */
       const changedHeights = {};
       for (let { id } of visibleThreads) {
         const threadElement = /** @type {HTMLElement} */ (

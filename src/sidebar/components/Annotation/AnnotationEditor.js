@@ -58,6 +58,7 @@ function AnnotationEditor({
   const text = draft.text;
   const isEmpty = !text && !tags.length;
 
+  /** @param {{ tags: string[] }} arg */
   const onEditTags = ({ tags }) => {
     store.createDraft(draft.annotation, { ...draft, tags });
   };
@@ -97,6 +98,7 @@ function AnnotationEditor({
     return false;
   };
 
+  /** @param {{ text: string }} arg */
   const onEditText = ({ text }) => {
     store.createDraft(draft.annotation, { ...draft, text });
   };
@@ -116,6 +118,7 @@ function AnnotationEditor({
   };
 
   // Allow saving of annotation by pressing CMD/CTRL-Enter
+  /** @param {KeyboardEvent} event */
   const onKeyDown = event => {
     const key = normalizeKeyName(event.key);
     if (isEmpty) {
