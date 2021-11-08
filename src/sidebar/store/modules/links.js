@@ -4,6 +4,9 @@ import { createStoreModule } from '../create-store';
 
 const initialState = /** @type {Record<string, string>|null} */ (null);
 
+/** @typedef {typeof initialState} State */
+
+/** @type {import('../create-store').ReducerMap<State>} */
 const reducers = {
   UPDATE_LINKS(state, action) {
     return {
@@ -31,9 +34,9 @@ function updateLinks(links) {
  *
  * Returns an empty string if links have not been fetched yet.
  *
+ * @param {State} state
  * @param {string} linkName
  * @param {Record<string, string>} [params]
- * @return {string}
  */
 function getLink(state, linkName, params = {}) {
   if (!state) {

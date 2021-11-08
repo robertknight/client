@@ -21,6 +21,9 @@ const initialState = {
   focusedGroup: /** @type {string|null} */ (null),
 };
 
+/** @typedef {typeof initialState} State */
+
+/** @type {import('../create-store').ReducerMap<State>} */
 const reducers = {
   SET_DEFAULT: function (state, action) {
     return { [action.defaultKey]: action.value };
@@ -29,6 +32,10 @@ const reducers = {
 
 const actions = util.actionTypes(reducers);
 
+/**
+ * @param {keyof initialState} defaultKey
+ * @param {typeof initialState[defaultKey]} value
+ */
 function setDefault(defaultKey, value) {
   return { type: actions.SET_DEFAULT, defaultKey, value };
 }
@@ -38,6 +45,8 @@ function setDefault(defaultKey, value) {
 /**
  * Retrieve the state's current value for `defaultKey`.
  *
+ * @param {State} state
+ * @param {keyof initialState} defaultKey
  * @return {string|null} - The current value for `defaultKey` or `undefined` if it is not
  *               present
  */
@@ -45,6 +54,7 @@ function getDefault(state, defaultKey) {
   return state[defaultKey];
 }
 
+/** @param {State} state */
 function getDefaults(state) {
   return state;
 }

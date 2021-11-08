@@ -15,6 +15,9 @@ const initialState = {
   sidebarHasOpened: false,
 };
 
+/** @typedef {typeof initialState} State */
+
+/** @type {import('../create-store').ReducerMap<State>} */
 const reducers = {
   SET_SIDEBAR_OPENED: (state, action) => {
     if (action.opened === true) {
@@ -28,8 +31,6 @@ const reducers = {
 
 const actions = util.actionTypes(reducers);
 
-// Action creators
-
 /**
  * @param {boolean} opened - If the sidebar is open
  */
@@ -37,8 +38,7 @@ function setSidebarOpened(opened) {
   return { type: actions.SET_SIDEBAR_OPENED, opened };
 }
 
-// Selectors
-
+/** @param {State} state */
 function hasSidebarOpened(state) {
   return state.sidebarHasOpened;
 }

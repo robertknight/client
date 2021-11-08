@@ -34,6 +34,9 @@ const initialState = {
   annotationResultCount: null,
 };
 
+/** @typedef {typeof initialState} State */
+
+/** @type {import('../create-store').ReducerMap<State>} */
 const reducers = {
   API_REQUEST_STARTED(state) {
     return {
@@ -143,22 +146,27 @@ function apiRequestFinished() {
   return { type: actions.API_REQUEST_FINISHED };
 }
 
+/** @param {number} resultCount */
 function setAnnotationResultCount(resultCount) {
   return { type: actions.SET_ANNOTATION_RESULT_COUNT, resultCount };
 }
 
 /** Selectors */
 
+/** @param {State} state */
 function annotationResultCount(state) {
   return state.annotationResultCount;
 }
 
+/** @param {State} state */
 function hasFetchedAnnotations(state) {
   return state.hasFetchedAnnotations;
 }
 
 /**
  * Return true when annotations are actively being fetched.
+ *
+ * @param {State} state
  */
 function isFetchingAnnotations(state) {
   return state.activeAnnotationFetches > 0;
@@ -167,6 +175,8 @@ function isFetchingAnnotations(state) {
 /**
  * Return true when any activity is happening in the app that needs to complete
  * before the UI is ready for interactivity with annotations.
+ *
+ * @param {State} state
  */
 function isLoading(state) {
   return state.activeApiRequests > 0 || !state.hasFetchedAnnotations;
@@ -177,9 +187,8 @@ function isLoading(state) {
  * have in-flight save requests, i.e. the annotation in question is actively
  * being saved to a remote service.
  *
- * @param {object} state
+ * @param {State} state
  * @param {object} annotation
- * @return {boolean}
  */
 function isSavingAnnotation(state, annotation) {
   if (!annotation.$tag) {
@@ -187,8 +196,6 @@ function isSavingAnnotation(state, annotation) {
   }
   return state.activeAnnotationSaveRequests.includes(annotation.$tag);
 }
-
-/** @typedef {import('../../../types/api').Annotation} Annotation */
 
 export const activityModule = createStoreModule(initialState, {
   reducers,

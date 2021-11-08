@@ -31,6 +31,9 @@ const initialState = {
   activePanelName: null,
 };
 
+/** @typedef {typeof initialState} State */
+
+/** @type {import('../create-store').ReducerMap<State>} */
 const reducers = {
   OPEN_SIDEBAR_PANEL: function (state, action) {
     return { activePanelName: action.panelName };
@@ -114,8 +117,8 @@ function toggleSidebarPanel(panelName, panelState) {
 /**
  * Is the panel indicated by `panelName` currently active (open)?
  *
+ * @param {State} state
  * @param {PanelName} panelName
- * @return {boolean} - `true` if `panelName` is the currently-active panel
  */
 function isSidebarPanelOpen(state, panelName) {
   return state.activePanelName === panelName;

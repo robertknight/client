@@ -124,6 +124,7 @@ const initialState = {
 
 /** @typedef {typeof initialState} State */
 
+/** @type {import('../create-store').ReducerMap<State>} */
 const reducers = {
   /** @param {State} state */
   ADD_ANNOTATIONS(state, action) {
@@ -486,6 +487,7 @@ function findAnnotationByID(state, id) {
  * @param {string[]} tags - Local tags of annotations to look up
  */
 function findIDsForTags(state, tags) {
+  /** @type {string[]} */
   const ids = [];
   tags.forEach(tag => {
     const annot = findByTag(state.annotations, tag);

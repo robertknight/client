@@ -22,6 +22,9 @@ const initialState = {
   messages: [],
 };
 
+/** @typedef {typeof initialState} State */
+
+/** @type {import('../create-store').ReducerMap<State>} */
 const reducers = {
   ADD_MESSAGE: function (state, action) {
     return {
@@ -81,8 +84,8 @@ function updateMessage(message) {
 /**
  * Retrieve a message by `id`
  *
+ * @param {State} state
  * @param {string} id
- * @return {object|undefined}
  */
 function getMessage(state, id) {
   return state.messages.find(message => message.id === id);
@@ -91,7 +94,7 @@ function getMessage(state, id) {
 /**
  * Retrieve all current messages
  *
- * @return {object[]}
+ * @param {State} state
  */
 function getMessages(state) {
   return state.messages;
@@ -102,9 +105,9 @@ function getMessages(state) {
  * text exists in the state's collection of messages. This matches messages
  * by content, not by ID (true uniqueness).
  *
+ * @param {State} state
  * @param {string} type
  * @param {string} text
- * @return {boolean}
  */
 function hasMessage(state, type, text) {
   return state.messages.some(message => {

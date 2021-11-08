@@ -104,6 +104,7 @@ const resetSelection = () => {
   };
 };
 
+/** @type {import('../create-store').ReducerMap<State>} */
 const reducers = {
   CLEAR_SELECTION: function () {
     return resetSelection();

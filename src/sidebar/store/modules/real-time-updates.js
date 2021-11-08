@@ -37,6 +37,7 @@ const initialState = {
 
 /** @typedef {typeof initialState} State */
 
+/** @type {import('../create-store').ReducerMap<State>} */
 const reducers = {
   RECEIVE_REAL_TIME_UPDATES(state, action) {
     return {
@@ -155,7 +156,7 @@ function clearPendingUpdates() {
  * Return added or updated annotations received via the WebSocket
  * which have not been applied to the local state.
  *
- * @return {Record<string, Annotation>}
+ * @param {State} state
  */
 function pendingUpdates(state) {
   return state.pendingUpdates;
@@ -165,7 +166,7 @@ function pendingUpdates(state) {
  * Return IDs of annotations which have been deleted on the server but not
  * yet removed from the local state.
  *
- * @return {Record<string, Annotation>}
+ * @param {State} state
  */
 function pendingDeletions(state) {
   return state.pendingDeletions;
@@ -173,8 +174,6 @@ function pendingDeletions(state) {
 
 /**
  * Return a total count of pending updates and deletions.
- *
- * @type {(state: any) => number}
  */
 const pendingUpdateCount = createSelector(
   /** @param {State} state */
@@ -187,6 +186,7 @@ const pendingUpdateCount = createSelector(
  * Return true if an annotation has been deleted on the server but the deletion
  * has not yet been applied.
  *
+ * @param {State} state
  * @param {string} id
  */
 function hasPendingDeletion(state, id) {

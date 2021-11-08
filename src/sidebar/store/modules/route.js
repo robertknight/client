@@ -26,6 +26,9 @@ const initialState = {
   params: {},
 };
 
+/** @typedef {typeof initialState} State */
+
+/** @type {import('../create-store').ReducerMap<State>} State */
 const reducers = {
   CHANGE_ROUTE(state, { name, params }) {
     return { name, params };
@@ -50,6 +53,8 @@ function changeRoute(name, params = {}) {
 
 /**
  * Return the name of the current route.
+ *
+ * @param {State} state
  */
 function route(state) {
   return state.name;
@@ -58,6 +63,8 @@ function route(state) {
 /**
  * Return any parameters for the current route, extracted from the path and
  * query string.
+ *
+ * @param {State} state
  */
 function routeParams(state) {
   return state.params;

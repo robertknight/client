@@ -26,6 +26,7 @@ const initialState = [];
 
 /** @typedef {typeof initialState} State */
 
+/** @type {import('../create-store').ReducerMap<State>} */
 const reducers = {
   CONNECT_FRAME: function (state, action) {
     return [...state, action.frame];
@@ -87,7 +88,7 @@ function updateFrameAnnotationFetchStatus(uri, isFetchComplete) {
 /**
  * Return the list of frames currently connected to the sidebar app.
  *
- * @return {Frame[]}
+ * @param {State} state
  */
 function frames(state) {
   return state;

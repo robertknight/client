@@ -34,6 +34,7 @@ const initialState = {
 
 /** @typedef {typeof initialState} State */
 
+/** @type {import('../create-store').ReducerMap<State>} */
 const reducers = {
   FILTER_GROUPS(state, action) {
     if (!action.filteredGroupIds?.length) {

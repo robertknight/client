@@ -42,6 +42,9 @@ function initialState(settings) {
   };
 }
 
+/** @typedef {ReturnType<initialState>} State */
+
+/** @type {import('../create-store').ReducerMap<State>} */
 const reducers = {
   UPDATE_DIRECT_LINKED_GROUP_FETCH_FAILED(state, action) {
     return {
@@ -127,17 +130,17 @@ function clearDirectLinkedIds() {
   };
 }
 
-/**
- * Selectors
- */
+/** @param {State} state */
 function directLinkedAnnotationId(state) {
   return state.directLinkedAnnotationId;
 }
 
+/** @param {State} state */
 function directLinkedGroupId(state) {
   return state.directLinkedGroupId;
 }
 
+/** @param {State} state */
 function directLinkedGroupFetchFailed(state) {
   return state.directLinkedGroupFetchFailed;
 }
