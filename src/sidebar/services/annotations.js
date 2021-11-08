@@ -57,7 +57,9 @@ export class AnnotationsService {
    * @return {Annotation}
    */
   _initialize(annotationData, now = new Date()) {
-    const defaultPrivacy = this._store.getDefault('annotationPrivacy');
+    const defaultPrivacy = /** @type {'private'|'shared'|null} */ (
+      this._store.getDefault('annotationPrivacy')
+    );
     const groupid = this._store.focusedGroupId();
     const profile = this._store.profile();
 
