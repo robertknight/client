@@ -11,7 +11,7 @@ import { useService } from '../service-context';
  */
 class CacheEntry {
   /**
-   * @param {string} name - Method name
+   * @param {string|symbol} name - Method name
    * @param {Function} method - Method implementation
    * @param {any[]} args - Arguments to the selector
    * @param {any} result - Result of the invocation
@@ -24,7 +24,7 @@ class CacheEntry {
   }
 
   /**
-   * @param {string} name
+   * @param {string|symbol} name
    * @param {any[]} args
    */
   matches(name, args) {
@@ -60,7 +60,7 @@ class CacheEntry {
  * @return {SidebarStore}
  */
 export function useStoreProxy() {
-  const store = useService('store');
+  const store = /** @type {SidebarStore} */ (useService('store'));
 
   // Hack to trigger a component re-render.
   const [, forceUpdate] = useReducer(x => x + 1, 0);
@@ -78,13 +78,15 @@ export function useStoreProxy() {
   const proxy = useRef(/** @type {SidebarStore|null} */ (null));
   if (!proxy.current) {
     // Cached method wrappers.
-    const wrappedMethods = {};
+    const wrappedMethods =
+      /** @type {Record<keyof store, (...args: unknown[]) => unknown>} */ ({});
 
     /**
      * @param {typeof store} store
-     * @param {string} prop
+     * @param {keyof store} prop
      */
     const get = (store, prop) => {
+      /** @type {Function} */
       const method = store[prop];
       if (typeof method !== 'function') {
         return method;
