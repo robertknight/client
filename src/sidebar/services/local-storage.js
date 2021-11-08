@@ -3,17 +3,24 @@
  */
 class InMemoryStorage {
   constructor() {
+    /** @type {Record<string, string>} */
     this._store = {};
   }
 
+  /** @param {string} key */
   getItem(key) {
     return key in this._store ? this._store[key] : null;
   }
 
+  /**
+   * @param {string} key
+   * @param {string} value
+   */
   setItem(key, value) {
     this._store[key] = value;
   }
 
+  /** @param {string} key */
   removeItem(key) {
     delete this._store[key];
   }
