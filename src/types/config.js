@@ -72,7 +72,7 @@
  * @prop {string} [appType] - Method used to load the client
  * @prop {boolean} [openSidebar] - Whether to open the sidebar on the initial load
  * @prop {boolean} [showHighlights] - Whether to show highlights
- * @prop {object} [branding] -
+ * @prop {Record<string, string>} [branding] -
  *   Theme properties (fonts, colors etc.)
  * @prop {boolean} [enableExperimentalNewNoteButton] -
  *   Whether to show the "New note" button on the "Page Notes" tab
