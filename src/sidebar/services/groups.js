@@ -6,6 +6,13 @@ import { watch } from '../util/watch';
 
 /** @typedef {import('../../types/api').Group} Group */
 
+/**
+ * @typedef ListGroupParams
+ * @prop {string} [authority]
+ * @prop {string} [document_uri]
+ * @prop {string[]} [expand]
+ */
+
 const DEFAULT_ORG_ID = '__default__';
 
 // @ts-ignore - TS doesn't know about SVG files.
@@ -53,6 +60,7 @@ export class GroupsService {
    * @param {import('./api').APIService} api
    * @param {import('./auth').AuthService} auth
    * @param {import('./session').SessionService} session
+   * @param {import('../../types/config').MergedConfig} settings
    * @param {import('./toast-messenger').ToastMessengerService} toastMessenger
    */
   constructor(store, api, auth, session, settings, toastMessenger) {
@@ -266,6 +274,7 @@ export class GroupsService {
         });
     }
 
+    /** @type {ListGroupParams} */
     const listParams = {
       expand: expandParam,
     };
@@ -365,6 +374,8 @@ export class GroupsService {
     });
 
     let error;
+
+    /** @param {string} id */
     const tryFetchGroup = async id => {
       try {
         return await this._fetchGroup(id);
@@ -374,6 +385,7 @@ export class GroupsService {
       }
     };
 
+    /** @param {string} id */
     const getGroup = id =>
       userGroups.find(g => g.id === id || g.groupid === id) ||
       tryFetchGroup(id);
@@ -418,6 +430,7 @@ export class GroupsService {
    */
   async load() {
     if (this._serviceConfig?.groups) {
+      /** @type {string[]} */
       let groupIds = [];
       try {
         groupIds = await this._serviceConfig.groups;
