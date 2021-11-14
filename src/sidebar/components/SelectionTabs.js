@@ -63,7 +63,11 @@ function Tab({
         {count > 0 && !isWaitingToAnchor && (
           <span
             className="u-font--xsmall"
-            style="position:relative;bottom:3px;left:2px"
+            style={{
+              position: 'relative',
+              bottom: '3px',
+              left: '2px',
+            }}
           >
             {count}
           </span>
