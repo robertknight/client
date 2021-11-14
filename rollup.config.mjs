@@ -21,7 +21,7 @@ if (isProd) {
   );
 }
 
-function bundleConfig({ name, entry }) {
+function bundleConfig({ name, entry, format = 'es', exportName }) {
   return {
     input: {
       [name]: entry,
@@ -31,9 +31,10 @@ function bundleConfig({ name, entry }) {
       chunkFileNames: `${name}-[name].bundle.js`,
       entryFileNames: '[name].bundle.js',
       sourcemap: true,
-    },
-    preserveEntrySignatures: false,
 
+      format,
+      name: exportName,
+    },
     treeshake: isProd,
 
     // Suppress a warning (https://rollupjs.org/guide/en/#error-this-is-undefined)
@@ -67,6 +68,13 @@ function bundleConfig({ name, entry }) {
 
 export default [
   bundleConfig({ name: 'annotator', entry: 'src/annotator/index.js' }),
+  bundleConfig({
+    name: 'match-quote',
+    entry: 'src/annotator/anchoring/match-quote.js',
+
+    format: 'iife',
+    exportName: 'matchQuoteLib',
+  }),
   bundleConfig({ name: 'sidebar', entry: 'src/sidebar/index.js' }),
   bundleConfig({
     name: 'ui-playground',

@@ -8,7 +8,7 @@
  *     libraries.
  */
 
-import { matchQuote } from './match-quote';
+import { matchQuoteAsync } from './match-quote';
 import { TextRange, TextPosition } from './text-range';
 import { nodeFromXPath, xpathFromNode } from './xpath';
 
@@ -224,16 +224,17 @@ export class TextQuoteAnchor {
   /**
    * @param {QuoteMatchOptions} [options]
    */
-  toRange(options = {}) {
-    return this.toPositionAnchor(options).toRange();
+  async toRange(options = {}) {
+    const position = await this.toPositionAnchor(options);
+    return position.toRange();
   }
 
   /**
    * @param {QuoteMatchOptions} [options]
    */
-  toPositionAnchor(options = {}) {
+  async toPositionAnchor(options = {}) {
     const text = /** @type {string} */ (this.root.textContent);
-    const match = matchQuote(text, this.exact, {
+    const match = await matchQuoteAsync(text, this.exact, {
       ...this.context,
       hint: options.hint,
     });
