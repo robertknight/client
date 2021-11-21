@@ -30,9 +30,10 @@ function bundleConfig({ name, entry, format = 'es', exportName }) {
       dir: 'build/scripts/',
       chunkFileNames: `${name}-[name].bundle.js`,
       entryFileNames: '[name].bundle.js',
+      format,
       sourcemap: true,
 
-      format,
+      // Options for IIFE bundles
       name: exportName,
     },
     treeshake: isProd,
@@ -69,11 +70,10 @@ function bundleConfig({ name, entry, format = 'es', exportName }) {
 export default [
   bundleConfig({ name: 'annotator', entry: 'src/annotator/index.js' }),
   bundleConfig({
-    name: 'match-quote',
-    entry: 'src/annotator/anchoring/match-quote.js',
-
+    name: 'anchoring-worker',
+    entry: 'src/annotator/anchoring/worker.js',
     format: 'iife',
-    exportName: 'matchQuoteLib',
+    exportName: 'anchoringLib',
   }),
   bundleConfig({ name: 'sidebar', entry: 'src/sidebar/index.js' }),
   bundleConfig({

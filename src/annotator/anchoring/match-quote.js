@@ -171,8 +171,6 @@ export function matchQuote(text, quote, context = {}) {
   return scoredMatches[0];
 }
 
-let workerFailed = false;
-
 /**
  * Async version of {@link matchQuote} which executes the search in a Web Worker.
  *
@@ -185,35 +183,14 @@ let workerFailed = false;
  * @return {Promise<Match|null>}
  */
 export async function matchQuoteAsync(text, quote, context) {
-  if (workerFailed) {
-    // If using a worker previously failed, don't keep trying to use it.
-    return matchQuote(text, quote, context);
-  }
-
-  try {
-    const result = /** @type {Match|null} */ (
-      await runInWorker(
-        './match-quote.bundle.js',
-        'matchQuoteLib',
-        'matchQuote',
-        [text, quote, context]
-      )
-    );
-    return result;
-  } catch (err) {
-    workerFailed = true;
-    warnOnce(
-      'Failed to execute search in worker, falling back to main-thread search.',
-      err
-    );
-    return matchQuote(text, quote, context);
-  }
-}
-
-/**
- * Internal helper that resets the flag that tracks whether launching a
- * web worker failed.
- */
-export function resetWorkerFailed() {
-  workerFailed = false;
+  const result = /** @type {Match|null} */ (
+    await runInWorker(
+      './anchoring-worker.bundle.js',
+      'anchoringLib',
+      'matchQuote',
+      [text, quote, context],
+      matchQuote
+    )
+  );
+  return result;
 }
