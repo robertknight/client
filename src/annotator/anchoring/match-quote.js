@@ -25,7 +25,7 @@ function search(text, str, maxErrors) {
   // Do a fast search for exact matches. The `approx-string-match` library
   // doesn't currently incorporate this optimization itself.
   let matchPos = 0;
-  let exactMatches = [];
+  const exactMatches = [];
   while (matchPos !== -1) {
     matchPos = text.indexOf(str, matchPos);
     if (matchPos !== -1) {
@@ -44,26 +44,6 @@ function search(text, str, maxErrors) {
   // If there are no exact matches, do a more expensive search for matches
   // with errors.
   return approxSearch(text, str, maxErrors);
-}
-
-/**
- * Compute a score between 0 and 1.0 for the similarity between `text` and `str`.
- *
- * @param {string} text
- * @param {string} str
- */
-function textMatchScore(text, str) {
-  // `search` will return no matches if either the text or pattern is empty,
-  // otherwise it will return at least one match if the max allowed error count
-  // is at least `str.length`.
-  if (str.length === 0 || text.length === 0) {
-    return 0.0;
-  }
-
-  const matches = search(text, str, str.length);
-
-  // prettier-ignore
-  return 1 - (matches[0].errors / str.length);
 }
 
 /**
@@ -97,68 +77,46 @@ export function matchQuote(text, quote, context = {}) {
   //     `O((maxErrors / 32) * text.length)`. See `approx-string-match` docs.
   const maxErrors = Math.min(256, quote.length / 2);
 
-  // Find closest matches for `quote` in `text` based on edit distance.
-  const matches = search(text, quote, maxErrors);
+  const prefix = context.prefix ?? '';
+  const suffix = context.suffix ?? '';
 
-  if (matches.length === 0) {
-    return null;
-  }
+  const maxContextErrors = maxErrors + prefix.length + suffix.length;
+  const quoteInContext = prefix + quote + suffix;
+  const matches = search(text, quoteInContext, maxContextErrors);
 
-  /**
-   * Compute a score between 0 and 1.0 for a match candidate.
-   *
-   * @param {StringMatch} match
-   */
-  const scoreMatch = match => {
-    const quoteWeight = 50; // Similarity of matched text to quote.
-    const prefixWeight = 20; // Similarity of text before matched text to `context.prefix`.
-    const suffixWeight = 20; // Similarity of text after matched text to `context.suffix`.
-    const posWeight = 2; // Proximity to expected location. Used as a tie-breaker.
+  let bestMatch = null;
+  for (let qicMatch of matches) {
+    const matchText = text.slice(qicMatch.start, qicMatch.end);
+    const quoteMatches = search(matchText, quote, maxErrors);
+    if (quoteMatches.length === 0) {
+      // We may fail to find a quote match if the best match for the quote in
+      // context doesn't include the quote at all.
+      continue;
+    }
 
-    const quoteScore = 1 - match.errors / quote.length;
+    const quoteMatch = quoteMatches[0];
 
-    const prefixScore = context.prefix
-      ? textMatchScore(
-          text.slice(
-            Math.max(0, match.start - context.prefix.length),
-            match.start
-          ),
-          context.prefix
-        )
-      : 1.0;
-    const suffixScore = context.suffix
-      ? textMatchScore(
-          text.slice(match.end, match.end + context.suffix.length),
-          context.suffix
-        )
-      : 1.0;
+    const start = qicMatch.start + quoteMatch.start;
+
+    const contextScore =
+      maxContextErrors > 0 ? 1.0 - qicMatch.errors / maxContextErrors : 0;
+    const quoteScore = maxErrors > 0 ? 1.0 - quoteMatch.errors / maxErrors : 0;
 
     let posScore = 1.0;
     if (typeof context.hint === 'number') {
-      const offset = Math.abs(match.start - context.hint);
+      const offset = Math.abs(start - context.hint);
       posScore = 1.0 - offset / text.length;
     }
+    const score = contextScore + quoteScore + posScore;
 
-    const rawScore =
-      quoteWeight * quoteScore +
-      prefixWeight * prefixScore +
-      suffixWeight * suffixScore +
-      posWeight * posScore;
-    const maxScore = quoteWeight + prefixWeight + suffixWeight + posWeight;
-    const normalizedScore = rawScore / maxScore;
-
-    return normalizedScore;
-  };
-
-  // Rank matches based on similarity of actual and expected surrounding text
-  // and actual/expected offset in the document text.
-  const scoredMatches = matches.map(m => ({
-    start: m.start,
-    end: m.end,
-    score: scoreMatch(m),
-  }));
-
-  // Choose match with highest score.
-  scoredMatches.sort((a, b) => b.score - a.score);
-  return scoredMatches[0];
+    const match = {
+      start,
+      end: qicMatch.start + quoteMatch.end,
+      score,
+    };
+    if (!bestMatch || match.score > bestMatch.score) {
+      bestMatch = match;
+    }
+  }
+  return bestMatch;
 }
