@@ -34,6 +34,13 @@ function AnnotationQuote({ annotation, isFocused, settings = {} }) {
   // as part of the annotation anchoring process.
   const documentLanguage = '';
 
+  const quoteSel = annotation.target[0].selector?.find(
+    s => s.type === 'TextQuoteSelector'
+  );
+  const prefix = quoteSel?.prefix ?? '';
+  const quote = quoteSel?.exact ?? '';
+  const suffix = quoteSel?.suffix ?? '';
+
   return (
     <div
       className={classnames({
@@ -54,7 +61,9 @@ function AnnotationQuote({ annotation, isFocused, settings = {} }) {
           lang={documentLanguage}
           style={applyTheme(['selectionFontFamily'], settings)}
         >
-          {quote(annotation)}
+          {prefix}
+          <u>{quote}</u>
+          {suffix}
         </blockquote>
       </Excerpt>
     </div>
