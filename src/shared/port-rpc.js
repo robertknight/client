@@ -59,31 +59,61 @@ const PROTOCOL = 'frame-rpc';
  *
  * Code adapted from https://github.com/substack/frame-rpc.
  *
+ * @template {string} OnMethods
+ * @template {string} CallMethods
  * @implements Destroyable
  */
 export class PortRPC {
   /**
-   * Create an RPC client for sending and receiving RPC message using a
-   * `MessagePort`.
+   * Create an RPC client for sending and receiving RPC messages.
    *
-   * @param {MessagePort} port
-   * @param {Record<string, (...args: any[]) => void>} methods - Map of method
-   *   name to method handler
+   * After creating the PortRPC instance, call {@link on} to register handlers
+   * for incoming RPC requests on this port, then call {@link connect} to
+   * establish a connection to a port.
+   *
+   * RPC methods can then be invoked using {@link call}.
+   *
+   * TODO - What happens if an RPC method is invoked before the port is connected?
    */
-  constructor(port, methods) {
-    this._port = port;
-    this._methods = methods;
+  constructor() {
+    /** @type {MessagePort|null} */
+    this._port = null;
 
-    this._sequence = 0;
+    /** @type {Record<string, (...args: any[]) => void>} */
+    this._methods = {};
+
+    this._sequence = 1;
+
+    /** @type {Record<number, (...args: any[]) => void>} */
     this._callbacks = {};
-    this._destroyed = false;
 
     this._listeners = new ListenerCollection();
+  }
 
-    this._listeners.add(this._port, 'message', event =>
+  /**
+   * Register a method handler for incoming RPC requests.
+   *
+   * @param {OnMethods} method
+   * @param {(...args: any[]) => void} handler
+   */
+  on(method, handler) {
+    if (this._port) {
+      throw new Error('Cannot add a method handler after a port is connected');
+    }
+    this._methods[method] = handler;
+  }
+
+  /**
+   * Connect to a MessagePort and process any queued RPC requests.
+   *
+   * @param {MessagePort} port
+   */
+  connect(port) {
+    this._port = port;
+    this._listeners.add(port, 'message', event =>
       this._handle(/** @type {MessageEvent} */ (event))
     );
-    this._port.start();
+    port.start();
   }
 
   /**
@@ -93,7 +123,7 @@ export class PortRPC {
   destroy() {
     this._destroyed = true;
     this._listeners.removeAll();
-    this._port.close();
+    this._port?.close();
   }
 
   /**
@@ -102,11 +132,14 @@ export class PortRPC {
    * If the final argument in `args` is a function, it is treated as a callback
    * which is invoked with the response.
    *
-   * @param {string} method
+   * @param {CallMethods} method
    * @param {any[]} args
    */
   call(method, ...args) {
-    if (this._destroyed) {
+    // TODO - What should happen here if the port is not connected? Buffer
+    // method calls until the port is connected?
+
+    if (!this._port || this._destroyed) {
       return;
     }
 
@@ -157,8 +190,9 @@ export class PortRPC {
    */
   _handle(event) {
     const msg = this._parseMessage(event);
+    const port = this._port;
 
-    if (msg === null) {
+    if (msg === null || !port) {
       return;
     }
 
@@ -177,7 +211,7 @@ export class PortRPC {
           version: VERSION,
         };
 
-        this._port.postMessage(message);
+        port.postMessage(message);
       };
       this._methods[msg.method](...msg.arguments, callback);
     } else if ('response' in msg) {
