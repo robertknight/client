@@ -63,15 +63,103 @@ export function guessMainContentArea(root) {
 }
 
 /**
- * @param {DOMRect} a
- * @param {DOMRect} b
+ * Return the intersection of two rects.
+ *
+ * @param {DOMRect} rectA
+ * @param {DOMRect} rectB
  */
-function intersect(a, b) {
-  const left = Math.max(a.left, b.left);
-  const right = Math.min(a.right, b.right);
-  const top = Math.max(a.top, b.top);
-  const bottom = Math.min(a.bottom, b.bottom);
+function intersect(rectA, rectB) {
+  const left = Math.max(rectA.left, rectB.left);
+  const right = Math.min(rectA.right, rectB.right);
+  const top = Math.max(rectA.top, rectB.top);
+  const bottom = Math.min(rectA.bottom, rectB.bottom);
   return new DOMRect(left, top, right - left, bottom - top);
+}
+
+/**
+ * Return true if `rectB` intersects `rectA`.
+ *
+ * @param {DOMRect} rectA
+ * @param {DOMRect} rectB
+ */
+function rectIntersects(rectA, rectB) {
+  return (
+    rectA.left < rectB.right &&
+    rectA.top < rectB.bottom &&
+    rectA.bottom > rectB.top &&
+    rectA.right > rectB.left
+  );
+}
+
+/**
+ * Return true if `rectB` is fully contained within `rectA`
+ *
+ * @param {DOMRect} rectA
+ * @param {DOMRect} rectB
+ */
+function rectContains(rectA, rectB) {
+  return (
+    rectB.left >= rectA.left &&
+    rectB.right <= rectA.right &&
+    rectB.top >= rectA.top &&
+    rectB.bottom <= rectA.bottom
+  );
+}
+
+/** @type {Range} */
+let textRectRange;
+
+/**
+ * Return the viewport-relative rect occupied by part of a text node.
+ *
+ * @param {Text} text
+ * @param {number} start
+ * @param {number} end
+ */
+function textRect(text, start = 0, end = text.data.length) {
+  if (!textRectRange) {
+    // Allocate a range only on the first call to avoid the overhead of
+    // constructing and maintaining a large number of live ranges.
+    textRectRange = document.createRange();
+  }
+  textRectRange.setStart(text, start);
+  textRectRange.setEnd(text, end);
+  return textRectRange.getBoundingClientRect();
+}
+
+/**
+ * Yield all the text node descendants of `root` that intersect `rect`.
+ *
+ * @param {Element} root
+ * @param {DOMRect} rect
+ * @return {Generator<Text>}
+ */
+function* textNodesInRect(root, rect) {
+  /** @type {Node|null} */
+  let node = root.firstChild;
+  while (node) {
+    if (node.nodeType === Node.ELEMENT_NODE) {
+      const element = /** @type {Element} */ (node);
+      const elementRect = element.getBoundingClientRect();
+      if (rectIntersects(elementRect, rect)) {
+        yield* textNodesInRect(element, rect);
+      }
+    } else if (node.nodeType === Node.TEXT_NODE) {
+      const text = /** @type {Text} */ (node);
+      if (rectIntersects(textRect(text), rect)) {
+        yield text;
+      }
+    }
+
+    while (node && !node.nextSibling && node !== root) {
+      node = node.parentNode;
+    }
+    if (!node || node === root) {
+      break;
+    } else {
+      node = node.nextSibling;
+    }
+  }
 }
 
 /**
@@ -95,36 +183,22 @@ function getScrollAnchor(scrollRoot) {
     return null;
   }
 
-  // Create a range that includes the first word that is fully visible in the
-  // viewport.
-  //
-  // This currently visits every text node in `scrollRoot` and tests every
-  // possible anchor until it finds a suitable one. This could be optimized
-  // by skipping over elements that are entirely outside the viewport.
-  const walker = document.createTreeWalker(scrollRoot, NodeFilter.SHOW_TEXT);
-  const tempRange = document.createRange();
-
-  treeWalkLoop: while (walker.nextNode()) {
-    const textNode = /** @type {Text} */ (walker.currentNode);
+  // Find the first word (non-whitespace substring of a text node) that is fully
+  // visible in the viewport.
+  textNodeLoop: for (let textNode of textNodesInRect(scrollRoot, viewport)) {
     let textLen = 0;
 
+    // Visit all the non-whitespace substrings of the text node.
     for (let word of textNode.data.split(/\b/)) {
       if (/\S/.test(word)) {
         const start = textLen;
         const end = textLen + word.length;
-
-        tempRange.setStart(textNode, start);
-        tempRange.setEnd(textNode, end);
-
-        const wordBox = tempRange.getBoundingClientRect();
-        if (
-          wordBox.left >= viewport.left &&
-          wordBox.right <= viewport.right &&
-          wordBox.top >= viewport.top &&
-          wordBox.bottom <= viewport.bottom
-        ) {
-          anchorRange = tempRange.cloneRange();
-          break treeWalkLoop;
+        const wordBox = textRect(textNode, start, end);
+        if (rectContains(viewport, wordBox)) {
+          anchorRange = document.createRange();
+          anchorRange.setStart(textNode, start);
+          anchorRange.setEnd(textNode, end);
+          break textNodeLoop;
         }
       }
 
