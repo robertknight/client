@@ -9,6 +9,7 @@ import { scrollElementIntoView } from '../util/scroll';
 
 /**
  * @typedef {import('../../types/annotator').Anchor} Anchor
+ * @typedef {import('../../types/annotator').Annotator} Annotator
  * @typedef {import('../../types/annotator').Integration} Integration
  * @typedef {import('../../types/annotator').SidebarLayout} SidebarLayout
  */
@@ -27,7 +28,12 @@ const MIN_HTML_WIDTH = 480;
  * @implements {Integration}
  */
 export class HTMLIntegration {
-  constructor(container = document.body) {
+  /**
+   * @param {Annotator} annotator
+   * @param {HTMLElement} container
+   */
+  constructor(annotator, container = document.body) {
+    this.annotator = annotator;
     this.container = container;
     this.anchor = anchor;
     this.describe = describe;
@@ -37,10 +43,25 @@ export class HTMLIntegration {
     /**
      * Whether to attempt to resize the document contents when {@link fitSideBySide}
      * is called.
-     *
-     * Currently disabled by default.
      */
-    this.sideBySideEnabled = false;
+    this._sideBySideEnabled =
+      this.annotator.features.flagEnabled('html_side_by_side');
+
+    /** @type {SidebarLayout|null} */
+    this._lastLayout = null;
+
+    const updateSideBySideEnabled = on => {
+      if (on !== this._sideBySideEnabled) {
+        this._sideBySideEnabled = on;
+        if (this._lastLayout) {
+          this.fitSideBySide(this._lastLayout);
+        }
+      }
+    };
+
+    this.annotator.features.on('flagsChanged', flags => {
+      updateSideBySideEnabled(flags.get('html_side_by_side'));
+    });
   }
 
   canAnnotate() {
@@ -59,12 +80,13 @@ export class HTMLIntegration {
    * @param {SidebarLayout} layout
    */
   fitSideBySide(layout) {
-    const maximumWidthToFit = window.innerWidth - layout.width;
-    const active = layout.expanded && maximumWidthToFit >= MIN_HTML_WIDTH;
-
-    if (!this.sideBySideEnabled) {
+    this._lastLayout = layout;
+    if (!this._sideBySideEnabled) {
       return false;
     }
+
+    const maximumWidthToFit = window.innerWidth - layout.width;
+    const active = layout.expanded && maximumWidthToFit >= MIN_HTML_WIDTH;
 
     if (active) {
       this._activateSideBySide(layout.width);
