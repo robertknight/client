@@ -42,7 +42,7 @@ export class SelectionObserver {
     };
 
     /** @param {Event} event */
-    this._eventHandler = event => {
+    const eventHandler = event => {
       if (event.type === 'mousedown') {
         isMouseDown = true;
       }
@@ -76,10 +76,14 @@ export class SelectionObserver {
 
     this._document = document_;
     this._listeners = new ListenerCollection();
-    this._events = ['mousedown', 'mouseup', 'selectionchange'];
-    for (let event of this._events) {
-      this._listeners.add(document_, event, this._eventHandler);
-    }
+
+    this._listeners.add(document_, 'selectionchange', eventHandler);
+
+    // TODO: Make a note about why we listen for these events on `document.body`
+    // rather than the document. This was initially done to catch the event
+    // earlier in the VitalSource integration.
+    this._listeners.add(document_.body, 'mousedown', eventHandler);
+    this._listeners.add(document_.body, 'mouseup', eventHandler);
 
     // Report the initial selection.
     scheduleCallback(1);
