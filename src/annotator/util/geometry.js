@@ -139,3 +139,51 @@ export function rectCenter(rect) {
     (rect.top + rect.bottom) / 2
   );
 }
+
+/**
+ * Return the manhattan distance between two points.
+ *
+ * This is useful when a cheap distance metric is needed.
+ *
+ * @param {DOMPoint} a
+ * @param {DOMPoint} b
+ */
+export function manhattanDist(a, b) {
+  return Math.abs(a.x - b.x) + Math.abs(a.y - b.y);
+}
+
+/**
+ * @param {number} value
+ * @param {number} a
+ * @param {number} b
+ */
+function inRange(value, a, b) {
+  if (a <= b) {
+    return value >= a && value <= b;
+  } else {
+    return value >= b && value <= a;
+  }
+}
+
+/**
+ * Return true if the lines a-b and c-d intersect.
+ *
+ * @param {DOMPoint} a
+ * @param {DOMPoint} b
+ * @param {DOMPoint} c
+ * @param {DOMPoint} d
+ */
+export function linesIntersect(a, b, c, d) {
+  // Find slope and intercept of each line.
+  const m1 = (b.y - a.y) / (b.x - a.x);
+  const c1 = m1 * a.x - a.y;
+  const m2 = (d.y - c.y) / (d.x - c.x);
+  const c2 = m2 * c.x - c.y;
+
+  // Find x coordinate where lines would intersect if they had infinite length.
+  const x = (c2 - c1) / (m1 - m2);
+
+  // Check if the x coordinate lies on both lines.
+  return inRange(x, a.x, b.x) && inRange(x, c.x, d.x);
+}
+

@@ -1,9 +1,12 @@
 import debounce from 'lodash.debounce';
+import TinyQueue from 'tinyqueue';
 
 import { ListenerCollection } from '../../shared/listener-collection';
 import {
+  manhattanDist,
   rectCenter,
-  rectsOverlapHorizontally,
+  rectContains,
+  rectIsEmpty,
   rectsOverlapVertically,
   unionRects,
 } from '../util/geometry';
@@ -27,20 +30,29 @@ import {
  */
 
 /**
- * Group characters in a page into words, lines and columns.
+ * Shuffle an array in-place.
  *
- * The input is assumed to be _roughly_ reading order, more so at the low (word,
- * line) level. When the input is not in reading order, the output may be
- * divided into more lines / columns than expected. Downstream code is expected
- * to tolerate over-segmentation. This function should try to avoid producing
- * lines or columns that significantly intersect, as this can impair text
- * selection.
- *
- * @param {DOMRect[]} charBoxes - Bounding rectangle associated with each character on the page
- * @param {string} text - Text that corresponds to `charBoxes`
- * @return {ColumnBox[]}
+ * @template T
+ * @param {T[]} array
  */
-function analyzeLayout(charBoxes, text) {
+function shuffle(array) {
+  // See https://en.wikipedia.org/wiki/Fisher–Yates_shuffle#The_modern_algorithm
+  for (let i = array.length - 1; i >= 1; i--) {
+    const k = Math.round(Math.random() * i);
+    const temp = array[i];
+    array[i] = array[k];
+    array[k] = temp;
+  }
+  return array;
+}
+
+/**
+ * Group character boxes into words.
+ *
+ * @param {DOMRect[]} charBoxes
+ * @param {string} text
+ */
+function findWords(charBoxes, text) {
   /** @type {WordBox[]} */
   const words = [];
 
@@ -69,82 +81,231 @@ function analyzeLayout(charBoxes, text) {
   }
   addWord();
 
-  /** @type {LineBox[]} */
-  const lines = [];
+  return words;
+}
 
-  /** @type {LineBox} */
-  let currentLine = { words: [], rect: new DOMRect() };
+/**
+ * Sort columns of text on the page into reading order.
+ *
+ * @param {ColumnBox[]} columns
+ */
+function sortColumns(columns) {
+  return columns.sort((a, b) => {
+    // Sort rects top-to-bottom and then left-to-right.
+    if (!rectsOverlapVertically(a.rect, b.rect)) {
+      return a.rect.top - b.rect.top;
+    }
+    return a.rect.left - b.rect.left;
+  });
+}
 
-  // Group words into lines.
-  const addLine = () => {
-    if (currentLine.words.length > 0) {
-      lines.push(currentLine);
-      currentLine = { words: [], rect: new DOMRect() };
+/**
+ * @param {DOMRect[]} rects
+ */
+function unionRectList(rects) {
+  return rects.reduce((result, r) => unionRects(result, r), new DOMRect());
+}
+
+/**
+ * Find the largest empty rectangles in `rect` that do not intersect `items`,
+ * sorted in descending order of area.
+ *
+ * The implementation is based on a branch-and-bound algorithm from [1].
+ *
+ * [1] Breuel, T.M. (2002). Two Geometric Algorithms for Layout Analysis. Document Analysis Systems.
+ *
+ * @param {DOMRect} container
+ * @param {DOMRect[]} items
+ * @param {number} minWidth
+ * @param {number} minHeight
+ * @return {DOMRect[]}
+ */
+function findEmptyRects(container, items, minWidth, minHeight) {
+  if (rectIsEmpty(container)) {
+    return [];
+  }
+
+  /** @param {DOMRect} rect */
+  const area = rect => rect.width * rect.height;
+
+  // Priority queue of candidates for being empty rects, sorted in decreasing
+  // order of area.
+  //
+  // The algorithm works with _score functions_ other than the area, as long
+  // as when a candidate is subdivided, the subdivisions have a lower score than
+  // the current candidate.
+  const candidateQueue = new TinyQueue(
+    [container],
+    (a, b) => area(b) - area(a)
+  );
+
+  /** @param {DOMRect} rect */
+  const maybeEnqueue = rect => {
+    if (rect.width >= minWidth && rect.height >= minHeight) {
+      candidateQueue.push(rect);
     }
   };
-  for (let word of words) {
-    const prevWord = currentLine.words[currentLine.words.length - 1];
-    if (prevWord) {
-      const prevCenter = rectCenter(prevWord.rect);
-      const currentCenter = rectCenter(word.rect);
-      const xDist = currentCenter.x - prevCenter.x;
-      if (
-        !rectsOverlapVertically(prevWord.rect, word.rect) ||
-        // Break line if current word is left of previous word
-        xDist < 0
-      ) {
-        addLine();
+
+  const emptyRects = [];
+  while (candidateQueue.length > 0) {
+    const rect = candidateQueue.pop();
+    if (!rect) {
+      break;
+    }
+
+    // TODO - Make this more efficient. If `items` was sorted by top y
+    // coordinate a binary search could be used.
+    const rectItems = items.filter(item => rectContains(rect, item));
+
+    if (rectItems.length === 0) {
+      emptyRects.push(rect);
+    } else {
+      // Choose the item nearest the center of the current rect as a pivot.
+      const centerPos = rectCenter(rect);
+      let pivotDist = Infinity;
+      let pivot = rectItems[0];
+      for (let item of rectItems) {
+        const itemDist = manhattanDist(centerPos, rectCenter(item));
+        if (itemDist < pivotDist) {
+          pivot = item;
+          pivotDist = itemDist;
+        }
       }
+
+      // Add the spaces above, below, and to the left and right of the pivot
+      // as candidates for being empty rectangles.
+      const rectAbove = new DOMRect(
+        rect.left,
+        rect.top,
+        rect.width,
+        pivot.y - rect.top
+      );
+      maybeEnqueue(rectAbove);
+
+      const rectLeft = new DOMRect(
+        rect.left,
+        rect.top,
+        pivot.x - rect.left,
+        rect.height
+      );
+      maybeEnqueue(rectLeft);
+
+      const rectBelow = new DOMRect(
+        rect.left,
+        pivot.bottom,
+        rect.width,
+        rect.bottom - pivot.bottom
+      );
+      maybeEnqueue(rectBelow);
+
+      const rectRight = new DOMRect(
+        pivot.right,
+        rect.top,
+        rect.right - pivot.right,
+        rect.height
+      );
+      maybeEnqueue(rectRight);
     }
-    currentLine.words.push(word);
-    currentLine.rect = unionRects(currentLine.rect, word.rect);
   }
-  addLine();
 
-  /** @type {ColumnBox[]} */
-  const columns = [];
+  return emptyRects;
+}
 
-  /** @type {ColumnBox} */
-  let currentColumn = { lines: [], rect: new DOMRect() };
+/**
+ * Group characters in a page into words, lines and columns.
+ *
+ * The input is assumed to be _roughly_ reading order, more so at the low (word,
+ * line) level. When the input is not in reading order, the output may be
+ * divided into more lines / columns than expected. Downstream code is expected
+ * to tolerate over-segmentation. This function should try to avoid producing
+ * lines or columns that significantly intersect, as this can impair text
+ * selection.
+ *
+ * @param {DOMRect[]} charBoxes - Bounding rectangle associated with each character on the page
+ * @param {string} text - Text that corresponds to `charBoxes`
+ * @return {ColumnBox[]}
+ */
+function analyzeLayout(charBoxes, text) {
+  const words = findWords(charBoxes, text);
 
-  // Group lines into columns.
-  const addColumn = () => {
-    if (currentColumn.lines.length > 0) {
-      columns.push(currentColumn);
-      currentColumn = { lines: [], rect: new DOMRect() };
-    }
-  };
-  for (let line of lines) {
-    const prevLine = currentColumn.lines[currentColumn.lines.length - 1];
+  // Shuffle words in to ensure that the rest of the logic doesn't depend on
+  // the input order.
+  shuffle(words);
 
-    if (prevLine) {
-      const prevCenter = rectCenter(prevLine.rect);
-      const currentCenter = rectCenter(line.rect);
-      const yDist = currentCenter.y - prevCenter.y;
+  // Find empty areas which separate sections of the page.
+  const wordRects = words.map(w => w.rect);
 
-      if (
-        !rectsOverlapHorizontally(prevLine.rect, line.rect) ||
-        rectsOverlapVertically(prevLine.rect, line.rect) ||
-        // Break column if current line is above previous line.
-        //
-        // In the case of a two column layout for example, this happens when
-        // moving from the bottom of one column to the top of the next.
-        yDist < 0 ||
-        // Break column if there is a large gap between the previous and current lines.
-        //
-        // This helps to avoid generating intersecting columns if there happens
-        // to be other content between the lines that comes later in the input.
-        yDist > line.rect.height * 4
-      ) {
-        addColumn();
+  // Thresholds for the minimum size that a candidate rectangle must have to
+  // be returned.
+  const minWidth =
+    (wordRects.reduce((sum, r) => sum + r.width, 0) / wordRects.length) * 4;
+  const minHeight =
+    (wordRects.reduce((sum, r) => sum + r.height, 0) / wordRects.length) * 4;
+
+  const boundingRect = unionRectList(wordRects);
+
+  // TODO - Visualize whitespace rects and content rects.
+  const whitespaceRects = findEmptyRects(
+    boundingRect,
+    wordRects,
+    minWidth,
+    minHeight
+  );
+
+  // Find non-empty areas. These define the "columns" on the page.
+  const columnRects = findEmptyRects(
+    boundingRect,
+    whitespaceRects,
+    0 /* minWidth */,
+    0 /* minHeight */
+  );
+
+  // TODO - Handle overlap between areas.
+
+  columnRects.sort((a, b) => a.top - b.top);
+
+  // Group the words in each column into lines.
+  const columns = columnRects
+    .map(rect => {
+      const rectWords = words
+        .filter(w => rectContains(rect, w.rect))
+        .sort((a, b) => rectCenter(a.rect).y - rectCenter(b.rect).y);
+      if (rectWords.length === 0) {
+        return null;
       }
-    }
-    currentColumn.lines.push(line);
-    currentColumn.rect = unionRects(currentColumn.rect, line.rect);
-  }
-  addColumn();
 
-  return columns;
+      const lines = [];
+      while (rectWords.length > 0) {
+        const firstWord = /** @type {WordBox} */ (rectWords.pop());
+        const lineWords = [firstWord];
+        while (
+          rectWords.length > 0 &&
+          rectsOverlapVertically(firstWord.rect, rectWords[0].rect)
+        ) {
+          lineWords.push(/** @type {WordBox} */ (rectWords.pop()));
+        }
+        const lineRect = lineWords.reduce(
+          (result, word) => unionRects(result, word.rect),
+          new DOMRect()
+        );
+
+        lineWords.sort((a, b) => a.rect.left - b.rect.left);
+
+        lines.push(
+          /** @type {LineBox} */ ({ words: lineWords, rect: lineRect })
+        );
+      }
+
+      return /** @type {ColumnBox} */ ({ lines, rect });
+    })
+    .filter(
+      /** @return {col is ColumnBox} */
+      col => col !== null
+    );
+
+  const sortedColumns = sortColumns(columns);
+
+  return sortedColumns;
 }
 
 /**
