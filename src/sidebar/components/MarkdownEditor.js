@@ -428,7 +428,7 @@ function Toolbar({ isPreviewing, onCommand, onTogglePreview }) {
  * @prop {Record<string,string>} [textStyle] -
  *   Additional CSS properties to apply to the input field and rendered preview
  * @prop {string} [text] - The markdown text to edit.
- * @prop {(arg: {text: string}) => void} [onEditText]
+ * @prop {(text: string) => void} [onEditText]
  *   - Callback invoked with `{ text }` object when user edits text.
  *   TODO: Simplify this callback to take just a string rather than an object once the
  *   parent component is converted to Preact.
@@ -463,7 +463,7 @@ export default function MarkdownEditor({
   const handleCommand = command => {
     if (input.current) {
       handleToolbarCommand(command, input.current);
-      onEditText({ text: input.current.value });
+      onEditText(input.current.value);
     }
   };
 
@@ -509,11 +509,9 @@ export default function MarkdownEditor({
           containerRef={input}
           onClick={e => e.stopPropagation()}
           onKeyDown={handleKeyDown}
-          onInput={e => {
-            onEditText({
-              text: /** @type {HTMLTextAreaElement} */ (e.target).value,
-            });
-          }}
+          onInput={e =>
+            onEditText(/** @type {HTMLTextAreaElement} */ (e.target).value)
+          }
           value={text}
           style={textStyle}
         />
