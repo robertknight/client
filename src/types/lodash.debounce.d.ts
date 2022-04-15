@@ -19,7 +19,7 @@ declare module 'lodash.debounce' {
   ): DebouncedFunction<Args>;
 
   export default function debounce<Args extends unknown[]>(
-    callback: () => void,
+    callback: (...args: Args) => void,
     delay: number,
     options?: DebounceOptions
   ): DebouncedFunction<Args>;

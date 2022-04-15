@@ -25,18 +25,22 @@ import Thread from './Thread';
  */
 function ThreadCard({ frameSync, thread }) {
   const store = useStoreProxy();
-  const threadTag = thread.annotation && thread.annotation.$tag;
+  const threadTag = thread.annotation?.$tag;
   const isFocused = threadTag && store.isAnnotationFocused(threadTag);
   const focusThreadAnnotation = useMemo(
     () =>
-      debounce(tag => {
-        const focusTags = tag ? [tag] : [];
-        frameSync.focusAnnotations(focusTags);
-      }, 10),
+      debounce(
+        /** @param {string|null} tag */ tag => {
+          const focusTags = tag ? [tag] : [];
+          frameSync.focusAnnotations(focusTags);
+        },
+        10
+      ),
     [frameSync]
   );
 
   const scrollToAnnotation = useCallback(
+    /** @param {string} tag */
     tag => {
       frameSync.scrollToAnnotation(tag);
     },
@@ -63,11 +67,14 @@ function ThreadCard({ frameSync, thread }) {
       onClick={e => {
         // Prevent click events intended for another action from
         // triggering a page scroll.
-        if (!isFromButtonOrLink(/** @type {Element} */ (e.target))) {
+        if (
+          !isFromButtonOrLink(/** @type {Element} */ (e.target)) &&
+          threadTag
+        ) {
           scrollToAnnotation(threadTag);
         }
       }}
-      onMouseEnter={() => focusThreadAnnotation(threadTag)}
+      onMouseEnter={() => focusThreadAnnotation(threadTag ?? null)}
       onMouseLeave={() => focusThreadAnnotation(null)}
       key={thread.id}
       className={classnames('ThreadCard p-3', {
