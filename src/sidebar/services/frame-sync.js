@@ -1,4 +1,5 @@
 import debounce from 'lodash.debounce';
+import shallowEqual from 'shallowequal';
 
 import { ListenerCollection } from '../../shared/listener-collection';
 import { PortFinder, PortRPC, isMessageEqual } from '../../shared/messaging';
@@ -136,11 +137,12 @@ export class FrameSyncService {
 
     watch(
       this._store.subscribe,
-      [() => this._store.allAnnotations(), () => this._store.frames()],
-      /**
-       * @param {[Annotation[], Frame[]]} current
-       * @param {[Annotation[]]} previous
-       */
+      () =>
+        /** @type {const} */ ([
+          this._store.allAnnotations(),
+          this._store.frames(),
+        ]),
+      shallowEqual,
       ([annotations, frames], [prevAnnotations]) => {
         let publicAnns = 0;
         /** @type {Set<string>} */

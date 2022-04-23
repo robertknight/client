@@ -1,3 +1,5 @@
+import shallowEqual from 'shallowequal';
+
 import { serviceConfig } from '../config/service-config';
 import { isReply } from '../helpers/annotation-metadata';
 import { combineGroups } from '../helpers/groups';
@@ -157,6 +159,7 @@ export class GroupsService {
     watch(
       this._store.subscribe,
       () => this._mainURI(),
+      null,
       () => {
         this.load();
       }
@@ -167,10 +170,12 @@ export class GroupsService {
     // logging in or logging out.
     watch(
       this._store.subscribe,
-      [
-        () => this._store.hasFetchedProfile(),
-        () => this._store.profile().userid,
-      ],
+      () =>
+        /** @type {const} */ ([
+          this._store.hasFetchedProfile(),
+          this._store.profile().userid,
+        ]),
+      shallowEqual,
       (_, [prevFetchedProfile]) => {
         if (!prevFetchedProfile) {
           // Ignore the first time that the profile is loaded.

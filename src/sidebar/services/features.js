@@ -26,6 +26,7 @@ export class FeaturesService {
     watch(
       this._store.subscribe,
       () => this._store.profile().features,
+      null,
       flags => this._frameSync.notifyHost('featureFlagsUpdated', flags || {})
     );
   }

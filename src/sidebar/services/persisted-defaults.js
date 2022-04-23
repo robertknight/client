@@ -62,6 +62,7 @@ export class PersistedDefaultsService {
     watch(
       this._store.subscribe,
       () => this._store.getDefaults(),
+      null,
       persistChangedDefaults
     );
   }
